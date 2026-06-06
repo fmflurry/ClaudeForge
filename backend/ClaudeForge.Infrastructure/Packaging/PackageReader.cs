@@ -1,6 +1,8 @@
 using System.Formats.Tar;
 using System.IO.Compression;
 using System.Text;
+using ClaudeForge.Core.Domain.Packaging;
+using ClaudeForge.Core.Ports;
 
 namespace ClaudeForge.Infrastructure.Packaging;
 

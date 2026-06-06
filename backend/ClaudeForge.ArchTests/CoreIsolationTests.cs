@@ -44,4 +44,20 @@ public sealed class CoreIsolationTests
         Assert.True(result.IsSuccessful,
             $"Core should not depend on EF Core. Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
+
+    [Fact]
+    public void Application_ShouldNot_HaveAnyDependencyOnInfrastructure()
+    {
+        Types? types = Types.InAssembly(typeof(ClaudeForge.Application.Modules.PluginPublishing.UseCases.UploadPluginUseCase).Assembly);
+
+        TestResult? result = types
+            .That()
+            .ResideInNamespace(ApplicationNamespace)
+            .ShouldNot()
+            .HaveDependencyOn(InfrastructureNamespace)
+            .GetResult();
+
+        Assert.True(result.IsSuccessful,
+            $"Application should not depend on Infrastructure. Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
+    }
 }

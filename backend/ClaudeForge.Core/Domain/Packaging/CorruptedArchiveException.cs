@@ -1,11 +1,15 @@
-namespace ClaudeForge.Infrastructure.Packaging;
+using ClaudeForge.Core.Shared.Exceptions;
+
+namespace ClaudeForge.Core.Domain.Packaging;
 
 /// <summary>
 /// Thrown when an archive that should be valid cannot be read (truncated, malformed magic bytes, etc.).
 /// Message matches the spec verbatim.
 /// </summary>
-public sealed class CorruptedArchiveException : Exception
+public sealed class CorruptedArchiveException : ProblemDetailsException
 {
+    public override int StatusCode => 400;
+
     public CorruptedArchiveException()
         : base("Package file is corrupted or not a valid archive")
     {

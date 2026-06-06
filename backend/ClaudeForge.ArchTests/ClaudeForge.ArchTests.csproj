@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ClaudeForge.Application\ClaudeForge.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ClaudeForge.Core\ClaudeForge.Core.csproj" />
     <ProjectReference Include="..\ClaudeForge.Application\ClaudeForge.Application.csproj" />
     <ProjectReference Include="..\ClaudeForge.Infrastructure\ClaudeForge.Infrastructure.csproj" />

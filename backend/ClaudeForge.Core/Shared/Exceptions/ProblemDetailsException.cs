@@ -13,4 +13,6 @@ public class ProblemDetailsException : Exception
     public virtual int StatusCode => 400;
 
     public ProblemDetailsException(string detail) : base(detail) { }
+
+    protected ProblemDetailsException(string detail, Exception inner) : base(detail, inner) { }
 }

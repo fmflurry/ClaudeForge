@@ -48,14 +48,14 @@
 
 ## 5. Backend — PluginPublishing Module (plugin-upload, plugin-versioning)
 
-- [ ] 5.1 Write failing tests for upload use-case: valid multipart submission, missing package (400 "Package file is required"), missing required field (400 "Required field missing: name"), invalid semver, duplicate name (409, case-insensitive), README extraction
-- [ ] 5.2 Implement `UploadPluginUseCase` orchestrating manifest validation, package storage (SHA-256 + size), plugin + initial version persistence (`isLatest=true`), `name_normalized`/`slug` generation, README extraction to `readme_text`
-- [ ] 5.3 Implement `POST /api/v1/plugins/upload` (multipart/form-data) returning 201 with `pluginId` + version reference; map duplicate to 409, validation to 400 with spec-exact strings
-- [ ] 5.4 Write failing tests for versioning use-case: publish new version (flips prior `isLatest`), duplicate version (409 "Version 1.5.0 already exists"), invalid format (400 with format message), publish-to-nonexistent-plugin (404), immutable PATCH (405)
-- [ ] 5.5 Implement `PublishVersionUseCase` enforcing semver, single-`isLatest` invariant (atomic flip), immutability, and release-notes storage (default empty string)
-- [ ] 5.6 Implement endpoints `POST /api/v1/plugins/{pluginId}/versions`, `GET /api/v1/plugins/{pluginId}/versions` (paginated, semver desc), `GET /api/v1/plugins/{pluginId}/versions/{version}`, and `PATCH .../versions/{version}` → 405 Method Not Allowed
-- [ ] 5.7 Write integration tests covering full publish lifecycle, version-history pagination defaults/out-of-range, per-version download counts, and immutability enforcement
-- [ ] 5.8 Add per-IP rate limiting middleware applied to upload + version-publish endpoints
+- [x] 5.1 Write failing tests for upload use-case: valid multipart submission, missing package (400 "Package file is required"), missing required field (400 "Required field missing: name"), invalid semver, duplicate name (409, case-insensitive), README extraction
+- [x] 5.2 Implement `UploadPluginUseCase` orchestrating manifest validation, package storage (SHA-256 + size), plugin + initial version persistence (`isLatest=true`), `name_normalized`/`slug` generation, README extraction to `readme_text`
+- [x] 5.3 Implement `POST /api/v1/plugins/upload` (multipart/form-data) returning 201 with `pluginId` + version reference; map duplicate to 409, validation to 400 with spec-exact strings
+- [x] 5.4 Write failing tests for versioning use-case: publish new version (flips prior `isLatest`), duplicate version (409 "Version 1.5.0 already exists"), invalid format (400 with format message), publish-to-nonexistent-plugin (404), immutable PATCH (405)
+- [x] 5.5 Implement `PublishVersionUseCase` enforcing semver, single-`isLatest` invariant (atomic flip), immutability, and release-notes storage (default empty string)
+- [x] 5.6 Implement endpoints `POST /api/v1/plugins/{pluginId}/versions`, `GET /api/v1/plugins/{pluginId}/versions` (paginated, semver desc), `GET /api/v1/plugins/{pluginId}/versions/{version}`, and `PATCH .../versions/{version}` → 405 Method Not Allowed
+- [x] 5.7 Write integration tests covering full publish lifecycle, version-history pagination defaults/out-of-range, per-version download counts, and immutability enforcement
+- [x] 5.8 Add per-IP rate limiting middleware applied to upload + version-publish endpoints
 
 ## 6. Backend — PluginDistribution Module (plugin-download)
 

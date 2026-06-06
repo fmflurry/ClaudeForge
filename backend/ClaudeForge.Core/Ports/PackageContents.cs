@@ -1,4 +1,4 @@
-namespace ClaudeForge.Infrastructure.Packaging;
+namespace ClaudeForge.Core.Ports;
 
 /// <summary>
 /// Contents extracted from a plugin archive.

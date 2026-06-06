@@ -6,12 +6,15 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-// Auto-discover and register feature modules
+// Auto-discover and register feature modules (including rate limiting from PluginPublishingModule)
 builder.Services.RegisterModules();
 
 WebApplication app = builder.Build();
 
 app.UseExceptionHandler();
+
+// Rate limiting must be applied before endpoints
+app.UseRateLimiter();
 
 // Map all module endpoints
 app.MapModuleEndpoints();

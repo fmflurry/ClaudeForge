@@ -1,4 +1,6 @@
-namespace ClaudeForge.Infrastructure.Packaging;
+using ClaudeForge.Core.Domain.Packaging;
+
+namespace ClaudeForge.Core.Ports;
 
 /// <summary>
 /// Reads a plugin archive stream and extracts the manifest and optional README.
