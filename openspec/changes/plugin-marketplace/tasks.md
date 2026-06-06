@@ -195,11 +195,11 @@
 
 ## 23. End-to-End Verification
 
-- [ ] 23.1 Run backend verification gate: `dotnet build` clean + xUnit suite green + NetArchTest isolation rules passing
-- [ ] 23.2 Run frontend verification gate: `npx tsc --noEmit`, ESLint (no `any`), Angular unit/component tests green
-- [ ] 23.3 Run CLI verification gate: typecheck + lint + CLI test suite green
-- [ ] 23.4 Run full integration smoke against docker-compose: upload → catalog list → search/discovery → download (counter increments once) → telemetry summary → CLI install/list/update/remove
-- [ ] 23.5 Confirm ≥80% coverage across backend, frontend, and CLI; record coverage report and close any gaps
+- [x] 23.1 Run backend verification gate: `dotnet build` clean + xUnit suite green + NetArchTest isolation rules passing
+- [x] 23.2 Run frontend verification gate: `npx tsc --noEmit`, ESLint (no `any`), Angular unit/component tests green
+- [x] 23.3 Run CLI verification gate: typecheck + lint + CLI test suite green
+- [x] 23.4 Run full integration smoke against docker-compose: upload → catalog list → search/discovery → download (counter increments once) → telemetry summary → CLI install/list/update/remove
+- [x] 23.5 Confirm ≥80% coverage across backend, frontend, and CLI; record coverage report and close any gaps
 
 ## Notes & Reconciled Conflicts
 

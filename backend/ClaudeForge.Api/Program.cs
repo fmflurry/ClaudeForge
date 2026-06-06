@@ -1,6 +1,8 @@
 using ClaudeForge.Api.Infrastructure;
 using ClaudeForge.Api.Module;
+using ClaudeForge.Infrastructure.Persistence;
 using ClaudeForge.Infrastructure.Storage;
+using Microsoft.EntityFrameworkCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,10 @@ builder.Services.AddProblemDetails();
 
 // Built-in .NET 10 OpenAPI document generation (Microsoft.AspNetCore.OpenApi)
 builder.Services.AddOpenApi();
+
+// ── Database: register MarketplaceDbContext with Postgres ────────────────────
+builder.Services.AddDbContext<MarketplaceDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
 // ── Package Storage: bind options, validate on start, register adapter ──────
 builder.Services
