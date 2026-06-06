@@ -78,12 +78,12 @@
 
 ## 8. Backend — Telemetry Module (plugin-telemetry)
 
-- [ ] 8.1 Write failing tests for ingest use-case: valid event persists raw row + increments aggregate, malformed event (missing eventType/anonClientId/pluginId) → 400 logged-not-stored, coarse OS/arch only, no PII columns
-- [ ] 8.2 Implement `IngestTelemetryEventUseCase` (fire-and-forget semantics, atomic raw insert + aggregate increment, 404-download events never reach this path)
-- [ ] 8.3 Implement `GetTelemetrySummaryUseCase` reading aggregates only (total downloads/installs, last-7d activity) with 5-minute cache
-- [ ] 8.4 Implement endpoints `POST /api/v1/telemetry/events` (202 Accepted) and `GET /api/v1/plugins/{pluginId}/telemetry/summary`; enforce that raw events are never exposed via API
-- [ ] 8.5 Implement nightly rollup + 90-day raw-event purge job (aggregate into daily windows, then delete raw >90d) gated by `Features:TelemetryRetention`; cover with a test
-- [ ] 8.6 Apply per-IP rate limiting to telemetry POST; write integration tests for ingest, malformed rejection, aggregate-only summary, and cache behavior
+- [x] 8.1 Write failing tests for ingest use-case: valid event persists raw row + increments aggregate, malformed event (missing eventType/anonClientId/pluginId) → 400 logged-not-stored, coarse OS/arch only, no PII columns
+- [x] 8.2 Implement `IngestTelemetryEventUseCase` (fire-and-forget semantics, atomic raw insert + aggregate increment, 404-download events never reach this path)
+- [x] 8.3 Implement `GetTelemetrySummaryUseCase` reading aggregates only (total downloads/installs, last-7d activity) with 5-minute cache
+- [x] 8.4 Implement endpoints `POST /api/v1/telemetry/events` (202 Accepted) and `GET /api/v1/plugins/{pluginId}/telemetry/summary`; enforce that raw events are never exposed via API
+- [x] 8.5 Implement nightly rollup + 90-day raw-event purge job (aggregate into daily windows, then delete raw >90d) gated by `Features:TelemetryRetention`; cover with a test
+- [x] 8.6 Apply per-IP rate limiting to telemetry POST; write integration tests for ingest, malformed rejection, aggregate-only summary, and cache behavior
 
 ## 9. Backend — Docs Module (docs)
 

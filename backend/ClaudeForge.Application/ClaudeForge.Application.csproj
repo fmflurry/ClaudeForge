@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <!-- Riok.Mapperly: source-generator-based mapper (replaces AutoMapper placeholder; no DI registration needed) -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.5" />
     <PackageReference Include="Riok.Mapperly" Version="4.0.0" PrivateAssets="all" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
   </ItemGroup>
