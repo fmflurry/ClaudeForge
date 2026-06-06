@@ -24,6 +24,9 @@ import { DashboardFacade } from './features/dashboard/application/facades/dashbo
 import { CatalogFacade } from './features/catalog/application/facades/catalog.facade';
 import { SearchFacade } from './features/search/application/facades/search.facade';
 import { TelemetryFacade } from './features/telemetry/application/facades/telemetry.facade';
+import { DocsPort } from './features/docs/domain/ports/docs.port';
+import { DocsHttpAdapter } from './features/docs/infrastructure/adapter/docs-http.adapter';
+import { DocsFacade } from './features/docs/application/facades/docs.facade';
 
 /**
  * Reads the runtime API base URL from:
@@ -83,6 +86,11 @@ export const appConfig: ApplicationConfig = {
     CatalogFacade,
     SearchFacade,
     TelemetryFacade,
+    {
+      provide: DocsPort,
+      useClass: DocsHttpAdapter,
+    },
+    DocsFacade,
   ],
 };
 

@@ -144,10 +144,10 @@
 
 ## 17. Frontend — Docs Domain (docs)
 
-- [ ] 17.1 Write failing tests for docs domain (search ranking display, category tree, per-plugin doc tab)
-- [ ] 17.2 Implement docs domain + HTTP adapter for `/api/v1/docs` and `/api/v1/docs/{slug}`
-- [ ] 17.3 Implement `DocsStore` + `DocsFacade` (full-text search, doc tree navigation, plugin doc tab content)
-- [ ] 17.4 Build docs components (sidebar category tree, searchable doc viewer with highlight/snippet, plugin "Docs" tab, missing-doc placeholder); component tests
+- [x] 17.1 Write failing tests for docs domain (search ranking display, category tree, per-plugin doc tab)
+- [x] 17.2 Implement docs domain + HTTP adapter for `/api/v1/docs` and `/api/v1/docs/{slug}`
+- [x] 17.3 Implement `DocsStore` + `DocsFacade` (full-text search, doc tree navigation, plugin doc tab content)
+- [x] 17.4 Build docs components (sidebar category tree, searchable doc viewer with highlight/snippet, plugin "Docs" tab, missing-doc placeholder); component tests
 
 ## 18. CLI/SDK (cli-sdk)
 
