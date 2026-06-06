@@ -1,3 +1,5 @@
+using Amazon.Runtime;
+using Amazon.S3;
 using ClaudeForge.Api.Module;
 using ClaudeForge.Application.Modules.PluginPublishing.Ports;
 using ClaudeForge.Application.Modules.PluginPublishing.UseCases;
@@ -10,6 +12,7 @@ using ClaudeForge.Infrastructure.PluginPublishing;
 using ClaudeForge.Infrastructure.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using System.Threading.RateLimiting;
 
 
@@ -29,13 +32,28 @@ public sealed class PluginPublishingModule : IModule
 
     public IServiceCollection RegisterModule(IServiceCollection services)
     {
-        // Package storage — uses local filesystem adapter (config-driven path).
-        // Falls back to a temp directory when the configured path is not accessible
-        // (e.g., /packages in non-Docker environments).
+        // Package storage — adapter selected at startup by StorageOptions.Type.
         services.AddSingleton<IPackageStoragePort>(sp =>
         {
-            IConfiguration config = sp.GetRequiredService<IConfiguration>();
-            string configuredPath = config["PackageStorage:LocalPath"]
+            StorageOptions opts = sp.GetRequiredService<IOptions<StorageOptions>>().Value;
+
+            if (opts.Type == "OVHObjectStorage")
+            {
+                OvhStorageOptions ovh = opts.Ovh!;
+                AmazonS3Config s3Config = new()
+                {
+                    ServiceURL = ovh.Endpoint,
+                    ForcePathStyle = true,
+                    AuthenticationRegion = "us-east-1"
+                };
+                IAmazonS3 s3Client = new AmazonS3Client(
+                    new BasicAWSCredentials(ovh.AccessKey, ovh.SecretKey),
+                    s3Config);
+                return new OvhObjectStorageAdapter(s3Client, ovh.BucketName);
+            }
+
+            // Default: LocalFileSystem
+            string configuredPath = opts.LocalPath
                 ?? Path.Combine(Path.GetTempPath(), "claudeforge-packages");
 
             string localPath = configuredPath;

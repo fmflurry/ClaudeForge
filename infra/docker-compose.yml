@@ -1,5 +1,16 @@
 name: claudeforge-dev
 
+# ─── Usage ────────────────────────────────────────────────────────────────────
+# Default stack (api + web + postgres):
+#   docker compose up
+#
+# Include optional Qdrant semantic-search service:
+#   docker compose --profile semantic up
+#
+# One-command start with live-reload:
+#   make up           (or: npm run dev:up from repo root)
+# ─────────────────────────────────────────────────────────────────────────────
+
 services:
   # ─── .NET API ──────────────────────────────────────────────────────────────
   api:
@@ -27,6 +38,17 @@ services:
     networks:
       - cf-net
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
 
   # ─── Angular Frontend ─────────────────────────────────────────────────────
   web:
@@ -39,17 +61,29 @@ services:
     ports:
       - "4200:4200"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     volumes:
       - ../frontend:/app
       - frontend-node-modules:/app/node_modules
     networks:
       - cf-net
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4200 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
 
   # ─── PostgreSQL 16 ────────────────────────────────────────────────────────
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.9-alpine3.21
     container_name: cf-postgres
     environment:
       POSTGRES_USER: "${POSTGRES_USER:-postgres}"
@@ -69,10 +103,16 @@ services:
       retries: 10
       start_period: 10s
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
 
   # ─── Qdrant (optional — requires --profile semantic) ──────────────────────
+  # Usage: docker compose --profile semantic up
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.14.1
     container_name: cf-qdrant
     profiles:
       - semantic
@@ -84,6 +124,11 @@ services:
     networks:
       - cf-net
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
 
 volumes:
   postgres-data:

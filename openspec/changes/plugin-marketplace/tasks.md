@@ -179,12 +179,12 @@
 
 ## 21. DevOps Hardening
 
-- [ ] 21.1 Harden the dev compose from Group 1 for parity (healthchecks, resource limits, restart policies, pinned image digests) and document the qdrant `--profile semantic` opt-in path
-- [ ] 21.2 Add production multi-stage `Dockerfile` targets (backend: dotnet publish runtime image; frontend: npm build → nginx with runtime-injected API base URL) extending the Group 1 dev Dockerfiles
-- [ ] 21.3 Add `docker-compose.prod.yml` overlay for OVH (Production env, `PackageStorage__Type=OVHObjectStorage`, S3 endpoint/bucket, managed Postgres connection string)
-- [ ] 21.4 Implement `OVHObjectStorageAdapter` (S3-compatible via AWS SDK) implementing `IPackageStoragePort`; integration-test against a local S3-compatible mock
-- [ ] 21.5 Implement startup secret/config validation (fail fast if required env vars missing) and run EF migrations on startup/init
-- [ ] 21.6 Verify dev→prod parity: bring up dev compose, run smoke flow (upload → download → counter), confirm only env vars differ between dev and prod adapters
+- [x] 21.1 Harden the dev compose from Group 1 for parity (healthchecks, resource limits, restart policies, pinned image digests) and document the qdrant `--profile semantic` opt-in path
+- [x] 21.2 Add production multi-stage `Dockerfile` targets (backend: dotnet publish runtime image; frontend: npm build → nginx with runtime-injected API base URL) extending the Group 1 dev Dockerfiles
+- [x] 21.3 Add `docker-compose.prod.yml` overlay for OVH (Production env, `PackageStorage__Type=OVHObjectStorage`, S3 endpoint/bucket, managed Postgres connection string)
+- [x] 21.4 Implement `OVHObjectStorageAdapter` (S3-compatible via AWS SDK) implementing `IPackageStoragePort`; integration-test against a local S3-compatible mock
+- [x] 21.5 Implement startup secret/config validation (fail fast if required env vars missing) and run EF migrations on startup/init
+- [x] 21.6 Verify dev→prod parity: bring up dev compose, run smoke flow (upload → download → counter), confirm only env vars differ between dev and prod adapters
 
 ## 22. Documentation
 

@@ -18,6 +18,8 @@
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
 <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
+<PackageReference Include="Testcontainers.Minio" Version="4.4.0" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.415.3" />
     <PackageReference Include="xunit.core" Version="2.9.3" />
     <PackageReference Include="xunit.assert.source" Version="2.9.3">
       <IncludeAssets>build; compile; native; contentfiles; analyzers</IncludeAssets>

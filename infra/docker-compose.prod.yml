@@ -1,0 +1,74 @@
+# ─── Production overlay for ClaudeForge ─────────────────────────────────────
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This overlay:
+#   • Switches to production images built from multi-stage Dockerfiles
+#   • Enables OVH Object Storage for package artifacts
+#   • Uses managed Postgres (external connection string via env)
+#   • Injects all secrets via environment variables — NEVER hardcoded
+#
+# Required environment variables (set in CI/CD secrets or injected at deploy):
+#   POSTGRES_CONNECTION_STRING  — full Npgsql connection string for managed Postgres
+#   OVH_S3_ENDPOINT             — e.g. https://s3.sbg.perf.cloud.ovh.net
+#   OVH_BUCKET_NAME             — e.g. claudeforge-plugins
+#   OVH_ACCESS_KEY              — OVH S3 access key
+#   OVH_SECRET_KEY              — OVH S3 secret key
+#   JWT_SECRET                  — signing key for JWT tokens (≥32 chars)
+#   ASPNETCORE_URLS             — optional override, defaults to http://+:8080
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ─── .NET API (production build) ──────────────────────────────────────────
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile          # production multi-stage build
+    image: claudeforge-api:latest
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: "${ASPNETCORE_URLS:-http://+:8080}"
+      # Managed Postgres — connection string injected at deploy time
+      ConnectionStrings__Postgres: "${POSTGRES_CONNECTION_STRING}"
+      # OVH Object Storage
+      PackageStorage__Type: "OVHObjectStorage"
+      PackageStorage__Ovh__Endpoint: "${OVH_S3_ENDPOINT}"
+      PackageStorage__Ovh__BucketName: "${OVH_BUCKET_NAME}"
+      PackageStorage__Ovh__AccessKey: "${OVH_ACCESS_KEY}"
+      PackageStorage__Ovh__SecretKey: "${OVH_SECRET_KEY}"
+      # Security
+      Jwt__Secret: "${JWT_SECRET}"
+      # Feature flags
+      Features__QdrantEnabled: "${Features__QdrantEnabled:-false}"
+      Features__TelemetryRetention: "${Features__TelemetryRetention:-90}"
+      Features__SeedPlugins: "false"
+    volumes: []             # no source bind-mounts in production
+    restart: on-failure:3
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+
+  # ─── Angular Frontend (production nginx build) ─────────────────────────────
+  web:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile          # production multi-stage nginx build
+    image: claudeforge-web:latest
+    environment:
+      API_BASE_URL: "${API_BASE_URL:-http://api:8080/api/v1}"
+    volumes: []
+    restart: on-failure:3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+
+  # ─── Postgres — disabled in production (use managed service) ───────────────
+  # The postgres service from docker-compose.yml is not started.
+  # Connection is provided by POSTGRES_CONNECTION_STRING env var.
+  postgres:
+    deploy:
+      replicas: 0

@@ -1,5 +1,6 @@
 using ClaudeForge.Api.Infrastructure;
 using ClaudeForge.Api.Module;
+using ClaudeForge.Infrastructure.Storage;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,15 @@ builder.Services.AddProblemDetails();
 
 // Built-in .NET 10 OpenAPI document generation (Microsoft.AspNetCore.OpenApi)
 builder.Services.AddOpenApi();
+
+// ── Package Storage: bind options, validate on start, register adapter ──────
+builder.Services
+    .AddOptions<StorageOptions>()
+    .BindConfiguration("PackageStorage")
+    .ValidateOnStart();
+
+builder.Services.AddSingleton<Microsoft.Extensions.Options.IValidateOptions<StorageOptions>,
+    StorageOptionsValidator>();
 
 // Auto-discover and register feature modules (including rate limiting from PluginPublishingModule)
 builder.Services.RegisterModules();
