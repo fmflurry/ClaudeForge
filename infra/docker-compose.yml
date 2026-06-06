@@ -1,0 +1,96 @@
+name: claudeforge-dev
+
+services:
+  # ─── .NET API ──────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.dev
+    container_name: cf-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-plugin_marketplace};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-devpassword}"
+      PackageStorage__Type: "${PackageStorage__Type:-LocalFileSystem}"
+      PackageStorage__LocalPath: /packages
+      Features__QdrantEnabled: "${Features__QdrantEnabled:-false}"
+      Features__TelemetryRetention: "${Features__TelemetryRetention:-90}"
+    ports:
+      - "5010:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../backend:/app
+      - ../packages:/packages
+      - dotnet-watch-cache:/root/.nuget
+    networks:
+      - cf-net
+    restart: unless-stopped
+
+  # ─── Angular Frontend ─────────────────────────────────────────────────────
+  web:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    container_name: cf-web
+    environment:
+      API_BASE_URL: "${API_BASE_URL:-http://localhost:5010/api/v1}"
+    ports:
+      - "4200:4200"
+    depends_on:
+      - api
+    volumes:
+      - ../frontend:/app
+      - frontend-node-modules:/app/node_modules
+    networks:
+      - cf-net
+    restart: unless-stopped
+
+  # ─── PostgreSQL 16 ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: cf-postgres
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-devpassword}"
+      POSTGRES_DB: "${POSTGRES_DB:-plugin_marketplace}"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../packages:/packages
+    networks:
+      - cf-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-plugin_marketplace}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  # ─── Qdrant (optional — requires --profile semantic) ──────────────────────
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: cf-qdrant
+    profiles:
+      - semantic
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - cf-net
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  qdrant-data:
+  dotnet-watch-cache:
+  frontend-node-modules:
+
+networks:
+  cf-net:
+    driver: bridge

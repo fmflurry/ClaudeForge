@@ -1,46 +1,89 @@
-# ClaudeForge
+# ClaudeForge — Open Plugin Marketplace for Claude Code
 
-A platform to discover and share Claude agentic artefacts.
+ClaudeForge is an open-source plugin marketplace for Claude Code agentic tools: skills, hooks, subagents,
+slash commands, and MCP server configurations. It lets authors publish plugins and teams discover, install,
+and manage them through a web UI or a CLI.
 
-## What is ClaudeForge
+## Stack
 
-ClaudeForge is a community hub for discovering, sharing, and reusing agentic plugins, hooks, skills, slash commands, subagents, and MCP server configurations for Claude. Whether you've built a powerful custom skill, a specialized subagent, or a useful MCP integration, ClaudeForge lets you publish it and help others unlock new capabilities in their Claude workflows.
+| Layer | Technology |
+|---|---|
+| Frontend | Angular 19 standalone, OnPush, signal-based stores |
+| Backend | .NET 8 Minimal API, Clean/Hexagonal architecture |
+| Database | PostgreSQL 16 (full-text search via tsvector) |
+| Vector search (opt-in) | Qdrant — gated behind `--profile semantic` |
+| CLI | Node.js + TypeScript (`claude plugin <subcommand>`) |
+| Infrastructure | OVH VM, OVH Object Storage (S3-compatible), Docker Compose |
 
-## Why
+## Monorepo Layout
 
-Claude's agentic ecosystem—with hooks, skills, subagents, and MCP servers—enables powerful automation and expert tooling. Yet these artefacts often remain isolated within individual projects or teams. ClaudeForge aims to democratize access to these tools, advancing the craft of Claude-powered automation in the open. As an AI evangelist, I created this project to strengthen the community around Claude agentic tooling and to help teams everywhere build faster and smarter.
+```
+/backend          .NET solution (ClaudeForge.sln) — API, Core, Application, Infrastructure, Tests
+/frontend         Angular workspace — standalone, OnPush, signal stores
+/cli              Node/TS CLI package — `claude plugin` subcommands
+/plugin-template  Scaffolding templates (TS, Python, Go, Rust)
+/seed-plugins     10 seed plugins for dev/demo
+/docs             Markdown documentation pages (surfaced via Docs module)
+/infra            Docker Compose, Dockerfiles, infrastructure config
+/packages         Local plugin artifact storage (dev bind-mount, git-ignored)
+/openspec         Architecture specs and change tracking
+```
 
-## Status
+## One-Command Dev Stack
 
-ClaudeForge is in early / foundation stage. The tech stack and initial feature roadmap will be defined in upcoming phases. Contributions and feedback from the community are welcome.
+Prerequisites: Docker, Docker Compose
 
-## License & Usage
+```bash
+cp .env.example .env          # fill in dev values
+make up                       # or: npm run dev:up
+```
 
-**Important:** This project uses a two-tier licensing model to balance open development with platform accessibility.
+This starts:
+- `api`      — .NET backend at http://localhost:5000
+- `web`      — Angular dev server at http://localhost:4200
+- `postgres` — PostgreSQL 16 at localhost:5432
 
-### Code License (PolyForm Noncommercial 1.0.0)
+Optional Qdrant (semantic search):
+```bash
+docker compose -f infra/docker-compose.yml --profile semantic up -d
+```
 
-The **source code** of ClaudeForge is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). This means:
-- You may use, modify, and fork the code for **noncommercial purposes** freely.
-- You may **not** use the code for commercial purposes without explicit written consent from the author.
-- Charitable organizations, educational institutions, government agencies, and public research organizations may use the code for free, regardless of funding source.
+## Development
 
-See [LICENSE](LICENSE) for the full license text.
+```bash
+# Install all deps
+make install        # or: cd frontend && npm ci; cd ../cli && npm ci
 
-### Hosted Platform (Terms of Service)
+# Format
+make format
 
-The **ClaudeForge hosted platform** is governed separately by [Terms of Service](TERMS.md). Anyone—individuals and businesses alike—may use the running ClaudeForge service, including for commercial purposes, subject only to the ToS. Using the hosted platform does not require compliance with the PolyForm Noncommercial code license; the ToS permits broad commercial usage.
+# Lint
+make lint
 
-**In short:** The code itself is non-commercial; the platform is open to all.
+# Build all
+make build
 
-## Contributing
+# Run tests
+cd backend && dotnet test
+cd frontend && npm test
+cd cli && npm test
+```
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
-- Reporting issues and proposing features
-- Submitting pull requests
-- Code style and commit conventions
-- Legal terms for contributors
+## Architecture
+
+- **Backend**: Clean Architecture — `Core` (domain hexagon, zero infra deps), `Application` (HTTP/validators),
+  `Infrastructure` (EF Core, storage adapters). Modules: PluginCatalog, PluginPublishing,
+  PluginDistribution, PluginSearch, Telemetry, Docs.
+- **Frontend**: DDD domains (`catalog`, `search`, `dashboard`, `team-context`, `telemetry`, `docs`),
+  each with `application/` (facades + signal stores), `domain/` (models, ports, rules), `infrastructure/`
+  (HTTP adapters), `presentation/` (standalone OnPush components).
+- **CLI**: OpenAPI-generated typed client, local registry at `~/.claude-plugins/`.
+
+## License
+
+Source code: [PolyForm Noncommercial License 1.0.0](LICENSE).
+Hosted platform: open to all per [Terms of Service](TERMS.md).
 
 ## Author
 
-ClaudeForge is created and maintained by **Florian Michel** ([GitHub: fmflurry](https://github.com/fmflurry), [Email: florianmichel@groupeisagri.com](mailto:florianmichel@groupeisagri.com)).
+Florian Michel — [GitHub: fmflurry](https://github.com/fmflurry)

@@ -1,0 +1,25 @@
+# Dev Dockerfile for .NET API — supports hot-reload via dotnet watch
+# Uses .NET 10 SDK to match the local development toolchain.
+# Used by docker-compose.yml (infra/docker-compose.yml)
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dev
+
+WORKDIR /app
+
+# Copy project files for layer-cached restore
+COPY ClaudeForge.Core/*.csproj ClaudeForge.Core/
+COPY ClaudeForge.Application/*.csproj ClaudeForge.Application/
+COPY ClaudeForge.Infrastructure/*.csproj ClaudeForge.Infrastructure/
+COPY ClaudeForge.Api/*.csproj ClaudeForge.Api/
+COPY ClaudeForge.Tests/*.csproj ClaudeForge.Tests/
+COPY ClaudeForge.ArchTests/*.csproj ClaudeForge.ArchTests/
+
+# Restore the API and its transitive dependencies
+RUN dotnet restore ClaudeForge.Api/ClaudeForge.Api.csproj
+
+# Copy source (will be overridden by bind-mount in dev, but needed for standalone image build)
+COPY . .
+
+EXPOSE 8080
+
+# Start with dotnet watch for live reload
+CMD ["dotnet", "watch", "--project", "ClaudeForge.Api/ClaudeForge.Api.csproj", "run", "--urls", "http://+:8080"]

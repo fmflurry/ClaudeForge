@@ -1,4 +1,4 @@
-# OS & Editor Files
+# ─── OS & Editor ─────────────────────────────────────────────────────────────
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -12,48 +12,83 @@
 .sublime-project
 .sublime-workspace
 
-# Environment Variables
+# ─── Environment Variables ───────────────────────────────────────────────────
 .env
 .env.local
 .env.*.local
 
-# Node.js & npm
+# ─── .NET / C# ───────────────────────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+_ReSharper*/
+[Tt]est[Rr]esult*/
+*.coverage
+*.coveragexml
+[Ll]og/
+[Ll]ogs/
+BenchmarkDotNet.Artifacts/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.nupkg
+*.snupkg
+.nuget/
+packages/restore.props
+
+# ─── Node.js / npm ───────────────────────────────────────────────────────────
 node_modules/
-dist/
-build/
-coverage/
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .npm
 .eslintcache
 
-# Package Manager
-pnpm-lock.yaml
-yarn.lock
+# ─── Angular ─────────────────────────────────────────────────────────────────
+.angular/
+dist/
+.angular/cache/
 
-# Build Output
+# ─── Build outputs ───────────────────────────────────────────────────────────
+build/
 out/
+coverage/
 .next/
 .nuxt/
 .cache/
-
-# IDE Caches
-.cache-loader/
 .parcel-cache
-.eslintcache
+.cache-loader/
 .stylelintcache
 
-# Testing
+# ─── Testing ─────────────────────────────────────────────────────────────────
 .nyc_output/
 *.lcov
+*.log
 .mocha_output
+TestResults/
 
-# Temporary Files
+# ─── Plugin Artifacts ────────────────────────────────────────────────────────
+/packages/
+
+# ─── Package Manager Locks (keep package-lock.json, ignore others) ───────────
+pnpm-lock.yaml
+yarn.lock
+
+# ─── Temporary ───────────────────────────────────────────────────────────────
 tmp/
 temp/
 *.tmp
 
-# Git
+# ─── Git ─────────────────────────────────────────────────────────────────────
 .git/
+
+# ─── Claude Code Local Tooling ───────────────────────────────────────────────
+.claude/
+.opencode/
+
+# ─── Local Development Data ──────────────────────────────────────────────────
+data/

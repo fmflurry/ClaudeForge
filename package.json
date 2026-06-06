@@ -1,0 +1,35 @@
+{
+  "name": "claudeforge-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ClaudeForge plugin marketplace — root workspace",
+  "workspaces": [
+    "frontend",
+    "cli"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspace=frontend --workspace=cli",
+    "build": "npm run build:backend && npm run build:frontend && npm run build:cli",
+    "build:backend": "cd backend && dotnet build --nologo -clp:ErrorsOnly",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:cli": "npm run build --workspace=cli",
+    "lint": "npm run lint:backend && npm run lint:frontend && npm run lint:cli",
+    "lint:backend": "cd backend && dotnet format --verify-no-changes --no-restore",
+    "lint:frontend": "npm run lint --workspace=frontend",
+    "lint:cli": "npm run lint --workspace=cli",
+    "format": "npm run format:backend && npm run format:frontend && npm run format:cli",
+    "format:backend": "cd backend && dotnet format --no-restore",
+    "format:frontend": "npm run format --workspace=frontend",
+    "format:cli": "npm run format --workspace=cli",
+    "format:check": "npm run format:check:frontend && npm run format:check:cli",
+    "format:check:frontend": "npm run format:check --workspace=frontend",
+    "format:check:cli": "npm run format:check --workspace=cli",
+    "test": "npm run test:backend && npm run test:frontend && npm run test:cli",
+    "test:backend": "cd backend && dotnet test --nologo",
+    "test:frontend": "npm run test --workspace=frontend",
+    "test:cli": "npm run test --workspace=cli",
+    "dev:up": "docker compose -f infra/docker-compose.yml up -d",
+    "dev:down": "docker compose -f infra/docker-compose.yml down",
+    "dev:logs": "docker compose -f infra/docker-compose.yml logs -f"
+  }
+}

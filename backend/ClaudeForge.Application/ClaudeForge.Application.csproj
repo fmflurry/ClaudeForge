@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ClaudeForge.Core\ClaudeForge.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Riok.Mapperly: source-generator-based mapper (replaces AutoMapper placeholder; no DI registration needed) -->
+    <PackageReference Include="Riok.Mapperly" Version="4.0.0" PrivateAssets="all" />
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

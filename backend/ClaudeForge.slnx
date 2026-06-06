@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="ClaudeForge.Api/ClaudeForge.Api.csproj" />
+  <Project Path="ClaudeForge.Application/ClaudeForge.Application.csproj" />
+  <Project Path="ClaudeForge.ArchTests/ClaudeForge.ArchTests.csproj" />
+  <Project Path="ClaudeForge.Core/ClaudeForge.Core.csproj" />
+  <Project Path="ClaudeForge.Infrastructure/ClaudeForge.Infrastructure.csproj" />
+  <Project Path="ClaudeForge.Tests/ClaudeForge.Tests.csproj" />
+</Solution>

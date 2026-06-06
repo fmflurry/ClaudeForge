@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+
+jobs:
+  # ─── .NET Backend ────────────────────────────────────────────────────────────
+  backend:
+    name: Backend — Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        working-directory: backend
+        run: dotnet restore
+
+      - name: Build
+        working-directory: backend
+        run: dotnet build --no-restore --nologo -clp:ErrorsOnly
+
+      - name: Format check (dotnet format)
+        working-directory: backend
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Test
+        working-directory: backend
+        run: dotnet test --no-build --nologo --verbosity normal
+
+  # ─── Angular Frontend ────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend — Typecheck, Lint, Format & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npx tsc --noEmit --pretty false
+
+      - name: Lint (ESLint — no-explicit-any enforced)
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Format check (Prettier)
+        working-directory: frontend
+        run: npm run format:check
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  # ─── CLI ─────────────────────────────────────────────────────────────────────
+  cli:
+    name: CLI — Typecheck, Lint, Format & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: cli/package-lock.json
+
+      - name: Install dependencies
+        working-directory: cli
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: cli
+        run: npx tsc --noEmit --pretty false
+
+      - name: Lint (ESLint — no-explicit-any enforced)
+        working-directory: cli
+        run: npm run lint
+
+      - name: Format check (Prettier)
+        working-directory: cli
+        run: npm run format:check
+
+      - name: Build
+        working-directory: cli
+        run: npm run build
+
+      - name: Test
+        working-directory: cli
+        run: npm test
