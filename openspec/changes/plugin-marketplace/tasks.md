@@ -151,19 +151,19 @@
 
 ## 18. CLI/SDK (cli-sdk)
 
-- [ ] 18.1 Write failing tests for local registry/config layer: `~/.claude-plugins/config.json` (api-url, env override `CLAUDE_PLUGINS_API_URL`, default URL), `~/.claude-plugins/installed.json`, `~/.claude-plugins/backups/`
-- [ ] 18.2 Implement config + local-registry modules (read/write installed records immutably, resolve API URL precedence, validate URL format)
-- [ ] 18.3 Generate typed API client from `openapi.json` into CLI (shared contract with frontend, no `any`)
-- [ ] 18.4 Implement `config` command (`set api-url`, `show`) with connectivity test and spec-exact messages
-- [ ] 18.5 Implement `search` command (keyword query, table output Name/Version/Description/Downloads, default limit 10, `--limit`, no-results exit 0)
-- [ ] 18.6 Implement `install` command (resolve name/version, download package to plugins dir, record in registry, halt-before-write on network error with non-zero exit, fire install telemetry event)
-- [ ] 18.7 Implement `list` command (table Name/Version/InstalledDate/Status, `--check-updates` queries marketplace, "No plugins installed" empty case)
-- [ ] 18.8 Implement `update` command (fetch latest, already-up-to-date message, dependency-conflict halt, backup-then-extract with rollback on failure)
-- [ ] 18.9 Implement `remove` command (delete from disk + registry, confirmation message, non-existent → message + non-zero exit)
-- [ ] 18.10 Implement `validate` command (manifest presence, required fields incl. type/entrypoints, semver check, dependency conflict warnings, exit codes) reusing canonical manifest schema
-- [ ] 18.11 Implement `publish` command (validate manifest, compress directory, check version not existing, upload multipart, duplicate-version handling, success URL output)
-- [ ] 18.12 Implement `scaffold` command (`--name`/`--language`, infer-from-dir, `--interactive` guided flow with prompts/defaults/resume, language templates) delegating to template package
-- [ ] 18.13 Wire `claude plugin <subcommand>` dispatcher with `--help`; write CLI integration tests against a mocked API for each command's happy + error paths
+- [x] 18.1 Write failing tests for local registry/config layer: `~/.claude-plugins/config.json` (api-url, env override `CLAUDE_PLUGINS_API_URL`, default URL), `~/.claude-plugins/installed.json`, `~/.claude-plugins/backups/`
+- [x] 18.2 Implement config + local-registry modules (read/write installed records immutably, resolve API URL precedence, validate URL format)
+- [x] 18.3 Generate typed API client from `openapi.json` into CLI (shared contract with frontend, no `any`)
+- [x] 18.4 Implement `config` command (`set api-url`, `show`) with connectivity test and spec-exact messages
+- [x] 18.5 Implement `search` command (keyword query, table output Name/Version/Description/Downloads, default limit 10, `--limit`, no-results exit 0)
+- [x] 18.6 Implement `install` command (resolve name/version, download package to plugins dir, record in registry, halt-before-write on network error with non-zero exit, fire install telemetry event)
+- [x] 18.7 Implement `list` command (table Name/Version/InstalledDate/Status, `--check-updates` queries marketplace, "No plugins installed" empty case)
+- [x] 18.8 Implement `update` command (fetch latest, already-up-to-date message, dependency-conflict halt, backup-then-extract with rollback on failure)
+- [x] 18.9 Implement `remove` command (delete from disk + registry, confirmation message, non-existent → message + non-zero exit)
+- [x] 18.10 Implement `validate` command (manifest presence, required fields incl. type/entrypoints, semver check, dependency conflict warnings, exit codes) reusing canonical manifest schema
+- [x] 18.11 Implement `publish` command (validate manifest, compress directory, check version not existing, upload multipart, duplicate-version handling, success URL output)
+- [x] 18.12 Implement `scaffold` command (`--name`/`--language`, infer-from-dir, `--interactive` guided flow with prompts/defaults/resume, language templates) delegating to template package
+- [x] 18.13 Wire `claude plugin <subcommand>` dispatcher with `--help`; write CLI integration tests against a mocked API for each command's happy + error paths
 
 ## 19. Plugin Template Package (plugin-template)
 
