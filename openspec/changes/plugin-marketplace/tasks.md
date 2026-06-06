@@ -130,10 +130,10 @@
 
 ## 15. Frontend — Dashboard Domain (dashboard)
 
-- [ ] 15.1 Write failing tests for dashboard domain (install-intent vs install-execution separation, update-availability computation from marketplace latest, team-scoped grouping)
-- [ ] 15.2 Implement dashboard domain + `InstalledPluginsStoragePort` adapter (records name/version/installedAt/path intent in browser storage only — never writes developer filesystem)
-- [ ] 15.3 Implement `DashboardStore` + `DashboardFacade` orchestrating install/remove intent, update checks against catalog API, team-scoped grouping and "Recommended for [Team]" badges
-- [ ] 15.4 Build dashboard components: installed-plugins table (status, actions), update-available indicators with confirm + release-notes, details modal (deps, docs link/placeholder), remove flow, search/install-from-marketplace section, periodic 5-min background update check with graceful failure; component tests for empty/loaded/update-available/error states
+- [x] 15.1 Write failing tests for dashboard domain (install-intent vs install-execution separation, update-availability computation from marketplace latest, team-scoped grouping)
+- [x] 15.2 Implement dashboard domain + `InstalledPluginsStoragePort` adapter (records name/version/installedAt/path intent in browser storage only — never writes developer filesystem)
+- [x] 15.3 Implement `DashboardStore` + `DashboardFacade` orchestrating install/remove intent, update checks against catalog API, team-scoped grouping and "Recommended for [Team]" badges
+- [x] 15.4 Build dashboard components: installed-plugins table (status, actions), update-available indicators with confirm + release-notes, details modal (deps, docs link/placeholder), remove flow, search/install-from-marketplace section, periodic 5-min background update check with graceful failure; component tests for empty/loaded/update-available/error states
 
 ## 16. Frontend — Telemetry Client Domain (telemetry)
 
