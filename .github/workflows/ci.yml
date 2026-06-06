@@ -40,6 +40,13 @@ jobs:
         working-directory: backend
         run: dotnet test --no-build --nologo --verbosity normal
 
+      - name: Upload OpenAPI document artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-document
+          path: backend/openapi/ClaudeForge.Api.json
+          if-no-files-found: error
+
   # ─── Angular Frontend ────────────────────────────────────────────────────────
   frontend:
     name: Frontend — Typecheck, Lint, Format & Build

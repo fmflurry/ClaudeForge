@@ -95,8 +95,8 @@
 
 ## 10. OpenAPI Publication
 
-- [ ] 10.1 Configure OpenAPI/Swagger generation for all `/api/v1` endpoints with accurate schemas (paginated envelope, ProblemDetails, multipart upload, streaming download) and publish a static `openapi.json`
-- [ ] 10.2 Add a build/CI step that emits `openapi.json` as an artifact consumed by both the Angular infra layer and the CLI client generator; add a test asserting spec generation succeeds and contains all documented operations
+- [x] 10.1 Configure OpenAPI/Swagger generation for all `/api/v1` endpoints with accurate schemas (paginated envelope, ProblemDetails, multipart upload, streaming download) and publish a static `openapi.json`
+- [x] 10.2 Add a build/CI step that emits `openapi.json` as an artifact consumed by both the Angular infra layer and the CLI client generator; add a test asserting spec generation succeeds and contains all documented operations
 
 ## 11. Frontend — Foundation
 
