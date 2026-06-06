@@ -23,6 +23,7 @@ public sealed class MarketplaceDbContext : DbContext
     public DbSet<PluginCategoryEntity> PluginCategories => Set<PluginCategoryEntity>();
     public DbSet<TelemetryEventEntity> TelemetryEvents => Set<TelemetryEventEntity>();
     public DbSet<TelemetryAggregateEntity> TelemetryAggregates => Set<TelemetryAggregateEntity>();
+    public DbSet<DocPageEntity> DocPages => Set<DocPageEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +35,7 @@ public sealed class MarketplaceDbContext : DbContext
         ConfigurePluginCategories(modelBuilder);
         ConfigureTelemetryEvents(modelBuilder);
         ConfigureTelemetryAggregates(modelBuilder);
+        ConfigureDocPages(modelBuilder);
     }
 
     private static void ConfigurePlugins(ModelBuilder modelBuilder)
@@ -330,6 +332,65 @@ public sealed class MarketplaceDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(ta => ta.PluginId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureDocPages(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<DocPageEntity>(entity =>
+        {
+            entity.ToTable("doc_pages");
+            entity.HasKey(d => d.Id);
+            entity.Property(d => d.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(d => d.Slug)
+                  .HasColumnName("slug")
+                  .IsRequired();
+
+            entity.Property(d => d.Title)
+                  .HasColumnName("title")
+                  .IsRequired();
+
+            entity.Property(d => d.ContentMarkdown)
+                  .HasColumnName("content_markdown")
+                  .IsRequired();
+
+            entity.Property(d => d.Category)
+                  .HasColumnName("category")
+                  .IsRequired();
+
+            entity.Property(d => d.LastUpdated)
+                  .HasColumnName("last_updated")
+                  .HasDefaultValueSql("NOW()");
+
+            // search_vector is a PostgreSQL GENERATED ALWAYS AS STORED tsvector column.
+            // title is weighted A (higher relevance), content_markdown is weighted B (lower).
+            // The DB computes it automatically on every INSERT/UPDATE; EF never writes it.
+            // A ValueConverter bridges string? ↔ NpgsqlTsVector? for the Npgsql provider.
+            ValueConverter<string?, NpgsqlTsVector?> tsVectorConverter = new(
+                v => v == null ? null : NpgsqlTsVector.Parse(v),
+                v => v == null ? null : v.ToString());
+
+            entity.Property(d => d.SearchVector)
+                  .HasColumnName("search_vector")
+                  .HasColumnType("tsvector")
+                  .HasConversion(tsVectorConverter)
+                  .HasComputedColumnSql(
+                      "setweight(to_tsvector('english', coalesce(title,'')), 'A') || " +
+                      "setweight(to_tsvector('english', coalesce(content_markdown,'')), 'B')",
+                      stored: true)
+                  .IsRequired(false);
+
+            // UNIQUE constraint on slug
+            entity.HasIndex(d => d.Slug)
+                  .IsUnique()
+                  .HasDatabaseName("ix_doc_pages_slug");
+
+            // NOTE: The GIN index on search_vector is created via raw SQL in the migration
+            // (idx_doc_pages_search_vector) — EF cannot configure a GIN index on a
+            // tsvector GENERATED column with a standard HasIndex call.
         });
     }
 }

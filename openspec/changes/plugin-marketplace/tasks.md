@@ -87,11 +87,11 @@
 
 ## 9. Backend — Docs Module (docs)
 
-- [ ] 9.1 Write failing tests for docs search + retrieval (full-text over doc pages, relevance ranking title>content, pagination, slug retrieval, 404)
-- [ ] 9.2 Implement docs storage model + `IDocsRepositoryPort` sourcing static marketplace doc pages (markdown) and plugin README content extracted on upload
-- [ ] 9.3 Implement `SearchDocsUseCase` (full-text, ranked, paginated up to 20) and `GetDocPageUseCase` (by slug, returns markdown + last_updated)
-- [ ] 9.4 Implement endpoints `GET /api/v1/docs?search=...` and `GET /api/v1/docs/{slug}`; cover plugin-doc-by-version surfacing and missing-doc placeholder behavior in tests
-- [ ] 9.5 Write integration tests for docs search ranking, pagination, and graceful missing-README handling
+- [x] 9.1 Write failing tests for docs search + retrieval (full-text over doc pages, relevance ranking title>content, pagination, slug retrieval, 404)
+- [x] 9.2 Implement docs storage model + `IDocsRepositoryPort` sourcing static marketplace doc pages (markdown) and plugin README content extracted on upload
+- [x] 9.3 Implement `SearchDocsUseCase` (full-text, ranked, paginated up to 20) and `GetDocPageUseCase` (by slug, returns markdown + last_updated)
+- [x] 9.4 Implement endpoints `GET /api/v1/docs?search=...` and `GET /api/v1/docs/{slug}`; cover plugin-doc-by-version surfacing and missing-doc placeholder behavior in tests
+- [x] 9.5 Write integration tests for docs search ranking, pagination, and graceful missing-README handling
 
 ## 10. OpenAPI Publication
 
