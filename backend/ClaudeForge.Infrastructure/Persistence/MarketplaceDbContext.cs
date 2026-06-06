@@ -70,10 +70,10 @@ public sealed class MarketplaceDbContext : DbContext
                   .HasColumnName("download_count")
                   .HasDefaultValue(0L);
 
-            // search_vector is a PostgreSQL tsvector STORED GENERATED column.
-            // We use a ValueConverter to bridge the CLR string? ↔ NpgsqlTsVector mapping.
-            // PostgreSQL evaluates to_tsvector('english', name || ' ' || description) on every write.
-            // EF reads the tsvector back and the converter converts NpgsqlTsVector.ToString() to string?.
+            // search_vector is a PostgreSQL GENERATED ALWAYS AS STORED tsvector column.
+            // The DB computes it automatically on every INSERT/UPDATE; EF never writes it.
+            // The entity property is string? so that callers can use standard string assertions.
+            // A ValueConverter bridges string? ↔ NpgsqlTsVector? for the Npgsql provider.
             ValueConverter<string?, NpgsqlTsVector?> tsVectorConverter = new(
                 v => v == null ? null : NpgsqlTsVector.Parse(v),
                 v => v == null ? null : v.ToString());
@@ -106,7 +106,7 @@ public sealed class MarketplaceDbContext : DbContext
 
             // NOTE: The GIN index on search_vector is created via raw SQL in the migration
             // (idx_plugins_search_vector) because EF cannot configure a GIN index on a
-            // tsvector column that is mapped as string.
+            // tsvector GENERATED column with a standard HasIndex call.
         });
     }
 

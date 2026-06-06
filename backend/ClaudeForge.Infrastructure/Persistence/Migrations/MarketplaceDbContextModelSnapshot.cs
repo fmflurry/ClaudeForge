@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using NpgsqlTypes;
-
 #nullable disable
 
 namespace ClaudeForge.Infrastructure.Persistence.Migrations
@@ -116,7 +114,7 @@ namespace ClaudeForge.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name_normalized");
 
-                    b.Property<NpgsqlTsVector>("SearchVector")
+                    b.Property<string>("SearchVector")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("tsvector")
                         .HasColumnName("search_vector")

@@ -68,13 +68,13 @@
 
 ## 7. Backend — PluginSearch Module (plugin-search, discovery-service)
 
-- [ ] 7.1 Write failing tests for `ISearchIndexPort` against Postgres FTS: name/description/keyword match, case-insensitivity, ranking (exact > prefix > partial), download-count and recency tiebreakers
-- [ ] 7.2 Define `ISearchIndexPort` in PluginSearch Core and implement `PostgresSearchAdapter` (ts_rank blended with download_count + recency, category filters via joins)
-- [ ] 7.3 Implement `SearchPluginsUseCase` (query + type/language filters, pagination, relevance_score, empty-result message with category suggestions); cover search spec scenarios incl. invalid pagination 400 and OR-within-type / AND-across-dimension filter logic
-- [ ] 7.4 Implement `DiscoverPluginsUseCase` (keyword required → 400 "Keyword cannot be empty" when blank, language/useCase/type criteria, relevance score 0-1, contextual metadata incl. all languages + maturity indicator, criteria echo on empty results)
-- [ ] 7.5 Implement endpoints `GET /api/v1/plugins/search`, `GET /api/v1/search` (thin alias delegating to same use-case), `GET /api/v1/discovery`
-- [ ] 7.6 Add `QdrantSearchAdapter` seam behind `Features:QdrantEnabled` flag with graceful FTS fallback (interface + no-op/disabled stub only; full impl deferred) and a test asserting fallback path logs and returns FTS results
-- [ ] 7.7 Write integration tests for search + discovery covering ranking order, combined criteria accuracy, and empty/no-results paths
+- [x] 7.1 Write failing tests for `ISearchIndexPort` against Postgres FTS: name/description/keyword match, case-insensitivity, ranking (exact > prefix > partial), download-count and recency tiebreakers
+- [x] 7.2 Define `ISearchIndexPort` in PluginSearch Core and implement `PostgresSearchAdapter` (ts_rank blended with download_count + recency, category filters via joins)
+- [x] 7.3 Implement `SearchPluginsUseCase` (query + type/language filters, pagination, relevance_score, empty-result message with category suggestions); cover search spec scenarios incl. invalid pagination 400 and OR-within-type / AND-across-dimension filter logic
+- [x] 7.4 Implement `DiscoverPluginsUseCase` (keyword required → 400 "Keyword cannot be empty" when blank, language/useCase/type criteria, relevance score 0-1, contextual metadata incl. all languages + maturity indicator, criteria echo on empty results)
+- [x] 7.5 Implement endpoints `GET /api/v1/plugins/search`, `GET /api/v1/search` (thin alias delegating to same use-case), `GET /api/v1/discovery`
+- [x] 7.6 Add `QdrantSearchAdapter` seam behind `Features:QdrantEnabled` flag with graceful FTS fallback (interface + no-op/disabled stub only; full impl deferred) and a test asserting fallback path logs and returns FTS results
+- [x] 7.7 Write integration tests for search + discovery covering ranking order, combined criteria accuracy, and empty/no-results paths
 
 ## 8. Backend — Telemetry Module (plugin-telemetry)
 

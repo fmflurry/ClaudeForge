@@ -25,8 +25,9 @@ public sealed class PluginEntity
     public long DownloadCount { get; set; }
 
     /// <summary>
-    /// PostgreSQL <c>tsvector</c> column populated by a DB trigger.
-    /// Mapped as <c>string?</c> because EF Core has no first-class tsvector type.
+    /// PostgreSQL <c>tsvector</c> GENERATED ALWAYS AS STORED column.
+    /// The DB computes it automatically from <c>name</c> and <c>description</c> on every row write.
+    /// Mapped as <c>string?</c> so that callers can use standard string assertions on the lexeme output.
     /// </summary>
     public string? SearchVector { get; set; }
 
