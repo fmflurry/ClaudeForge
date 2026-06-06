@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "description": "ClaudeForge plugin marketplace — root workspace",
+  "engines": {
+    "node": ">=22.22.3"
+  },
   "workspaces": [
     "frontend",
     "cli"

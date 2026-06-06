@@ -31,7 +31,7 @@ and manage them through a web UI or a CLI.
 
 ## One-Command Dev Stack
 
-Prerequisites: Docker, Docker Compose
+Prerequisites: Docker, Docker Compose, Node.js >=22.22.3 (Angular CLI 22 requirement; `.nvmrc` pins `22.22.3` — run `nvm install && nvm use` to switch)
 
 ```bash
 cp .env.example .env          # fill in dev values
