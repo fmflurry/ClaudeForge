@@ -27,8 +27,8 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         {
             ProblemDetailsException domainEx => new ProblemDetails
             {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Bad Request",
+                Status = domainEx.StatusCode,
+                Title = domainEx.StatusCode == StatusCodes.Status404NotFound ? "Not Found" : "Bad Request",
                 Detail = domainEx.Message,
             },
             _ => CreateUnexpectedError(exception),

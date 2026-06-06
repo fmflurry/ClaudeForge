@@ -38,13 +38,13 @@
 
 ## 4. Backend — PluginCatalog Module (plugin-catalog, plugin-categorization)
 
-- [ ] 4.1 Write failing tests for `IPluginRepositoryPort` (list with pagination/sort/filter, get-by-id with versions, existence/duplicate-name checks)
-- [ ] 4.2 Define `IPluginRepositoryPort` in PluginCatalog Core and implement EF adapter in Infrastructure (case-insensitive name normalization, semver-descending version ordering via `version_sort`)
-- [ ] 4.3 Implement `ListPluginsUseCase` with pagination, sort (`downloads|createdAt|name` + `order`), and combined category/tag filters (AND across dimensions, intersection semantics); cover catalog spec scenarios incl. empty state, page-beyond-range, invalid-sort default, invalid-category 400
-- [ ] 4.4 Implement `GetPluginDetailsUseCase` returning plugin + versions (semver desc, `isLatest`, per-version download counts), 404 "Plugin not found", and empty-versions/`latestVersion=null` case
-- [ ] 4.5 Implement `ListCategoriesUseCase` returning `{ types, languages, useCases }` with displayName/description and per-value counts; cover empty-system 200 case
-- [ ] 4.6 Implement Minimal API endpoints `GET /api/v1/plugins`, `GET /api/v1/plugins/{pluginId}`, `GET /api/v1/categories` with FluentValidation request validators
-- [ ] 4.7 Write integration tests (WebApplicationFactory + test Postgres) asserting paginated envelope shape, filter intersection, sort order, and ProblemDetails error bodies for all catalog + categorization scenarios
+- [x] 4.1 Write failing tests for `IPluginRepositoryPort` (list with pagination/sort/filter, get-by-id with versions, existence/duplicate-name checks)
+- [x] 4.2 Define `IPluginRepositoryPort` in PluginCatalog Core and implement EF adapter in Infrastructure (case-insensitive name normalization, semver-descending version ordering via `version_sort`)
+- [x] 4.3 Implement `ListPluginsUseCase` with pagination, sort (`downloads|createdAt|name` + `order`), and combined category/tag filters (AND across dimensions, intersection semantics); cover catalog spec scenarios incl. empty state, page-beyond-range, invalid-sort default, invalid-category 400
+- [x] 4.4 Implement `GetPluginDetailsUseCase` returning plugin + versions (semver desc, `isLatest`, per-version download counts), 404 "Plugin not found", and empty-versions/`latestVersion=null` case
+- [x] 4.5 Implement `ListCategoriesUseCase` returning `{ types, languages, useCases }` with displayName/description and per-value counts; cover empty-system 200 case
+- [x] 4.6 Implement Minimal API endpoints `GET /api/v1/plugins`, `GET /api/v1/plugins/{pluginId}`, `GET /api/v1/categories` with FluentValidation request validators
+- [x] 4.7 Write integration tests (WebApplicationFactory + test Postgres) asserting paginated envelope shape, filter intersection, sort order, and ProblemDetails error bodies for all catalog + categorization scenarios
 
 ## 5. Backend — PluginPublishing Module (plugin-upload, plugin-versioning)
 

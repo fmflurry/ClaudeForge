@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ClaudeForge.Core\ClaudeForge.Core.csproj" />
+    <ProjectReference Include="..\ClaudeForge.Application\ClaudeForge.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
