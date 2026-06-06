@@ -123,10 +123,10 @@
 
 ## 14. Frontend — Team Context Domain (team-context)
 
-- [ ] 14.1 Write failing tests for team-context domain (validation rules: special chars/length limits, browser-scoped persistence via fake storage port)
-- [ ] 14.2 Implement team-context domain + `TeamContextStoragePort` adapter (key `plugin-marketplace:team`, no HTTP)
-- [ ] 14.3 Implement `TeamContextStore` + `TeamContextFacade` (set/change/clear team, preset list, init prompt, optional team query-param hint for analytics only)
-- [ ] 14.4 Build team-context UI (first-visit welcome overlay with presets + custom + skip, switch/clear controls, header display, validation errors); component tests covering all team-context scenarios
+- [x] 14.1 Write failing tests for team-context domain (validation rules: special chars/length limits, browser-scoped persistence via fake storage port)
+- [x] 14.2 Implement team-context domain + `TeamContextStoragePort` adapter (key `plugin-marketplace:team`, no HTTP)
+- [x] 14.3 Implement `TeamContextStore` + `TeamContextFacade` (set/change/clear team, preset list, init prompt, optional team query-param hint for analytics only)
+- [x] 14.4 Build team-context UI (first-visit welcome overlay with presets + custom + skip, switch/clear controls, header display, validation errors); component tests covering all team-context scenarios
 
 ## 15. Frontend — Dashboard Domain (dashboard)
 

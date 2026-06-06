@@ -1,5 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { TeamContextFacade } from '../features/team-context/application/facades/team-context.facade';
+import { TeamWelcomeOverlayComponent } from '../features/team-context/presentation/welcome-overlay/team-welcome-overlay.component';
+import { TeamSwitcherComponent } from '../features/team-context/presentation/team-switcher/team-switcher.component';
 
 /**
  * Main application shell — header, primary navigation, and router outlet.
@@ -8,7 +11,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 @Component({
   selector: 'cf-shell-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  providers: [TeamContextFacade],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TeamWelcomeOverlayComponent, TeamSwitcherComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="cf-shell">
@@ -30,8 +34,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             Docs
           </a>
         </nav>
+        <div class="cf-shell__team">
+          <cf-team-switcher />
+        </div>
       </header>
       <main class="cf-shell__content">
+        @if (facade.needsInit()) {
+          <cf-team-welcome />
+        }
         <router-outlet />
       </main>
     </div>
@@ -85,4 +95,10 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     `,
   ],
 })
-export class ShellLayoutComponent {}
+export class ShellLayoutComponent implements OnInit {
+  protected readonly facade = inject(TeamContextFacade);
+
+  ngOnInit(): void {
+    this.facade.init();
+  }
+}

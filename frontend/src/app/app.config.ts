@@ -4,6 +4,8 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { API_BASE_URL } from './core/config/api-config';
+import { TeamContextStoragePort } from './shared/domain/ports/team-context-storage.port';
+import { LocalStorageTeamContextAdapter } from './shared/infrastructure/storage/local-storage-team-context.adapter';
 
 /**
  * Reads the runtime API base URL from:
@@ -26,6 +28,10 @@ export const appConfig: ApplicationConfig = {
     {
       provide: API_BASE_URL,
       useFactory: resolveApiBaseUrl,
+    },
+    {
+      provide: TeamContextStoragePort,
+      useClass: LocalStorageTeamContextAdapter,
     },
   ],
 };
