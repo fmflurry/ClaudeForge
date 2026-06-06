@@ -174,8 +174,8 @@
 
 ## 20. Seed Test Plugins
 
-- [ ] 20.1 Author 10 real seed plugins across varied types/languages/use-cases using the template + canonical manifest (valid packages with READMEs)
-- [ ] 20.2 Implement a seeding task/script that uploads the 10 plugins via the upload pipeline (or direct repository seeding) into a fresh dev database, including ≥1 multi-version plugin and ≥1 multi-type plugin; verify catalog/search/categories return them
+- [x] 20.1 Author 10 real seed plugins across varied types/languages/use-cases using the template + canonical manifest (valid packages with READMEs)
+- [x] 20.2 Implement a seeding task/script that uploads the 10 plugins via the upload pipeline (or direct repository seeding) into a fresh dev database, including ≥1 multi-version plugin and ≥1 multi-type plugin; verify catalog/search/categories return them
 
 ## 21. DevOps Hardening
 

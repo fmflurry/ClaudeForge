@@ -1,0 +1,13 @@
+{
+  "name": "API Gateway Hook",
+  "slug": "api-gateway-hook",
+  "version": "1.0.0",
+  "description": "Hook plugin for API gateway request/response transformation and security enforcement.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["hook"],
+  "languages": ["go"],
+  "useCaseTags": ["devops", "security"],
+  "entrypoints": ["main.go"],
+  "dependencies": {}
+}

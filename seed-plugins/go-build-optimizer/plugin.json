@@ -1,0 +1,13 @@
+{
+  "name": "Go Build Optimizer",
+  "slug": "go-build-optimizer",
+  "version": "1.0.0",
+  "description": "Optimizes Go build configurations for faster compilation and smaller binaries.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["hook"],
+  "languages": ["go"],
+  "useCaseTags": ["devops"],
+  "entrypoints": ["main.go"],
+  "dependencies": {}
+}

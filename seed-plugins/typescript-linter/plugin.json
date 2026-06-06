@@ -1,0 +1,13 @@
+{
+  "name": "TypeScript Linter",
+  "slug": "typescript-linter",
+  "version": "1.0.0",
+  "description": "A linter plugin for TypeScript projects that enforces code quality rules.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["skill"],
+  "languages": ["typescript"],
+  "useCaseTags": ["dev-team"],
+  "entrypoints": ["src/index.ts"],
+  "dependencies": {}
+}

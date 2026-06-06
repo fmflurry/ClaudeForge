@@ -1,0 +1,13 @@
+{
+  "name": "Sprint Planning Assistant",
+  "slug": "sprint-planning-assistant",
+  "version": "1.0.0",
+  "description": "Assists product managers with sprint planning, estimation, and backlog grooming.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["skill"],
+  "languages": ["python"],
+  "useCaseTags": ["product-manager"],
+  "entrypoints": ["src/planner.py"],
+  "dependencies": {}
+}

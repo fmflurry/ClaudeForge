@@ -1,0 +1,13 @@
+{
+  "name": "Rust Security Scanner",
+  "slug": "rust-security-scanner",
+  "version": "1.0.0",
+  "description": "Scans Rust codebases for common security vulnerabilities and unsafe patterns.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["skill"],
+  "languages": ["rust"],
+  "useCaseTags": ["security"],
+  "entrypoints": ["src/main.rs"],
+  "dependencies": {}
+}

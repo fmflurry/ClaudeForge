@@ -1,0 +1,13 @@
+{
+  "name": "Python Data Analyzer",
+  "slug": "python-data-analyzer",
+  "version": "1.0.0",
+  "description": "Analyzes Python data pipelines and provides statistical insights.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["skill", "agent"],
+  "languages": ["python"],
+  "useCaseTags": ["data-analyst"],
+  "entrypoints": ["src/analyzer.py"],
+  "dependencies": {}
+}

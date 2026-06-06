@@ -1,0 +1,13 @@
+{
+  "name": "PR Review Agent",
+  "slug": "pr-review-agent",
+  "version": "2.0.0",
+  "description": "Automated pull request review agent that provides actionable feedback.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["agent"],
+  "languages": ["typescript"],
+  "useCaseTags": ["dev-team", "product-owner"],
+  "entrypoints": ["src/agent.ts"],
+  "dependencies": {}
+}

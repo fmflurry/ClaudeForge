@@ -1,0 +1,13 @@
+{
+  "name": "Code Quality Plugin",
+  "slug": "code-quality-plugin",
+  "version": "1.0.0",
+  "description": "Enforces code quality standards across TypeScript and Rust codebases.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["plugin"],
+  "languages": ["typescript", "rust"],
+  "useCaseTags": ["dev-team"],
+  "entrypoints": ["src/index.ts"],
+  "dependencies": {}
+}

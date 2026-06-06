@@ -1,0 +1,13 @@
+{
+  "name": "Data Pipeline Orchestrator",
+  "slug": "data-pipeline-orchestrator",
+  "version": "1.0.0",
+  "description": "Orchestrates complex data pipelines across Python and Rust processing stages.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["agent"],
+  "languages": ["python", "rust"],
+  "useCaseTags": ["data-analyst"],
+  "entrypoints": ["src/orchestrator.py"],
+  "dependencies": {}
+}

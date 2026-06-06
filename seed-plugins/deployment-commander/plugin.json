@@ -1,0 +1,13 @@
+{
+  "name": "Deployment Commander",
+  "slug": "deployment-commander",
+  "version": "1.0.0",
+  "description": "Command-line plugin for orchestrating multi-environment deployments.",
+  "author": "ClaudeForge",
+  "license": "MIT",
+  "types": ["command"],
+  "languages": ["go", "typescript"],
+  "useCaseTags": ["devops"],
+  "entrypoints": ["cmd/commander/main.go"],
+  "dependencies": {}
+}
