@@ -116,10 +116,10 @@
 
 ## 13. Frontend — Search & Discovery Domain (search)
 
-- [ ] 13.1 Write failing tests for search domain rules (filter combination, relevance display, empty-result messaging)
-- [ ] 13.2 Implement search domain + HTTP adapter for `/api/v1/plugins/search` and `/api/v1/discovery`
-- [ ] 13.3 Implement `SearchStore` + `SearchFacade` (keyword search, type/language filters, discovery criteria builder, ranked results)
-- [ ] 13.4 Build search/discovery components (search bar, filter chips, ranked result list with relevance + match-field indicators, no-results-with-suggestions); component tests
+- [x] 13.1 Write failing tests for search domain rules (filter combination, relevance display, empty-result messaging)
+- [x] 13.2 Implement search domain + HTTP adapter for `/api/v1/plugins/search` and `/api/v1/discovery`
+- [x] 13.3 Implement `SearchStore` + `SearchFacade` (keyword search, type/language filters, discovery criteria builder, ranked results)
+- [x] 13.4 Build search/discovery components (search bar, filter chips, ranked result list with relevance + match-field indicators, no-results-with-suggestions); component tests
 
 ## 14. Frontend — Team Context Domain (team-context)
 
