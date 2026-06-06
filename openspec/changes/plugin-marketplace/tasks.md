@@ -100,12 +100,12 @@
 
 ## 11. Frontend — Foundation
 
-- [ ] 11.1 Set up app shell, routing, and layout (header, nav incl. Catalog/Search/Dashboard/Docs, OnPush components) with runtime-injected `API_BASE_URL` config
-- [ ] 11.2 Implement signal-based `BaseStore<T>` with `ResourceState<T>` pattern (idle/loading/success/error) and immutable update helpers; unit-test state transitions
-- [ ] 11.3 Generate typed HTTP client from `openapi.json` into the infrastructure layer; add shared HTTP adapter with ProblemDetails error parsing (no `any`)
-- [ ] 11.4 Implement localStorage adapter base + three domain ports as adapters: `TeamContextStoragePort`, `TelemetryPreferencePort`, `InstalledPluginsStoragePort` (each swappable, unit-tested with in-memory fake)
-- [ ] 11.5 Implement Context Registry for cross-domain event publication (no direct service injection between domains); unit-test publish/subscribe
-- [ ] 11.6 Establish design-system shell (shared UI primitives: table, badge, modal, empty-state, pagination, toast) used by feature domains
+- [x] 11.1 Set up app shell, routing, and layout (header, nav incl. Catalog/Search/Dashboard/Docs, OnPush components) with runtime-injected `API_BASE_URL` config
+- [x] 11.2 Implement signal-based `BaseStore<T>` with `ResourceState<T>` pattern (idle/loading/success/error) and immutable update helpers; unit-test state transitions
+- [x] 11.3 Generate typed HTTP client from `openapi.json` into the infrastructure layer; add shared HTTP adapter with ProblemDetails error parsing (no `any`)
+- [x] 11.4 Implement localStorage adapter base + three domain ports as adapters: `TeamContextStoragePort`, `TelemetryPreferencePort`, `InstalledPluginsStoragePort` (each swappable, unit-tested with in-memory fake)
+- [x] 11.5 Implement Context Registry for cross-domain event publication (no direct service injection between domains); unit-test publish/subscribe
+- [x] 11.6 Establish design-system shell (shared UI primitives: table, badge, modal, empty-state, pagination, toast) used by feature domains
 
 ## 12. Frontend — Catalog Domain (catalog)
 
