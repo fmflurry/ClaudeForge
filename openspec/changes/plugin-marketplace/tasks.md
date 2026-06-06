@@ -109,10 +109,10 @@
 
 ## 12. Frontend — Catalog Domain (catalog)
 
-- [ ] 12.1 Write failing tests for catalog domain models, mappers, and pure filter/sort rules
-- [ ] 12.2 Implement catalog domain (models, ports, mappers) and HTTP adapter consuming `/api/v1/plugins`, `/api/v1/plugins/{id}`, `/api/v1/categories`
-- [ ] 12.3 Implement `CatalogStore` (signal store) + `CatalogFacade` (list, paginate, filter by category/tags, sort, get detail) — components consume facade only
-- [ ] 12.4 Build catalog components: plugin list (paginated, sortable, filterable), plugin detail with version history, empty-state ("No plugins found. Try adjusting your filters."); unit + component tests covering empty/loaded/error states
+- [x] 12.1 Write failing tests for catalog domain models, mappers, and pure filter/sort rules
+- [x] 12.2 Implement catalog domain (models, ports, mappers) and HTTP adapter consuming `/api/v1/plugins`, `/api/v1/plugins/{id}`, `/api/v1/categories`
+- [x] 12.3 Implement `CatalogStore` (signal store) + `CatalogFacade` (list, paginate, filter by category/tags, sort, get detail) — components consume facade only
+- [x] 12.4 Build catalog components: plugin list (paginated, sortable, filterable), plugin detail with version history, empty-state ("No plugins found. Try adjusting your filters."); unit + component tests covering empty/loaded/error states
 
 ## 13. Frontend — Search & Discovery Domain (search)
 
