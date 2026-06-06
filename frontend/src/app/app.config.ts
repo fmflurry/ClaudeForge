@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, inject } from '@angular/core';
+import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 
@@ -8,15 +8,22 @@ import { TeamContextStoragePort } from './shared/domain/ports/team-context-stora
 import { LocalStorageTeamContextAdapter } from './shared/infrastructure/storage/local-storage-team-context.adapter';
 import { InstalledPluginsStoragePort } from './shared/domain/ports/installed-plugins-storage.port';
 import { LocalStorageInstalledPluginsAdapter } from './shared/infrastructure/storage/local-storage-installed-plugins.adapter';
+import { TelemetryPreferencePort } from './shared/domain/ports/telemetry-preference.port';
+import { LocalStorageTelemetryPreferenceAdapter } from './shared/infrastructure/storage/local-storage-telemetry-preference.adapter';
 import { CatalogLatestVersionPort } from './features/dashboard/domain/ports/catalog-latest-version.port';
 import { CatalogLatestVersionHttpAdapter } from './features/dashboard/infrastructure/adapter/catalog-latest-version-http.adapter';
 import { CatalogPort } from './features/catalog/domain/ports/catalog.port';
 import { CatalogHttpAdapter } from './features/catalog/infrastructure/adapter/catalog-http.adapter';
 import { SearchPort } from './features/search/domain/ports/search.port';
 import { SearchHttpAdapter } from './features/search/infrastructure/adapter/search-http.adapter';
+import { CryptoPort } from './features/telemetry/domain/ports/crypto.port';
+import { WebCryptoAdapter } from './features/telemetry/infrastructure/adapter/web-crypto.adapter';
+import { AnonIdPort } from './features/telemetry/domain/ports/anon-id.port';
+import { AnonIdAdapter } from './features/telemetry/infrastructure/adapter/anon-id.adapter';
 import { DashboardFacade } from './features/dashboard/application/facades/dashboard.facade';
 import { CatalogFacade } from './features/catalog/application/facades/catalog.facade';
 import { SearchFacade } from './features/search/application/facades/search.facade';
+import { TelemetryFacade } from './features/telemetry/application/facades/telemetry.facade';
 
 /**
  * Reads the runtime API base URL from:
@@ -49,6 +56,18 @@ export const appConfig: ApplicationConfig = {
       useClass: LocalStorageInstalledPluginsAdapter,
     },
     {
+      provide: TelemetryPreferencePort,
+      useClass: LocalStorageTelemetryPreferenceAdapter,
+    },
+    {
+      provide: CryptoPort,
+      useClass: WebCryptoAdapter,
+    },
+    {
+      provide: AnonIdPort,
+      useFactory: () => new AnonIdAdapter(inject(CryptoPort)),
+    },
+    {
       provide: CatalogLatestVersionPort,
       useClass: CatalogLatestVersionHttpAdapter,
     },
@@ -63,6 +82,7 @@ export const appConfig: ApplicationConfig = {
     DashboardFacade,
     CatalogFacade,
     SearchFacade,
+    TelemetryFacade,
   ],
 };
 

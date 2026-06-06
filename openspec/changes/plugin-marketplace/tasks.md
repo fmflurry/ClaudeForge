@@ -137,10 +137,10 @@
 
 ## 16. Frontend — Telemetry Client Domain (telemetry)
 
-- [ ] 16.1 Write failing tests for anon-ID generation (UUID v4 → SHA-256 → 64-hex, persisted under `plugin-marketplace:anon-id`, rotates on re-enable), opt-out gate, and fire-and-forget no-op when disabled
-- [ ] 16.2 Implement telemetry domain + `TelemetryPreferencePort` adapter (opt-out key `plugin-marketplace:telemetry-disabled`)
-- [ ] 16.3 Implement `TelemetryStore` + `TelemetryFacade` (generate/reuse anon ID, opt-out toggle, fire-and-forget POST to `/api/v1/telemetry/events`, emit nothing when disabled, rotate ID on re-enable) — confirm client does NOT separately POST download events (single increment path)
-- [ ] 16.4 Build telemetry settings UI (enable/disable toggle, privacy explanation); component tests for opt-out persistence and ID rotation
+- [x] 16.1 Write failing tests for anon-ID generation (UUID v4 → SHA-256 → 64-hex, persisted under `plugin-marketplace:anon-id`, rotates on re-enable), opt-out gate, and fire-and-forget no-op when disabled
+- [x] 16.2 Implement telemetry domain + `TelemetryPreferencePort` adapter (opt-out key `plugin-marketplace:telemetry-disabled`)
+- [x] 16.3 Implement `TelemetryStore` + `TelemetryFacade` (generate/reuse anon ID, opt-out toggle, fire-and-forget POST to `/api/v1/telemetry/events`, emit nothing when disabled, rotate ID on re-enable) — confirm client does NOT separately POST download events (single increment path)
+- [x] 16.4 Build telemetry settings UI (enable/disable toggle, privacy explanation); component tests for opt-out persistence and ID rotation
 
 ## 17. Frontend — Docs Domain (docs)
 

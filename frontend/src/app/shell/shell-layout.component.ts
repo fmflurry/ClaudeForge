@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TeamContextFacade } from '../features/team-context/application/facades/team-context.facade';
 import { TeamWelcomeOverlayComponent } from '../features/team-context/presentation/welcome-overlay/team-welcome-overlay.component';
 import { TeamSwitcherComponent } from '../features/team-context/presentation/team-switcher/team-switcher.component';
+import { TelemetrySettingsComponent } from '../features/telemetry/presentation/settings/telemetry-settings.component';
 
 /**
  * Main application shell — header, primary navigation, and router outlet.
@@ -12,7 +13,7 @@ import { TeamSwitcherComponent } from '../features/team-context/presentation/tea
   selector: 'cf-shell-layout',
   standalone: true,
   providers: [TeamContextFacade],
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TeamWelcomeOverlayComponent, TeamSwitcherComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TeamWelcomeOverlayComponent, TeamSwitcherComponent, TelemetrySettingsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="cf-shell">
@@ -36,6 +37,9 @@ import { TeamSwitcherComponent } from '../features/team-context/presentation/tea
         </nav>
         <div class="cf-shell__team">
           <cf-team-switcher />
+        </div>
+        <div class="cf-shell__settings">
+          <cf-telemetry-settings />
         </div>
       </header>
       <main class="cf-shell__content">
