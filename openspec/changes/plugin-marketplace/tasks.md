@@ -167,10 +167,10 @@
 
 ## 19. Plugin Template Package (plugin-template)
 
-- [ ] 19.1 Write failing tests asserting scaffolded output for each language (TS, Python, Go, Rust): required files, subdirs (`src/`, `docs/`, `tests/`, `assets/`), populated `plugin.json`, sectioned `README.md`
-- [ ] 19.2 Build TypeScript template (plugin.json, package.json, src/index.ts with JSDoc entrypoints, tests, .gitignore, README sections Overview/Installation/Configuration/Usage/API/Contributing/License)
-- [ ] 19.3 Build Python, Go, and Rust templates with language-appropriate manifest/build files (pyproject.toml, go.mod, Cargo.toml) and example entrypoints
-- [ ] 19.4 Implement manifest generation producing canonical-schema-compliant `plugin.json` (types[], languages[], useCaseTags, entrypoints, dependencies, license default MIT); test generated manifests pass `validate`
+- [x] 19.1 Write failing tests asserting scaffolded output for each language (TS, Python, Go, Rust): required files, subdirs (`src/`, `docs/`, `tests/`, `assets/`), populated `plugin.json`, sectioned `README.md`
+- [x] 19.2 Build TypeScript template (plugin.json, package.json, src/index.ts with JSDoc entrypoints, tests, .gitignore, README sections Overview/Installation/Configuration/Usage/API/Contributing/License)
+- [x] 19.3 Build Python, Go, and Rust templates with language-appropriate manifest/build files (pyproject.toml, go.mod, Cargo.toml) and example entrypoints
+- [x] 19.4 Implement manifest generation producing canonical-schema-compliant `plugin.json` (types[], languages[], useCaseTags, entrypoints, dependencies, license default MIT); test generated manifests pass `validate`
 
 ## 20. Seed Test Plugins
 

@@ -8,7 +8,8 @@
   },
   "workspaces": [
     "frontend",
-    "cli"
+    "cli",
+    "plugin-template"
   ],
   "scripts": {
     "install:all": "npm install --workspace=frontend --workspace=cli",
