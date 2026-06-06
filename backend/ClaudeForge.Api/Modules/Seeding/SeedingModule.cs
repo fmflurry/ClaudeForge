@@ -21,8 +21,12 @@ public sealed class SeedingModule : IModule
                 sp.GetRequiredService<MarketplaceDbContext>(),
                 sp.GetRequiredService<ICategorySeeder>()));
 
+        services.AddScoped<IDocPageSeeder>(sp =>
+            new DocPageSeeder(sp.GetRequiredService<MarketplaceDbContext>()));
+
         // Register the hosted service that seeds on startup when the flag is enabled
         services.AddHostedService<PluginSeedingHostedService>();
+        services.AddHostedService<DocPageSeedingHostedService>();
 
         return services;
     }

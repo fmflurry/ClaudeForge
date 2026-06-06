@@ -188,10 +188,10 @@
 
 ## 22. Documentation
 
-- [ ] 22.1 Author Getting Started / installation guide (web UI + CLI, prerequisites, verification) as seedable doc pages surfaced by the Docs module
-- [ ] 22.2 Author Contributor/Author guide (structure, manifest schema, scaffolding, versioning + release notes, publishing) as doc pages
-- [ ] 22.3 Author General/FAQ + Privacy & Telemetry docs (data collected, opt-out, retention, no PII) and API reference page
-- [ ] 22.4 Verify per-plugin docs surfacing end-to-end (README extracted on upload appears in plugin Docs tab; missing-README placeholder shown)
+- [x] 22.1 Author Getting Started / installation guide (web UI + CLI, prerequisites, verification) as seedable doc pages surfaced by the Docs module
+- [x] 22.2 Author Contributor/Author guide (structure, manifest schema, scaffolding, versioning + release notes, publishing) as doc pages
+- [x] 22.3 Author General/FAQ + Privacy & Telemetry docs (data collected, opt-out, retention, no PII) and API reference page
+- [x] 22.4 Verify per-plugin docs surfacing end-to-end (README extracted on upload appears in plugin Docs tab; missing-README placeholder shown)
 
 ## 23. End-to-End Verification
 
