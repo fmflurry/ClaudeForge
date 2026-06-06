@@ -59,12 +59,12 @@
 
 ## 6. Backend — PluginDistribution Module (plugin-download)
 
-- [ ] 6.1 Write failing tests for download use-case: latest resolution (no version param), explicit version, 404 plugin, 404 specific version ("Plugin version 9.9.9 not found"), invalid version format (400)
-- [ ] 6.2 Implement `DownloadPluginUseCase` resolving version (default latest), streaming from `IPackageStoragePort`, and producing headers (Content-Type gzip/zip, Content-Disposition attachment `{name}-{version}.tar.gz`, Content-Length, ETag, optional Cache-Control)
-- [ ] 6.3 Implement atomic single-path counter increment on successful download only: increment `telemetry_aggregates` (source of truth) + denormalized `plugin_versions.download_count`/`plugins.download_count` inside one transaction; never increment on 404
-- [ ] 6.4 Implement `GET /api/v1/plugins/{pluginId}/download?version=latest` streaming endpoint with attachment disposition
-- [ ] 6.5 Write integration + concurrency tests asserting exactly-N increments under concurrent downloads (no race), failed-download no-increment, and correct headers
-- [ ] 6.6 Apply per-IP rate limiting to the download endpoint
+- [x] 6.1 Write failing tests for download use-case: latest resolution (no version param), explicit version, 404 plugin, 404 specific version ("Plugin version 9.9.9 not found"), invalid version format (400)
+- [x] 6.2 Implement `DownloadPluginUseCase` resolving version (default latest), streaming from `IPackageStoragePort`, and producing headers (Content-Type gzip/zip, Content-Disposition attachment `{name}-{version}.tar.gz`, Content-Length, ETag, optional Cache-Control)
+- [x] 6.3 Implement atomic single-path counter increment on successful download only: increment `telemetry_aggregates` (source of truth) + denormalized `plugin_versions.download_count`/`plugins.download_count` inside one transaction; never increment on 404
+- [x] 6.4 Implement `GET /api/v1/plugins/{pluginId}/download?version=latest` streaming endpoint with attachment disposition
+- [x] 6.5 Write integration + concurrency tests asserting exactly-N increments under concurrent downloads (no race), failed-download no-increment, and correct headers
+- [x] 6.6 Apply per-IP rate limiting to the download endpoint
 
 ## 7. Backend — PluginSearch Module (plugin-search, discovery-service)
 
