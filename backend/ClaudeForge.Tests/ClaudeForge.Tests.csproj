@@ -17,6 +17,9 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.9.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.9.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.9.0" />
 <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
 <PackageReference Include="Testcontainers.Minio" Version="4.4.0" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.415.3" />
@@ -40,6 +43,14 @@
     <ProjectReference Include="..\ClaudeForge.Application\ClaudeForge.Application.csproj" />
     <ProjectReference Include="..\ClaudeForge.Infrastructure\ClaudeForge.Infrastructure.csproj" />
     <ProjectReference Include="..\ClaudeForge.Api\ClaudeForge.Api.csproj" />
+  </ItemGroup>
+
+  <!-- Global usings to support test files that don't explicitly import these namespaces -->
+  <ItemGroup>
+    <!-- NSubstitute.ExceptionExtensions exposes ThrowsAsync on Task-returning mock calls -->
+    <Using Include="NSubstitute.ExceptionExtensions" />
+    <!-- Xunit provides Fact, Theory, InlineData, Collection, IAsyncLifetime etc. -->
+    <Using Include="Xunit" />
   </ItemGroup>
 
 </Project>

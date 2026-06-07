@@ -20,4 +20,11 @@ public interface IOrgMembershipQueryPort
     /// When <paramref name="minRole"/> is <c>null</c>, any membership qualifies.
     /// </summary>
     Task<bool> IsMemberAsync(Guid userId, Guid orgId, string? minRole = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Removes any cached membership data for the given user so that subsequent
+    /// authorization checks reflect the current database state immediately.
+    /// Call this from any use-case that mutates org membership.
+    /// </summary>
+    void InvalidateUser(Guid userId);
 }
