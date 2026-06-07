@@ -329,7 +329,7 @@ public sealed class PluginDistributionRepositoryPortTests : IAsyncLifetime
             .FirstOrDefaultAsync(pv => pv.PluginId == plugin.Id && pv.Version == "1.0.0");
 
         Assert.NotNull(version);
-        Assert.Equal(1L, version.DownloadCount);
+        Assert.Equal(1L, version!.DownloadCount);
     }
 
     [Fact]
@@ -350,7 +350,7 @@ public sealed class PluginDistributionRepositoryPortTests : IAsyncLifetime
         PluginEntity? pluginEntity = await verifyCtx.Plugins.FindAsync(plugin.Id);
 
         Assert.NotNull(pluginEntity);
-        Assert.Equal(1L, pluginEntity.DownloadCount);
+        Assert.Equal(1L, pluginEntity!.DownloadCount);
     }
 
     [Fact]
@@ -373,12 +373,12 @@ public sealed class PluginDistributionRepositoryPortTests : IAsyncLifetime
 
         PluginEntity? pluginRow = await verifyCtx.Plugins.FindAsync(plugin.Id);
         Assert.NotNull(pluginRow);
-        Assert.Equal(3L, pluginRow.DownloadCount);
+        Assert.Equal(3L, pluginRow!.DownloadCount);
 
         PluginVersionEntity? versionRow = await verifyCtx.PluginVersions
             .FirstOrDefaultAsync(pv => pv.PluginId == plugin.Id && pv.Version == "1.0.0");
         Assert.NotNull(versionRow);
-        Assert.Equal(3L, versionRow.DownloadCount);
+        Assert.Equal(3L, versionRow!.DownloadCount);
 
         long aggCount = await verifyCtx.TelemetryAggregates
             .Where(ta => ta.PluginId == plugin.Id
@@ -419,12 +419,12 @@ public sealed class PluginDistributionRepositoryPortTests : IAsyncLifetime
 
         PluginEntity? pluginRow = await verifyCtx.Plugins.FindAsync(plugin.Id);
         Assert.NotNull(pluginRow);
-        Assert.Equal((long)concurrency, pluginRow.DownloadCount);
+        Assert.Equal((long)concurrency, pluginRow!.DownloadCount);
 
         PluginVersionEntity? versionRow = await verifyCtx.PluginVersions
             .FirstOrDefaultAsync(pv => pv.PluginId == plugin.Id && pv.Version == "1.0.0");
         Assert.NotNull(versionRow);
-        Assert.Equal((long)concurrency, versionRow.DownloadCount);
+        Assert.Equal((long)concurrency, versionRow!.DownloadCount);
 
         long aggTotal = await verifyCtx.TelemetryAggregates
             .Where(ta => ta.PluginId == plugin.Id

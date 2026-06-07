@@ -261,7 +261,7 @@ public sealed class PluginPublishingHttpTests : IAsyncLifetime
             .FirstOrDefaultAsync(v => v.PluginId == pluginId);
 
         Assert.NotNull(version);
-        Assert.True(version.IsLatest);
+        Assert.True(version!.IsLatest);
     }
 
     [Fact]
@@ -293,7 +293,7 @@ public sealed class PluginPublishingHttpTests : IAsyncLifetime
             .FirstOrDefaultAsync(v => v.PluginId == pluginId);
 
         Assert.NotNull(version);
-        Assert.Equal(readmeContent, version.ReadmeText);
+        Assert.Equal(readmeContent, version!.ReadmeText);
     }
 
     [Fact]

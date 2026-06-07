@@ -183,7 +183,7 @@ public sealed class JwtSigningKeyFileResolutionTests : IDisposable
         Assert.NotNull(resolved);
         Assert.False(string.IsNullOrWhiteSpace(resolved));
         // Trimmed content must match original PEM (modulo surrounding whitespace)
-        Assert.Equal(TestKey.PrivatePem.Trim(), resolved.Trim());
+        Assert.Equal(TestKey.PrivatePem.Trim(), resolved!.Trim());
     }
 
     [Fact]

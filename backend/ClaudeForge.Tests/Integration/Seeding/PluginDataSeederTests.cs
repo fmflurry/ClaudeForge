@@ -324,7 +324,7 @@ public sealed class PluginDataSeederTests : IAsyncLifetime
             .FirstOrDefault(d => d.Types.Count >= 2);
 
         Assert.NotNull(multiTypeDef);
-        Assert.True(multiTypeDef.Types.Count >= 2,
+        Assert.True(multiTypeDef!.Types.Count >= 2,
             "At least one SeedPluginDefinition must declare ≥2 types.");
     }
 
@@ -755,8 +755,8 @@ public sealed class PluginDataSeederTests : IAsyncLifetime
         {
             CategoryDto? cat = result.Types.FirstOrDefault(c => c.Value == expectedType);
             Assert.NotNull(cat);
-            Assert.True(cat.Count > 0,
-                $"Expected type '{expectedType}' to have count > 0, got {cat.Count}.");
+            Assert.True(cat!.Count > 0,
+                $"Expected type '{expectedType}' to have count > 0, got {cat!.Count}.");
         }
 
         // Assert: every expected language value appears with count > 0
@@ -764,8 +764,8 @@ public sealed class PluginDataSeederTests : IAsyncLifetime
         {
             CategoryDto? cat = result.Languages.FirstOrDefault(c => c.Value == expectedLang);
             Assert.NotNull(cat);
-            Assert.True(cat.Count > 0,
-                $"Expected language '{expectedLang}' to have count > 0, got {cat.Count}.");
+            Assert.True(cat!.Count > 0,
+                $"Expected language '{expectedLang}' to have count > 0, got {cat!.Count}.");
         }
 
         // Assert: every expected use-case value appears with count > 0
@@ -773,8 +773,8 @@ public sealed class PluginDataSeederTests : IAsyncLifetime
         {
             CategoryDto? cat = result.UseCases.FirstOrDefault(c => c.Value == expectedUc);
             Assert.NotNull(cat);
-            Assert.True(cat.Count > 0,
-                $"Expected use-case '{expectedUc}' to have count > 0, got {cat.Count}.");
+            Assert.True(cat!.Count > 0,
+                $"Expected use-case '{expectedUc}' to have count > 0, got {cat!.Count}.");
         }
     }
 

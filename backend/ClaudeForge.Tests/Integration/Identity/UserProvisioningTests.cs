@@ -133,14 +133,14 @@ public sealed class UserProvisioningTests : IAsyncLifetime
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
         UserEntity? user = await ctx.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == result.UserId);
         Assert.NotNull(user);
-        Assert.Equal("alice@example.com", user.Email);
-        Assert.Equal("Alice", user.DisplayName);
+        Assert.Equal("alice@example.com", user!.Email);
+        Assert.Equal("Alice", user!.DisplayName);
 
         // Verify persistence: user_identity row exists
         UserIdentityEntity? identity = await ctx.UserIdentities.AsNoTracking()
             .FirstOrDefaultAsync(i => i.Provider == "google" && i.Subject == "google-sub-new-001");
         Assert.NotNull(identity);
-        Assert.Equal(result.UserId, identity.UserId);
+        Assert.Equal(result.UserId, identity!.UserId);
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public sealed class UserProvisioningTests : IAsyncLifetime
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
         UserEntity? user = await ctx.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == result.UserId);
         Assert.NotNull(user);
-        Assert.Equal("carol@example.com", user.EmailNormalized);
+        Assert.Equal("carol@example.com", user!.EmailNormalized);
     }
 
     // =========================================================================
@@ -201,8 +201,8 @@ public sealed class UserProvisioningTests : IAsyncLifetime
         // Verify: updated values persisted
         UserEntity? user = await ctx.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == first.UserId);
         Assert.NotNull(user);
-        Assert.Equal("bob.new@example.com", user.Email);
-        Assert.Equal("Bob New Name", user.DisplayName);
+        Assert.Equal("bob.new@example.com", user!.Email);
+        Assert.Equal("Bob New Name", user!.DisplayName);
     }
 
     [Fact]

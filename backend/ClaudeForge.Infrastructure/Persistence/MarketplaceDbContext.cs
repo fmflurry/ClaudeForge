@@ -109,9 +109,15 @@ public sealed class MarketplaceDbContext : DbContext
             // NpgsqlTsVector is not supported by that provider.
             if (isPostgres)
             {
+                // NpgsqlTsVector.Parse is marked obsolete for runtime use, but this converter
+                // is a CLR materialization shim for EF Core's model configuration — the column
+                // is a server-computed "tsvector" type and Parse is only called when EF Core
+                // needs a CLR value for change tracking, not in the hot path.
+#pragma warning disable CS0618 // NpgsqlTsVector.Parse: acceptable in EF value-converter shim
                 ValueConverter<string?, NpgsqlTsVector?> tsVectorConverter = new(
                     v => v == null ? null : NpgsqlTsVector.Parse(v),
                     v => v == null ? null : v.ToString());
+#pragma warning restore CS0618
                 ValueComparer<string?> tsVectorComparer = new(
                     (a, b) => a == b,
                     v => v == null ? 0 : v.GetHashCode(),
@@ -820,9 +826,15 @@ public sealed class MarketplaceDbContext : DbContext
             // NpgsqlTsVector is not supported by that provider.
             if (isPostgres)
             {
+                // NpgsqlTsVector.Parse is marked obsolete for runtime use, but this converter
+                // is a CLR materialization shim for EF Core's model configuration — the column
+                // is a server-computed "tsvector" type and Parse is only called when EF Core
+                // needs a CLR value for change tracking, not in the hot path.
+#pragma warning disable CS0618 // NpgsqlTsVector.Parse: acceptable in EF value-converter shim
                 ValueConverter<string?, NpgsqlTsVector?> tsVectorConverter = new(
                     v => v == null ? null : NpgsqlTsVector.Parse(v),
                     v => v == null ? null : v.ToString());
+#pragma warning restore CS0618
                 ValueComparer<string?> tsVectorComparer = new(
                     (a, b) => a == b,
                     v => v == null ? 0 : v.GetHashCode(),

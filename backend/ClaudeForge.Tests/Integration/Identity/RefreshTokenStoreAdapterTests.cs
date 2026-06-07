@@ -168,9 +168,9 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
 
         Assert.NotNull(entity);
         // hash must NOT equal the plain token
-        Assert.NotEqual(result.PlainToken, entity.TokenHash);
+        Assert.NotEqual(result.PlainToken, entity!.TokenHash);
         // hash must match SHA-256(plain)
-        Assert.Equal(Sha256Hex(result.PlainToken), entity.TokenHash);
+        Assert.Equal(Sha256Hex(result.PlainToken), entity!.TokenHash);
     }
 
     [Fact]
@@ -225,8 +225,8 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
             .FirstOrDefaultAsync(t => t.Id == result.Id);
 
         Assert.NotNull(entity);
-        Assert.Equal(64, entity.TokenHash.Length);
-        Assert.Matches("^[0-9a-f]{64}$", entity.TokenHash);
+        Assert.Equal(64, entity!.TokenHash.Length);
+        Assert.Matches("^[0-9a-f]{64}$", entity!.TokenHash);
     }
 
     [Fact]
@@ -261,8 +261,8 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenInfo? found = await store.FindByHashAsync(created.PlainToken);
 
         Assert.NotNull(found);
-        Assert.Equal(created.Id, found.Id);
-        Assert.Equal(userId, found.UserId);
+        Assert.Equal(created.Id, found!.Id);
+        Assert.Equal(userId, found!.UserId);
     }
 
     [Fact]
@@ -304,7 +304,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenEntity? oldEntity = await ctx.RefreshTokens
             .FirstOrDefaultAsync(t => t.Id == original.Id);
         Assert.NotNull(oldEntity);
-        Assert.Equal(rotated.NewId, oldEntity.RotatedTo);
+        Assert.Equal(rotated.NewId, oldEntity!.RotatedTo);
     }
 
     [Fact]
@@ -321,9 +321,9 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenEntity? newEntity = await ctx.RefreshTokens
             .FirstOrDefaultAsync(t => t.Id == rotated.NewId);
         Assert.NotNull(newEntity);
-        Assert.Equal(userId, newEntity.UserId);
-        Assert.Null(newEntity.RevokedAt); // new token not yet revoked
-        Assert.Null(newEntity.RotatedTo);  // not yet rotated again
+        Assert.Equal(userId, newEntity!.UserId);
+        Assert.Null(newEntity!.RevokedAt); // new token not yet revoked
+        Assert.Null(newEntity!.RotatedTo);  // not yet rotated again
     }
 
     [Fact]
@@ -353,7 +353,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenEntity? newEntity = await ctx.RefreshTokens
             .FirstOrDefaultAsync(t => t.Id == rotated.NewId);
         Assert.NotNull(newEntity);
-        Assert.Equal(Sha256Hex(rotated.NewPlainToken), newEntity.TokenHash);
+        Assert.Equal(Sha256Hex(rotated.NewPlainToken), newEntity!.TokenHash);
     }
 
     // =========================================================================
@@ -402,7 +402,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenEntity? entity = await ctx.RefreshTokens
             .FirstOrDefaultAsync(t => t.Id == token.Id);
         Assert.NotNull(entity);
-        Assert.NotNull(entity.RevokedAt);
+        Assert.NotNull(entity!.RevokedAt);
     }
 
     [Fact]
@@ -419,7 +419,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
 
         RefreshTokenInfo? found = await store.FindByHashAsync(token.PlainToken);
         Assert.NotNull(found);
-        Assert.NotNull(found.RevokedAt);
+        Assert.NotNull(found!.RevokedAt);
     }
 
     [Fact]
@@ -482,7 +482,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
 
         RefreshTokenInfo? found = await store.FindByHashAsync(expired.PlainToken);
         Assert.NotNull(found);
-        Assert.True(found.ExpiresAt < DateTimeOffset.UtcNow, "ExpiresAt must reflect past expiry");
+        Assert.True(found!.ExpiresAt < DateTimeOffset.UtcNow, "ExpiresAt must reflect past expiry");
     }
 
     // =========================================================================

@@ -291,8 +291,8 @@ public sealed class UploadAuthGateTests : IAsyncLifetime
         // Verify owner_user_id is set from ICurrentUser
         PluginEntity? plugin = await ctx.Plugins.AsNoTracking().FirstOrDefaultAsync(p => p.Id == pluginId);
         Assert.NotNull(plugin);
-        Assert.Equal(user.Id, plugin.OwnerUserId);
-        Assert.Equal("public", plugin.Visibility);
+        Assert.Equal(user.Id, plugin!.OwnerUserId);
+        Assert.Equal("public", plugin!.Visibility);
     }
 
     // =========================================================================
@@ -335,7 +335,7 @@ public sealed class UploadAuthGateTests : IAsyncLifetime
 
         PluginEntity? plugin = await ctx.Plugins.AsNoTracking().FirstOrDefaultAsync(p => p.Id == pluginId);
         Assert.NotNull(plugin);
-        Assert.Equal("public", plugin.Visibility);
+        Assert.Equal("public", plugin!.Visibility);
     }
 
     // =========================================================================
@@ -425,9 +425,9 @@ public sealed class UploadAuthGateTests : IAsyncLifetime
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
         PluginEntity? plugin = await ctx.Plugins.AsNoTracking().FirstOrDefaultAsync(p => p.Id == pluginId);
         Assert.NotNull(plugin);
-        Assert.Equal("private", plugin.Visibility);
-        Assert.Equal(orgId, plugin.OwnerOrgId);  // owner_org_id must be persisted
-        Assert.Equal(userId, plugin.OwnerUserId);
+        Assert.Equal("private", plugin!.Visibility);
+        Assert.Equal(orgId, plugin!.OwnerOrgId);  // owner_org_id must be persisted
+        Assert.Equal(userId, plugin!.OwnerUserId);
     }
 
     // =========================================================================
@@ -554,8 +554,8 @@ public sealed class UploadAuthGateTests : IAsyncLifetime
         PluginEntity? updated = await ctx.Plugins.AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == pluginId);
         Assert.NotNull(updated);
-        Assert.Equal("public", updated.Visibility);
-        Assert.Null(updated.OwnerOrgId);  // cleared when visibility → public
+        Assert.Equal("public", updated!.Visibility);
+        Assert.Null(updated!.OwnerOrgId);  // cleared when visibility → public
     }
 
     // =========================================================================
@@ -606,8 +606,8 @@ public sealed class UploadAuthGateTests : IAsyncLifetime
         PluginEntity? updated = await ctx.Plugins.AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == pluginId);
         Assert.NotNull(updated);
-        Assert.Equal("private", updated.Visibility);
-        Assert.Equal(orgId, updated.OwnerOrgId);
+        Assert.Equal("private", updated!.Visibility);
+        Assert.Equal(orgId, updated!.OwnerOrgId);
     }
 
     // =========================================================================

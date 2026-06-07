@@ -162,8 +162,8 @@ public sealed class DeleteAccountEndpointTests : IAsyncLifetime
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         Assert.NotNull(user);
-        Assert.NotNull(user.DeletedAt);
-        Assert.True(user.DeletedAt.Value <= DateTimeOffset.UtcNow,
+        Assert.NotNull(user!.DeletedAt);
+        Assert.True(user!.DeletedAt!.Value <= DateTimeOffset.UtcNow,
             "deleted_at must be set to a past or current timestamp");
     }
 

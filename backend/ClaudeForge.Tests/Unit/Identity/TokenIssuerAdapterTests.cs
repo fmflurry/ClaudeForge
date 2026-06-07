@@ -132,7 +132,7 @@ public sealed class TokenIssuerAdapterTests
         JwtSecurityToken jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
         Claim? sub = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub);
         Assert.NotNull(sub);
-        Assert.Equal(userId.ToString(), sub.Value);
+        Assert.Equal(userId.ToString(), sub!.Value);
     }
 
     [Fact]
@@ -148,7 +148,7 @@ public sealed class TokenIssuerAdapterTests
             c.Type == JwtRegisteredClaimNames.Email ||
             c.Type == "email");
         Assert.NotNull(email);
-        Assert.Equal("alice@example.com", email.Value);
+        Assert.Equal("alice@example.com", email!.Value);
     }
 
     [Fact]
@@ -164,7 +164,7 @@ public sealed class TokenIssuerAdapterTests
             c.Type == JwtRegisteredClaimNames.Name ||
             c.Type == "name");
         Assert.NotNull(name);
-        Assert.Equal("Alice Smith", name.Value);
+        Assert.Equal("Alice Smith", name!.Value);
     }
 
     [Fact]
@@ -178,7 +178,7 @@ public sealed class TokenIssuerAdapterTests
         JwtSecurityToken jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
         Claim? provider = jwt.Claims.FirstOrDefault(c => c.Type == "provider");
         Assert.NotNull(provider);
-        Assert.Equal("microsoft", provider.Value);
+        Assert.Equal("microsoft", provider!.Value);
     }
 
     [Fact]
@@ -249,7 +249,7 @@ public sealed class TokenIssuerAdapterTests
         JwtSecurityToken jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
         Claim? jti = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti);
         Assert.NotNull(jti);
-        Assert.True(Guid.TryParse(jti.Value, out _), "jti must be a valid Guid string");
+        Assert.True(Guid.TryParse(jti!.Value, out _), "jti must be a valid Guid string");
     }
 
     [Fact]

@@ -314,7 +314,7 @@ public sealed class PluginPublishingUseCaseTests
 
         // Assert
         Assert.NotNull(capturedCommand);
-        Assert.Equal(expectedReadme, capturedCommand.ReadmeText);
+        Assert.Equal(expectedReadme, capturedCommand!.ReadmeText);
     }
 
     [Fact]
@@ -343,7 +343,7 @@ public sealed class PluginPublishingUseCaseTests
 
         // Assert
         Assert.NotNull(capturedCommand);
-        Assert.Null(capturedCommand.ReadmeText);
+        Assert.Null(capturedCommand!.ReadmeText);
     }
 
     [Fact]
@@ -368,8 +368,8 @@ public sealed class PluginPublishingUseCaseTests
 
         // Assert — version_sort must be pre-computed correctly for 1.0.0
         Assert.NotNull(capturedCommand);
-        Assert.Equal(new SemVer(1, 0, 0).ToVersionSort(), capturedCommand.VersionSort);
-        Assert.Equal("1.0.0", capturedCommand.Version);
+        Assert.Equal(new SemVer(1, 0, 0).ToVersionSort(), capturedCommand!.VersionSort);
+        Assert.Equal("1.0.0", capturedCommand!.Version);
     }
 
     [Fact]
@@ -414,7 +414,7 @@ public sealed class PluginPublishingUseCaseTests
 
         // Assert
         Assert.NotNull(capturedCommand);
-        Assert.Equal("myawesomeplugin", capturedCommand.NameNormalized);
+        Assert.Equal("myawesomeplugin", capturedCommand!.NameNormalized);
     }
 
     [Fact]
@@ -440,7 +440,7 @@ public sealed class PluginPublishingUseCaseTests
 
         // Assert
         Assert.NotNull(capturedCommand);
-        Assert.Equal("", capturedCommand.ReleaseNotes);
+        Assert.Equal("", capturedCommand!.ReleaseNotes);
     }
 
     // =========================================================================
@@ -758,7 +758,7 @@ public sealed class PluginPublishingUseCaseTests
 
         // Assert — version_sort computed correctly for 1.0.1
         Assert.NotNull(capturedCmd);
-        Assert.Equal(new SemVer(1, 0, 1).ToVersionSort(), capturedCmd.VersionSort);
+        Assert.Equal(new SemVer(1, 0, 1).ToVersionSort(), capturedCmd!.VersionSort);
     }
 
     [Fact]
@@ -791,7 +791,7 @@ public sealed class PluginPublishingUseCaseTests
 
         // Assert — empty string release notes stored as-is (default empty)
         Assert.NotNull(capturedCmd);
-        Assert.Equal("", capturedCmd.ReleaseNotes);
+        Assert.Equal("", capturedCmd!.ReleaseNotes);
     }
 
     [Fact]
@@ -957,6 +957,6 @@ public sealed class PluginPublishingUseCaseTests
 
         // Assert
         Assert.NotNull(capturedCmd);
-        Assert.Equal(releaseNotes, capturedCmd.ReleaseNotes);
+        Assert.Equal(releaseNotes, capturedCmd!.ReleaseNotes);
     }
 }

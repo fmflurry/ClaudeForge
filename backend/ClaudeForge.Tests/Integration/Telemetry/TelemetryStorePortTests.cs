@@ -181,7 +181,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
                 a.WindowStart == DateOnly.FromDateTime(DateTime.UtcNow));
 
         Assert.NotNull(agg);
-        Assert.Equal(1, agg.Count);
+        Assert.Equal(1, agg!.Count);
     }
 
     [Fact]
@@ -207,7 +207,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
                 a.WindowStart == DateOnly.FromDateTime(DateTime.UtcNow));
 
         Assert.NotNull(agg);
-        Assert.Equal(2, agg.Count);
+        Assert.Equal(2, agg!.Count);
     }
 
     [Fact]
@@ -241,9 +241,9 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
                 a.WindowStart == today);
 
         Assert.NotNull(downloadAgg);
-        Assert.Equal(1, downloadAgg.Count);
+        Assert.Equal(1, downloadAgg!.Count);
         Assert.NotNull(installAgg);
-        Assert.Equal(1, installAgg.Count);
+        Assert.Equal(1, installAgg!.Count);
     }
 
     [Fact]
@@ -264,7 +264,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
             .FirstOrDefaultAsync(e => e.PluginId == plugin.Id);
 
         Assert.NotNull(entity);
-        Assert.Equal(ValidAnonClientId, entity.AnonClientId?.Trim()); // CHAR(64) may pad
+        Assert.Equal(ValidAnonClientId, entity!.AnonClientId?.Trim()); // CHAR(64) may pad
     }
 
     // -------------------------------------------------------------------------
@@ -364,7 +364,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
             .FirstOrDefault(d => d.Date == today);
 
         Assert.NotNull(todayActivity);
-        Assert.Equal(2, todayActivity.Downloads);
+        Assert.Equal(2, todayActivity!.Downloads);
     }
 
     [Fact]
@@ -483,7 +483,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
                 a.WindowStart == today);
 
         Assert.NotNull(agg);
-        Assert.Equal(42, agg.Count);
+        Assert.Equal(42, agg!.Count);
     }
 
     [Fact]

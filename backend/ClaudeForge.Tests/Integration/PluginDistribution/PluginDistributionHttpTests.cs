@@ -344,12 +344,12 @@ public sealed class PluginDistributionHttpTests : IAsyncLifetime
 
         PluginEntity? plugin = await ctx.Plugins.FindAsync(pluginId);
         Assert.NotNull(plugin);
-        Assert.Equal(1L, plugin.DownloadCount);
+        Assert.Equal(1L, plugin!.DownloadCount);
 
         PluginVersionEntity? version = await ctx.PluginVersions
             .FirstOrDefaultAsync(pv => pv.PluginId == pluginId && pv.Version == "1.0.0");
         Assert.NotNull(version);
-        Assert.Equal(1L, version.DownloadCount);
+        Assert.Equal(1L, version!.DownloadCount);
 
         long aggCount = await ctx.TelemetryAggregates
             .Where(ta => ta.PluginId == pluginId
@@ -430,7 +430,7 @@ public sealed class PluginDistributionHttpTests : IAsyncLifetime
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
         PluginEntity? seeded = await ctx.Plugins.FindAsync(seededPluginId);
         Assert.NotNull(seeded);
-        Assert.Equal(0L, seeded.DownloadCount);
+        Assert.Equal(0L, seeded!.DownloadCount);
     }
 
     // =========================================================================
@@ -477,7 +477,7 @@ public sealed class PluginDistributionHttpTests : IAsyncLifetime
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
         PluginEntity? plugin = await ctx.Plugins.FindAsync(pluginId);
         Assert.NotNull(plugin);
-        Assert.Equal(0L, plugin.DownloadCount);
+        Assert.Equal(0L, plugin!.DownloadCount);
     }
 
     // =========================================================================
@@ -549,11 +549,11 @@ public sealed class PluginDistributionHttpTests : IAsyncLifetime
 
         PluginEntity? plugin = await ctx.Plugins.FindAsync(pluginId);
         Assert.NotNull(plugin);
-        Assert.Equal((long)concurrency, plugin.DownloadCount);
+        Assert.Equal((long)concurrency, plugin!.DownloadCount);
 
         PluginVersionEntity? version = await ctx.PluginVersions
             .FirstOrDefaultAsync(pv => pv.PluginId == pluginId && pv.Version == "1.0.0");
         Assert.NotNull(version);
-        Assert.Equal((long)concurrency, version.DownloadCount);
+        Assert.Equal((long)concurrency, version!.DownloadCount);
     }
 }

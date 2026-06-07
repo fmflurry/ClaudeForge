@@ -359,12 +359,12 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
             .FirstOrDefaultAsync(p => p.Id == plugin.Id);
 
         Assert.NotNull(persisted);
-        Assert.NotNull(persisted.SearchVector);
-        Assert.False(string.IsNullOrWhiteSpace(persisted.SearchVector),
+        Assert.NotNull(persisted!.SearchVector);
+        Assert.False(string.IsNullOrWhiteSpace(persisted!.SearchVector),
             "search_vector should be non-empty after insert");
 
         // The vector must contain a token derived from the name "asynchelper"
-        Assert.Contains("async", persisted.SearchVector, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("async", persisted!.SearchVector, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -379,10 +379,10 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
         // Update name and description — trigger or generated column should refresh search_vector
         PluginEntity? tracked = await ctx.Plugins.FindAsync(plugin.Id);
         Assert.NotNull(tracked);
-        tracked.Name = "NewToolName";
-        tracked.NameNormalized = "newtoolname";
-        tracked.Description = "A brand new description with token";
-        tracked.UpdatedAt = DateTimeOffset.UtcNow;
+        tracked!.Name = "NewToolName";
+        tracked!.NameNormalized = "newtoolname";
+        tracked!.Description = "A brand new description with token";
+        tracked!.UpdatedAt = DateTimeOffset.UtcNow;
         await ctx.SaveChangesAsync();
 
         PluginEntity? refreshed = await ctx.Plugins
@@ -390,9 +390,9 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
             .FirstOrDefaultAsync(p => p.Id == plugin.Id);
 
         Assert.NotNull(refreshed);
-        Assert.NotNull(refreshed.SearchVector);
+        Assert.NotNull(refreshed!.SearchVector);
         // After update the old name token should be gone and new name present
-        Assert.Contains("newtool", refreshed.SearchVector, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("newtool", refreshed!.SearchVector, StringComparison.OrdinalIgnoreCase);
     }
 
     // -------------------------------------------------------------------------

@@ -304,7 +304,7 @@ public sealed class AuthSchemaTests : IAsyncLifetime
 
         UserEntity? persisted = await ctx.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == user.Id);
         Assert.NotNull(persisted);
-        Assert.Null(persisted.DeletedAt);
+        Assert.Null(persisted!.DeletedAt);
     }
 
     // =========================================================================
@@ -870,7 +870,7 @@ public sealed class AuthSchemaTests : IAsyncLifetime
         // Now set rotated_to on original to point to rotated
         RefreshTokenEntity? tracked = await ctx.RefreshTokens.FindAsync(original.Id);
         Assert.NotNull(tracked);
-        tracked.RotatedTo = rotated.Id;
+        tracked!.RotatedTo = rotated.Id;
         await ctx.SaveChangesAsync();
 
         RefreshTokenEntity? reloaded = await ctx.RefreshTokens
@@ -878,7 +878,7 @@ public sealed class AuthSchemaTests : IAsyncLifetime
             .FirstOrDefaultAsync(r => r.Id == original.Id);
 
         Assert.NotNull(reloaded);
-        Assert.Equal(rotated.Id, reloaded.RotatedTo);
+        Assert.Equal(rotated.Id, reloaded!.RotatedTo);
     }
 
     // -------------------------------------------------------------------------

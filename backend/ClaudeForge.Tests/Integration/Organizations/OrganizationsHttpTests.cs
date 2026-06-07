@@ -262,7 +262,7 @@ public sealed class OrganizationsHttpTests : IAsyncLifetime
             .FirstOrDefaultAsync(m => m.OrgId == orgId && m.UserId == creator.Id);
 
         Assert.NotNull(membership);
-        Assert.Equal("owner", membership.Role);
+        Assert.Equal("owner", membership!.Role);
     }
 
     // Task 6.2 — duplicate name → 409
@@ -703,7 +703,7 @@ public sealed class OrganizationsHttpTests : IAsyncLifetime
         ctx.OrganizationMembers.Add(MakeMember(org.Id, owner.Id, "owner"));
 
         OrganizationInvitationEntity invite = MakeInvitation(
-            org.Id, owner.Id, invitee.EmailNormalized, "accept-token-001");
+            org.Id, owner.Id, invitee.EmailNormalized!, "accept-token-001");
         ctx.OrganizationInvitations.Add(invite);
         await ctx.SaveChangesAsync();
 
@@ -728,7 +728,7 @@ public sealed class OrganizationsHttpTests : IAsyncLifetime
             .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == invite.Id);
         Assert.NotNull(updatedInvite);
-        Assert.Equal("accepted", updatedInvite.Status);
+        Assert.Equal("accepted", updatedInvite!.Status);
     }
 
     // Task 6.8 — accept non-existent invitation → 404
@@ -774,7 +774,7 @@ public sealed class OrganizationsHttpTests : IAsyncLifetime
         ctx.OrganizationMembers.Add(MakeMember(org.Id, owner.Id, "owner"));
 
         OrganizationInvitationEntity invite = MakeInvitation(
-            org.Id, owner.Id, invitee.EmailNormalized, $"gone-token-{status}", status);
+            org.Id, owner.Id, invitee.EmailNormalized!, $"gone-token-{status}", status);
         ctx.OrganizationInvitations.Add(invite);
         await ctx.SaveChangesAsync();
 
@@ -826,7 +826,7 @@ public sealed class OrganizationsHttpTests : IAsyncLifetime
             .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == invite.Id);
         Assert.NotNull(updatedInvite);
-        Assert.Equal("revoked", updatedInvite.Status);
+        Assert.Equal("revoked", updatedInvite!.Status);
     }
 
     // =========================================================================
@@ -982,7 +982,7 @@ public sealed class OrganizationsHttpTests : IAsyncLifetime
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.OrgId == org.Id && m.UserId == member.Id);
         Assert.NotNull(updatedMembership);
-        Assert.Equal("admin", updatedMembership.Role);
+        Assert.Equal("admin", updatedMembership!.Role);
     }
 
     // Task 6.10 — non-owner role change → 403

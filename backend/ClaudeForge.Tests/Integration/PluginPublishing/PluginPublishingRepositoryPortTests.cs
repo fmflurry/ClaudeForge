@@ -149,9 +149,9 @@ public sealed class PluginPublishingRepositoryPortTests : IAsyncLifetime
             .FirstOrDefaultAsync(p => p.Id == result.PluginId);
 
         Assert.NotNull(plugin);
-        Assert.Equal("NewPlugin", plugin.Name);
-        Assert.Equal("newplugin", plugin.NameNormalized);
-        Assert.Single(plugin.Versions);
+        Assert.Equal("NewPlugin", plugin!.Name);
+        Assert.Equal("newplugin", plugin!.NameNormalized);
+        Assert.Single(plugin!.Versions);
 
         PluginVersionEntity version = plugin.Versions.First();
         Assert.Equal("1.0.0", version.Version);
@@ -176,7 +176,7 @@ public sealed class PluginPublishingRepositoryPortTests : IAsyncLifetime
             .FirstOrDefaultAsync(v => v.PluginId == result.PluginId);
 
         Assert.NotNull(version);
-        Assert.True(version.IsLatest);
+        Assert.True(version!.IsLatest);
     }
 
     [Fact]
@@ -199,7 +199,7 @@ public sealed class PluginPublishingRepositoryPortTests : IAsyncLifetime
             .FirstOrDefaultAsync(v => v.PluginId == result.PluginId);
 
         Assert.NotNull(version);
-        Assert.Equal("# My Plugin README", version.ReadmeText);
+        Assert.Equal("# My Plugin README", version!.ReadmeText);
     }
 
     [Fact]
@@ -222,8 +222,8 @@ public sealed class PluginPublishingRepositoryPortTests : IAsyncLifetime
         PluginEntity? plugin = await verifyCtx.Plugins.FindAsync(result.PluginId);
 
         Assert.NotNull(plugin);
-        Assert.Equal("myplugin", plugin.NameNormalized);
-        Assert.Equal("myplugin", plugin.Slug);
+        Assert.Equal("myplugin", plugin!.NameNormalized);
+        Assert.Equal("myplugin", plugin!.Slug);
     }
 
     // -------------------------------------------------------------------------
@@ -258,8 +258,8 @@ public sealed class PluginPublishingRepositoryPortTests : IAsyncLifetime
 
         Assert.NotNull(v100);
         Assert.NotNull(v110);
-        Assert.False(v100.IsLatest);
-        Assert.True(v110.IsLatest);
+        Assert.False(v100!.IsLatest);
+        Assert.True(v110!.IsLatest);
     }
 
     [Fact]
@@ -294,7 +294,7 @@ public sealed class PluginPublishingRepositoryPortTests : IAsyncLifetime
 
         PluginVersionEntity? latest = versions.FirstOrDefault(v => v.IsLatest);
         Assert.NotNull(latest);
-        Assert.Equal("2.0.0", latest.Version);
+        Assert.Equal("2.0.0", latest!.Version);
     }
 
     // -------------------------------------------------------------------------
@@ -497,7 +497,7 @@ public sealed class PluginPublishingRepositoryPortTests : IAsyncLifetime
         Assert.Equal(1, items.Count(v => v.IsLatest));
         VersionHistoryDto? latestItem = items.FirstOrDefault(v => v.IsLatest);
         Assert.NotNull(latestItem);
-        Assert.Equal("2.0.0", latestItem.Version);
+        Assert.Equal("2.0.0", latestItem!.Version);
     }
 
     [Fact]
@@ -523,8 +523,8 @@ public sealed class PluginPublishingRepositoryPortTests : IAsyncLifetime
 
         Assert.NotNull(v100);
         Assert.NotNull(v200);
-        v100.DownloadCount = 5;
-        v200.DownloadCount = 10;
+        v100!.DownloadCount = 5;
+        v200!.DownloadCount = 10;
         await updateCtx.SaveChangesAsync();
 
         // Act
@@ -640,11 +640,11 @@ public sealed class PluginPublishingRepositoryPortTests : IAsyncLifetime
 
         // Assert
         Assert.NotNull(detail);
-        Assert.Equal("1.2.3", detail.Version);
-        Assert.Equal(created.PluginId, detail.PluginId);
-        Assert.True(detail.IsLatest);
-        Assert.Equal("Special release", detail.ReleaseNotes);
-        Assert.Equal("tar.gz", detail.PackageFormat);
+        Assert.Equal("1.2.3", detail!.Version);
+        Assert.Equal(created.PluginId, detail!.PluginId);
+        Assert.True(detail!.IsLatest);
+        Assert.Equal("Special release", detail!.ReleaseNotes);
+        Assert.Equal("tar.gz", detail!.PackageFormat);
     }
 
     [Fact]

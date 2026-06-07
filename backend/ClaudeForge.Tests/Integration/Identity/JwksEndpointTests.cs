@@ -306,7 +306,7 @@ public sealed class JwksEndpointTests : IAsyncLifetime
         Assert.NotEmpty(n);
         // Must be decodable as base64url
         // Base64url uses - and _ instead of + and /; pad with = to make length a multiple of 4
-        string padded = n.PadRight(n.Length + (4 - n.Length % 4) % 4, '=')
+        string padded = n!.PadRight(n!.Length + (4 - n!.Length % 4) % 4, '=')
                          .Replace('-', '+')
                          .Replace('_', '/');
         byte[] decoded = Convert.FromBase64String(padded);

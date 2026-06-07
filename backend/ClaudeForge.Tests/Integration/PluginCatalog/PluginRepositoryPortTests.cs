@@ -495,23 +495,23 @@ public sealed class PluginRepositoryPortTests : IAsyncLifetime
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(plugin.Id, result.Id);
-        Assert.Equal(3, result.Versions.Count);
+        Assert.Equal(plugin.Id, result!.Id);
+        Assert.Equal(3, result!.Versions.Count);
 
         // Versions must be sorted semver descending (highest first)
-        Assert.Equal("2.0.0", result.Versions[0].VersionNumber);
-        Assert.Equal("1.1.0", result.Versions[1].VersionNumber);
-        Assert.Equal("1.0.0", result.Versions[2].VersionNumber);
+        Assert.Equal("2.0.0", result!.Versions[0].VersionNumber);
+        Assert.Equal("1.1.0", result!.Versions[1].VersionNumber);
+        Assert.Equal("1.0.0", result!.Versions[2].VersionNumber);
 
         // isLatest flag
-        Assert.True(result.Versions[0].IsLatest);
-        Assert.False(result.Versions[1].IsLatest);
-        Assert.False(result.Versions[2].IsLatest);
+        Assert.True(result!.Versions[0].IsLatest);
+        Assert.False(result!.Versions[1].IsLatest);
+        Assert.False(result!.Versions[2].IsLatest);
 
         // Per-version download counts
-        Assert.Equal(50L, result.Versions[0].DownloadCount);
-        Assert.Equal(200L, result.Versions[1].DownloadCount);
-        Assert.Equal(100L, result.Versions[2].DownloadCount);
+        Assert.Equal(50L, result!.Versions[0].DownloadCount);
+        Assert.Equal(200L, result!.Versions[1].DownloadCount);
+        Assert.Equal(100L, result!.Versions[2].DownloadCount);
     }
 
     [Fact]
@@ -531,8 +531,8 @@ public sealed class PluginRepositoryPortTests : IAsyncLifetime
 
         // Assert
         Assert.NotNull(result);
-        Assert.Empty(result.Versions);
-        Assert.Null(result.LatestVersion);
+        Assert.Empty(result!.Versions);
+        Assert.Null(result!.LatestVersion);
     }
 
     [Fact]
@@ -670,9 +670,9 @@ public sealed class PluginRepositoryPortTests : IAsyncLifetime
         CategoryDto? hookCategory = result.Types.FirstOrDefault(c => c.Value == "hook");
 
         Assert.NotNull(skillCategory);
-        Assert.Equal(2, skillCategory.Count);
+        Assert.Equal(2, skillCategory!.Count);
 
         Assert.NotNull(hookCategory);
-        Assert.Equal(0, hookCategory.Count);
+        Assert.Equal(0, hookCategory!.Count);
     }
 }

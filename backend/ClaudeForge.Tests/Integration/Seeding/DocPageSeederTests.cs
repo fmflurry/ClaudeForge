@@ -232,9 +232,9 @@ public sealed class DocPageSeederTests : IAsyncLifetime
                 .FirstOrDefaultAsync(d => d.Slug == def.Slug);
 
             Assert.NotNull(entity);
-            Assert.Equal(def.Title, entity.Title);
-            Assert.Equal(def.Category, entity.Category);
-            Assert.Equal(def.ContentMarkdown, entity.ContentMarkdown);
+            Assert.Equal(def.Title, entity!.Title);
+            Assert.Equal(def.Category, entity!.Category);
+            Assert.Equal(def.ContentMarkdown, entity!.ContentMarkdown);
         }
     }
 

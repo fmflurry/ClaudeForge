@@ -427,11 +427,11 @@ public sealed class DocsRepositoryPortTests : IAsyncLifetime
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("contributor-guide", result.Slug);
-        Assert.Equal("Contributor Guide", result.Title);
-        Assert.Equal("Publishing Plugins", result.Category);
-        Assert.Equal("# Contributor Guide\n\nLearn how to publish plugins.", result.ContentMarkdown);
-        Assert.Equal(lastUpdated, result.LastUpdated);
+        Assert.Equal("contributor-guide", result!.Slug);
+        Assert.Equal("Contributor Guide", result!.Title);
+        Assert.Equal("Publishing Plugins", result!.Category);
+        Assert.Equal("# Contributor Guide\n\nLearn how to publish plugins.", result!.ContentMarkdown);
+        Assert.Equal(lastUpdated, result!.LastUpdated);
     }
 
     // -------------------------------------------------------------------------
@@ -501,9 +501,9 @@ public sealed class DocsRepositoryPortTests : IAsyncLifetime
 
         // Assert
         Assert.NotNull(result);
-        Assert.Contains("awesome-tool", result.Slug);
-        Assert.Contains("Awesome Tool", result.Title);
-        Assert.Contains("This tool is amazing", result.ContentMarkdown);
+        Assert.Contains("awesome-tool", result!.Slug);
+        Assert.Contains("Awesome Tool", result!.Title);
+        Assert.Contains("This tool is amazing", result!.ContentMarkdown);
     }
 
     [Fact]
@@ -531,7 +531,7 @@ public sealed class DocsRepositoryPortTests : IAsyncLifetime
 
         // Assert — placeholder page returned; spec string "No detailed documentation provided"
         Assert.NotNull(result);
-        Assert.Contains("No detailed documentation provided", result.ContentMarkdown);
+        Assert.Contains("No detailed documentation provided", result!.ContentMarkdown);
     }
 
     [Fact]

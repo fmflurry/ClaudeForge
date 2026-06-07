@@ -173,8 +173,8 @@ public sealed class PluginVisibilityConstraintTests : IAsyncLifetime
 
         PluginEntity? persisted = await ctx.Plugins.AsNoTracking().FirstOrDefaultAsync(p => p.Id == plugin.Id);
         Assert.NotNull(persisted);
-        Assert.Equal("public", persisted.Visibility);
-        Assert.Null(persisted.OwnerOrgId);
+        Assert.Equal("public", persisted!.Visibility);
+        Assert.Null(persisted!.OwnerOrgId);
     }
 
     // -------------------------------------------------------------------------
@@ -215,8 +215,8 @@ public sealed class PluginVisibilityConstraintTests : IAsyncLifetime
 
         PluginEntity? persisted = await ctx.Plugins.AsNoTracking().FirstOrDefaultAsync(p => p.Id == plugin.Id);
         Assert.NotNull(persisted);
-        Assert.Equal("private", persisted.Visibility);
-        Assert.Equal(org.Id, persisted.OwnerOrgId);
+        Assert.Equal("private", persisted!.Visibility);
+        Assert.Equal(org.Id, persisted!.OwnerOrgId);
     }
 
     // -------------------------------------------------------------------------
@@ -258,8 +258,8 @@ public sealed class PluginVisibilityConstraintTests : IAsyncLifetime
 
         PluginEntity? persisted = await ctx.Plugins.AsNoTracking().FirstOrDefaultAsync(p => p.Id == plugin.Id);
         Assert.NotNull(persisted);
-        Assert.Equal("public", persisted.Visibility);
-        Assert.Equal(org.Id, persisted.OwnerOrgId);
+        Assert.Equal("public", persisted!.Visibility);
+        Assert.Equal(org.Id, persisted!.OwnerOrgId);
     }
 
     // =========================================================================
@@ -289,9 +289,9 @@ public sealed class PluginVisibilityConstraintTests : IAsyncLifetime
         // Re-read and assert visibility defaulted to 'public'
         PluginEntity? persisted = await ctx.Plugins.AsNoTracking().FirstOrDefaultAsync(p => p.Id == pluginId);
         Assert.NotNull(persisted);
-        Assert.Equal("public", persisted.Visibility);
-        Assert.Null(persisted.OwnerOrgId);
-        Assert.Null(persisted.OwnerUserId);
+        Assert.Equal("public", persisted!.Visibility);
+        Assert.Null(persisted!.OwnerOrgId);
+        Assert.Null(persisted!.OwnerUserId);
     }
 
     // -------------------------------------------------------------------------
@@ -316,9 +316,9 @@ public sealed class PluginVisibilityConstraintTests : IAsyncLifetime
 
         PluginEntity? persisted = await ctx.Plugins.AsNoTracking().FirstOrDefaultAsync(p => p.Id == legacy.Id);
         Assert.NotNull(persisted);
-        Assert.Equal("public", persisted.Visibility);
-        Assert.Null(persisted.OwnerOrgId);
-        Assert.Null(persisted.OwnerUserId);
+        Assert.Equal("public", persisted!.Visibility);
+        Assert.Null(persisted!.OwnerOrgId);
+        Assert.Null(persisted!.OwnerUserId);
     }
 
     // -------------------------------------------------------------------------
