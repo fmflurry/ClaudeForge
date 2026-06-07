@@ -36,6 +36,10 @@ import { AuthPort } from './features/auth/domain/ports/auth.port';
 import { AuthHttpAdapter } from './features/auth/infrastructure/adapter/auth-http.adapter';
 import { AuthFacade } from './features/auth/application/facades/auth.facade';
 import { authInterceptor } from './features/auth/infrastructure/interceptors/auth.interceptor';
+import { OrgPort } from './features/organizations/domain/ports/org.port';
+import { OrgHttpAdapter } from './features/organizations/infrastructure/adapter/org-http.adapter';
+import { OrganizationsFacade } from './features/organizations/application/facades/organizations.facade';
+import { OrgContextFacade } from './features/organizations/application/facades/org-context.facade';
 
 /**
  * Reads the runtime API base URL from:
@@ -122,6 +126,15 @@ export const appConfig: ApplicationConfig = {
       deps: [AuthFacade],
       multi: true,
     },
+    // ---------------------------------------------------------------------------
+    // Organizations
+    // ---------------------------------------------------------------------------
+    {
+      provide: OrgPort,
+      useClass: OrgHttpAdapter,
+    },
+    OrganizationsFacade,
+    OrgContextFacade,
   ],
 };
 

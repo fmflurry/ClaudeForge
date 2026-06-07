@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit, Signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TeamContextFacade } from '../features/team-context/application/facades/team-context.facade';
 import { TeamWelcomeOverlayComponent } from '../features/team-context/presentation/welcome-overlay/team-welcome-overlay.component';
@@ -6,6 +6,12 @@ import { TeamSwitcherComponent } from '../features/team-context/presentation/tea
 import { TelemetrySettingsComponent } from '../features/telemetry/presentation/settings/telemetry-settings.component';
 import { AuthFacade } from '../features/auth/application/facades/auth.facade';
 import type { CurrentUser } from '../features/auth/domain/models/auth.models';
+import { OrgSwitcherComponent } from '../features/organizations/presentation/org-switcher/org-switcher.component';
+import { OrgContextFacade } from '../features/organizations/application/facades/org-context.facade';
+import { contextRegistry } from '../core/context/context-registry';
+import { ORG_ACTIVE_ORG_SWITCHED } from '../features/organizations/application/facades/org-context.facade';
+import type { ActiveOrgSwitchedPayload } from '../features/organizations/application/facades/org-context.facade';
+import { CatalogFacade } from '../features/catalog/application/facades/catalog.facade';
 
 /**
  * Main application shell — header, primary navigation, and router outlet.
@@ -16,7 +22,7 @@ import type { CurrentUser } from '../features/auth/domain/models/auth.models';
 @Component({
   selector: 'cf-shell-layout',
   standalone: true,
-  providers: [TeamContextFacade, AuthFacade],
+  providers: [TeamContextFacade, AuthFacade, OrgContextFacade],
   imports: [
     RouterOutlet,
     RouterLink,
@@ -24,6 +30,7 @@ import type { CurrentUser } from '../features/auth/domain/models/auth.models';
     TeamWelcomeOverlayComponent,
     TeamSwitcherComponent,
     TelemetrySettingsComponent,
+    OrgSwitcherComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -48,6 +55,9 @@ import type { CurrentUser } from '../features/auth/domain/models/auth.models';
         </nav>
         <div class="cf-shell__team">
           <cf-team-switcher />
+        </div>
+        <div class="cf-shell__orgs">
+          <cf-org-switcher />
         </div>
         <div class="cf-shell__settings">
           <cf-telemetry-settings />
@@ -172,14 +182,30 @@ import type { CurrentUser } from '../features/auth/domain/models/auth.models';
     `,
   ],
 })
-export class ShellLayoutComponent implements OnInit {
+export class ShellLayoutComponent implements OnInit, OnDestroy {
   protected readonly facade = inject(TeamContextFacade);
   private readonly authFacade = inject(AuthFacade);
+  private readonly catalogFacade = inject(CatalogFacade);
 
   readonly currentUser: Signal<CurrentUser | undefined> = this.authFacade.currentUser;
 
+  private unsubscribeOrgSwitch: (() => void) | undefined;
+
   ngOnInit(): void {
     this.facade.init();
+
+    // Subscribe to org-switch events via the contextRegistry singleton.
+    // No cross-domain facade injection — catalog reload is triggered by the event.
+    this.unsubscribeOrgSwitch = contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
+      ORG_ACTIVE_ORG_SWITCHED,
+      () => {
+        this.catalogFacade.loadPlugins();
+      },
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribeOrgSwitch?.();
   }
 
   onSignOut(): void {

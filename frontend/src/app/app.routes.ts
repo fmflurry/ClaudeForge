@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { FunctionalAuthGuard } from './features/auth/infrastructure/guards/auth.guard';
+import { OrgMemberGuard } from './features/auth/infrastructure/guards/org-member.guard';
 
 export const routes: Routes = [
   // ---------------------------------------------------------------------------
@@ -61,6 +63,25 @@ export const routes: Routes = [
             (m) => m.LandingPageComponent,
           ),
         pathMatch: 'full',
+      },
+      // -----------------------------------------------------------------------
+      // Organization routes
+      // -----------------------------------------------------------------------
+      {
+        path: 'orgs',
+        canActivate: [FunctionalAuthGuard],
+        loadComponent: () =>
+          import(
+            './features/organizations/presentation/orgs-page/orgs-page.component'
+          ).then((m) => m.OrgsPageComponent),
+      },
+      {
+        path: 'orgs/:orgId',
+        canActivate: [FunctionalAuthGuard, OrgMemberGuard],
+        loadComponent: () =>
+          import(
+            './features/organizations/presentation/org-detail/org-detail.component'
+          ).then((m) => m.OrgDetailComponent),
       },
     ],
   },
