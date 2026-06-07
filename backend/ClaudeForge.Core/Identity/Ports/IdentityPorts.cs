@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using ClaudeForge.Core.Shared.Exceptions;
 
 namespace ClaudeForge.Core.Identity.Ports;
 
@@ -26,8 +27,9 @@ public sealed record ProvisionedUser(
 
 /// <summary>
 /// Thrown when a requested provider is not supported or not enabled.
+/// Maps to HTTP 400 Bad Request via the global exception handler.
 /// </summary>
-public sealed class UnsupportedProviderException : Exception
+public sealed class UnsupportedProviderException : ProblemDetailsException
 {
     public string ProviderName { get; }
 
@@ -88,6 +90,22 @@ public interface IIdentityProviderRegistry
 }
 
 /// <summary>
+/// User profile data returned by <see cref="IUserStorePort.FindByIdAsync"/>.
+/// Includes the user's org memberships with names.
+/// </summary>
+public sealed record UserProfile(
+    Guid UserId,
+    string Email,
+    string DisplayName,
+    IReadOnlyList<UserOrgMembership> OrgMemberships);
+
+/// <summary>A single org membership entry for a user profile.</summary>
+public sealed record UserOrgMembership(
+    Guid OrgId,
+    string OrgName,
+    string Role);
+
+/// <summary>
 /// Port for provisioning new users or linking existing accounts via OIDC sign-in.
 /// </summary>
 public interface IUserStorePort
@@ -107,6 +125,12 @@ public interface IUserStorePort
         bool emailVerified,
         string displayName,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns the user's profile including org memberships with org names.
+    /// Returns <c>null</c> when the user does not exist.
+    /// </summary>
+    Task<UserProfile?> FindByIdAsync(Guid userId, CancellationToken ct = default);
 }
 
 /// <summary>

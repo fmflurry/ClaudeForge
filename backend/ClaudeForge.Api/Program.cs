@@ -94,6 +94,10 @@ if (!app.Environment.IsDevelopment())
 
 app.UseCors();
 
+// Authentication and authorization middleware must be before endpoint mapping.
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Serve OpenAPI document at GET /openapi/v1.json (available in all environments)
 app.MapOpenApi();
 

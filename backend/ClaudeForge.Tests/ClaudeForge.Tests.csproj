@@ -51,6 +51,8 @@
     <Using Include="NSubstitute.ExceptionExtensions" />
     <!-- Xunit provides Fact, Theory, InlineData, Collection, IAsyncLifetime etc. -->
     <Using Include="Xunit" />
+    <!-- AddInMemoryCollection is an extension method from this namespace -->
+    <Using Include="Microsoft.Extensions.Configuration" />
   </ItemGroup>
 
 </Project>

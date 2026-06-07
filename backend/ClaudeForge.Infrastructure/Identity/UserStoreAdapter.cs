@@ -124,6 +124,43 @@ public sealed class UserStoreAdapter : IUserStorePort
             .ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task<UserProfile?> FindByIdAsync(Guid userId, CancellationToken ct = default)
+    {
+        await using MarketplaceDbContext ctx = _dbFactory.CreateDbContext();
+
+        var user = await ctx.Users
+            .AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => new
+            {
+                u.Id,
+                u.Email,
+                u.DisplayName,
+                Memberships = u.Memberships
+                    .Select(m => new
+                    {
+                        m.OrgId,
+                        OrgName = m.Organization.Name,
+                        m.Role,
+                    })
+                    .ToList(),
+            })
+            .FirstOrDefaultAsync(ct)
+            .ConfigureAwait(false);
+
+        if (user is null)
+        {
+            return null;
+        }
+
+        IReadOnlyList<UserOrgMembership> memberships = user.Memberships
+            .Select(m => new UserOrgMembership(m.OrgId, m.OrgName, m.Role))
+            .ToList();
+
+        return new UserProfile(user.Id, user.Email, user.DisplayName, memberships);
+    }
+
     private static async Task<ProvisionedUser> CreateNewUserAsync(
         MarketplaceDbContext ctx,
         string provider,
