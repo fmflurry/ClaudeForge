@@ -31,6 +31,13 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
 builder.Services.AddDbContext<MarketplaceDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
+// IDbContextFactory is required by adapters that manage their own DbContext lifetime
+// (UserStoreAdapter, OrgMembershipQueryAdapter). The factory is separate from the
+// scoped DbContext registered above and is safe for singleton / parallel use.
+builder.Services.AddDbContextFactory<MarketplaceDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")),
+    ServiceLifetime.Scoped);
+
 // ── Package Storage: bind options, validate on start, register adapter ──────
 builder.Services
     .AddOptions<StorageOptions>()

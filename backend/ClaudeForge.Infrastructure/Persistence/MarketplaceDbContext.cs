@@ -37,6 +37,7 @@ public sealed class MarketplaceDbContext : DbContext
     public DbSet<OrganizationInvitationEntity> OrganizationInvitations => Set<OrganizationInvitationEntity>();
     public DbSet<RefreshTokenEntity> RefreshTokens => Set<RefreshTokenEntity>();
     public DbSet<OrgAuditEntryEntity> OrgAuditLog => Set<OrgAuditEntryEntity>();
+    public DbSet<RevokedJtiEntity> RevokedJtis => Set<RevokedJtiEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,6 +62,7 @@ public sealed class MarketplaceDbContext : DbContext
         ConfigureOrganizationInvitations(modelBuilder);
         ConfigureRefreshTokens(modelBuilder);
         ConfigureOrgAuditLog(modelBuilder);
+        ConfigureRevokedJti(modelBuilder);
     }
 
     private static void ConfigurePlugins(ModelBuilder modelBuilder, bool isPostgres = true)
@@ -837,6 +839,25 @@ public sealed class MarketplaceDbContext : DbContext
             // NOTE: The GIN index on search_vector is created via raw SQL in the migration
             // (idx_doc_pages_search_vector) — EF cannot configure a GIN index on a
             // tsvector GENERATED column with a standard HasIndex call.
+        });
+    }
+
+    private static void ConfigureRevokedJti(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RevokedJtiEntity>(entity =>
+        {
+            entity.ToTable("revoked_jti");
+
+            // jti is the primary key — TEXT column
+            entity.HasKey(r => r.Jti);
+            entity.Property(r => r.Jti)
+                  .HasColumnName("jti")
+                  .IsRequired();
+
+            // expires_at: TIMESTAMPTZ NOT NULL
+            entity.Property(r => r.ExpiresAt)
+                  .HasColumnName("expires_at")
+                  .IsRequired();
         });
     }
 }
