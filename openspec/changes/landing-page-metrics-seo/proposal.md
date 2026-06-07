@@ -8,7 +8,7 @@ The marketplace landing page (`/`) is the first impression for potential plugin 
 - **Frontend home domain**: New `metrics` capability with HTTP adapter, facade, and signal-based store for stats fetching.
 - **Landing page UI**: Replace static numbers in hero section with a live "stats band" showing real metrics (gracefully handles loading/error/empty states).
 - **SEO metadata service**: Angular `Title` and `Meta` services to set per-route title, description, Open Graph tags, Twitter Card, canonical URL, and JSON-LD structured data (Organization + ItemList of featured plugins).
-- **Static prerendering**: Configure Angular prerender for public routes (`/`, `/catalog`, `/docs`) using `@angular/ssr`, with `robots.txt` and generated `sitemap.xml`.
+- **Angular SSR**: Configure Angular Server-Side Rendering for public routes (`/`, `/catalog`, `/docs`) using `@angular/ssr` Node server, with `robots.txt` and generated `sitemap.xml`.
 
 ## Capabilities
 
@@ -28,6 +28,6 @@ The marketplace landing page (`/`) is the first impression for potential plugin 
 
 - **Backend**: New use-case + port + EF adapter in Telemetry or new Stats module (Clean/Hexagonal conventions).
 - **Frontend**: New `home/domain`, `home/application`, `home/infrastructure` layers following existing catalog feature structure; landing page component refactored to integrate metrics facade.
-- **Infrastructure**: Build/deploy workflow updated to run prerender during build; hosting must serve prerendered HTML for public routes.
-- **Dependencies**: `@angular/ssr` for prerendering; OpenAPI schema updated with new stats endpoint.
+- **Infrastructure**: Angular SSR (server-side rendering via `@angular/ssr` Node server) renders public routes on each request; hosting must run the Node SSR server process (`node dist/frontend/server/server.mjs`).
+- **Dependencies**: `@angular/ssr` for SSR; OpenAPI schema updated with new stats endpoint.
 - **Testing**: ≥80% coverage expected for new domain logic, facades, and UI components (signal-based stores, HTTP adapters).

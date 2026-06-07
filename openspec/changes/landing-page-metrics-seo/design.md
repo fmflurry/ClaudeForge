@@ -68,30 +68,29 @@ The landing page (`/`) is the primary entry point for the ClaudeForge marketplac
 - Inline stats in hero title: Couples stats to hero styling; harder to test independently.
 - Separate stats page/route: Increases cognitive load; metrics are more visible in hero.
 
-### Decision 5: SEO Metadata Approach — Static Prerender vs. Meta Tags Only
-**Choice**: **Static prerender with Angular `@angular/ssr`** for public routes (/, /catalog, /docs). Meta tags applied at runtime for fallback and dynamic content.
+### Decision 5: SEO Metadata Approach — Angular SSR vs. Static Prerender vs. Meta Tags Only
+**Choice**: **Angular SSR (server-side rendering) with Node @angular/ssr server** for public routes (/, /catalog, /docs).
 
-**Rationale for Prerender (RECOMMENDED)**:
-- **Crawlability**: Search engines (Google, Bing) and social media crawlers get full HTML with metadata already rendered. No JavaScript execution needed.
-- **Performance**: Prerendered pages serve static HTML instantly; no server-side rendering overhead.
-- **Reliability**: Metadata is "baked in" at build time; no runtime dependencies on the SEO service during crawl.
-- **Social unfurls**: Facebook, Twitter, LinkedIn crawlers can parse metadata immediately without waiting for JavaScript.
+**Rationale for SSR (CHOSEN)**:
+- **Crawlability**: Search engines (Google, Bing) and social media crawlers get full HTML with metadata rendered server-side on each request. No JavaScript execution needed.
+- **Fresh metrics**: Unlike static prerender, SSR renders fresh per request. Marketplace stats are bounded by the 5-minute backend API cache, but always current within that window.
+- **Hydration + TransferState**: Server renders initial state, transfers data to client via `TransferState` to prevent double-fetch (browser does not re-fetch from `/api/v1/stats` after hydration).
+- **Reliability**: Node SSR server handles rendering; no build-time dependencies on static files.
+- **Social unfurls**: Facebook, Twitter, LinkedIn crawlers receive fully-rendered HTML with metadata; unfurls work without waiting for JavaScript.
 
-**Prerender Trade-off & Mitigation**:
-- **Build time increases**: Prerendering adds 30-60 seconds to the build process (acceptable for CI/CD).
-  - *Mitigation*: Parallelize other build steps; document in CI/CD pipeline.
-- **Hosting requirement**: Web server must serve prerendered HTML files from dist; some hosting platforms (Vercel, Netlify) handle this automatically.
-  - *Mitigation*: Document hosting/deployment requirements. Fallback meta tags provide basic unfurl support if prerender is not deployed correctly.
-- **Metrics are stale**: Prerendered stats are as fresh as the last build. If stats change between builds, prerendered HTML shows old numbers until next deploy.
-  - *Mitigation*: Acceptable for landing page (metrics don't change rapidly). Publish a timestamp in JSON-LD indicating when data was last updated. Consider daily scheduled builds or on-demand builds triggered by metric changes.
+**SSR Trade-off & Mitigation**:
+- **Hosting requirement**: Web service must run a Node SSR server process (`node dist/frontend/server/server.mjs`), not just serve static files.
+  - *Mitigation*: Document deployment (Docker, Node version, memory requirements). CI/CD pipeline builds and packages the server bundle.
+- **Metrics freshness bounded by cache**: Stats are bounded by the 5-minute API cache, not freshly fetched per request (same as static prerender, but expected).
+  - *Mitigation*: Acceptable for landing page. Metadata sets `datePublished` to indicate when stats were last refreshed.
+- **Server resource overhead vs. static**: SSR requires memory/CPU per request vs. static file serving.
+  - *Mitigation*: Vertical scale the Node container; typical landing page SSR is lightweight. Monitor response times.
 
-**Alternative: Meta Tags Only (NOT RECOMMENDED)**:
-- Simpler: no prerender configuration; only client-side meta tag updates.
-- **Major limitation**: Social media crawlers execute JavaScript inconsistently (some do, some don't). Meta tags set by JavaScript may not be visible to crawlers.
-- **Risk**: Facebook unfurls may show generic title/image; Twitter cards may not render rich preview.
-- **SEO impact**: Crawlers that don't execute JavaScript won't see metadata; search engine visibility reduced for some crawlers.
+**Alternatives Considered**:
+- **Static Prerender**: Build-time prerendering, metrics stale between deploys. Simpler infrastructure but metrics always lag behind until next build.
+- **Meta Tags Only (NOT RECOMMENDED)**: No server-side rendering. Social media crawlers execute JavaScript inconsistently; unfurls may fail or show generic content.
 
-**Recommendation**: Implement prerender for maximum reach. Use client-side meta tags as fallback for content that changes frequently (e.g., plugin list updates).
+**Recommendation**: Implement SSR for maximum reach + fresh metrics within cache window. Use browser-global guards to prevent TransferState hydration issues in dev/test.
 
 ### Decision 6: Prerender Routes Selection
 **Choice**: Prerender only public routes: `/`, `/catalog`, `/docs`. Do NOT prerender authenticated routes (`/dashboard`, `/auth/*`, `/org/*`).
@@ -159,11 +158,12 @@ The landing page (`/`) is the primary entry point for the ClaudeForge marketplac
 
 | Risk | Mitigation |
 |------|-----------|
-| **Prerendered metrics are stale between builds** | Acceptable for landing page (metrics don't change frequently). Include `datePublished` in JSON-LD to indicate freshness. Consider daily scheduled builds or on-demand builds on metrics changes. |
+| **Metrics freshness bounded by 5-min API cache** | Acceptable for landing page (metrics don't change rapidly). Include `datePublished` in JSON-LD to indicate last refresh. Same freshness window as static prerender. |
 | **Stats endpoint becomes a bottleneck if cache misses** | Monitor cache hit rate; adjust TTL if needed. Database indexes on plugin/telemetry tables must exist. Alerts on cache miss spikes. |
-| **Social media crawlers evolve; some may bypass prerendered HTML** | Prerender is resilient: even if crawler does execute JS, client-side meta tags apply as fallback. Best-effort; cannot guarantee all crawlers work. |
-| **Prerender adds 30-60s to build time** | Acceptable for CI/CD pipeline. Document in build docs. Can parallelize with other build steps. |
-| **Hosting platform must serve prerendered HTML files correctly** | Document hosting requirements (e.g., static file serving from dist, Angular routing fallback to index.html for SPA routes). Test deployment on actual hosting platform. |
+| **Social media crawlers evolve; some may bypass server-rendered HTML** | SSR is resilient: even if crawler executes JS post-render, server-side content is already complete. Client-side meta tags apply as fallback. Best-effort; cannot guarantee all crawlers work. |
+| **Hosting must run Node SSR server, not just serve static files** | Document deployment (Docker, Node.js version, memory/CPU sizing). CI/CD pipeline builds server bundle. Monitor Node process health and response times. |
+| **Node SSR server uses more resources than static file serving** | Acceptable overhead for typical landing page SSR (lightweight). Vertical scale container as needed. Monitor server metrics; auto-scale if traffic spikes. |
+| **TransferState hydration bugs on browser-global objects** | Guards check `isPlatformBrowser()` before accessing window/document; prevents server-side crashes. Comprehensive E2E test coverage for SSR scenarios. |
 | **JSON-LD structured data may not be indexed by search engines** | JSON-LD is best-effort for search engine optimization. Rich snippets are not guaranteed. Implementation is still valuable; risk is low (no negative impact if not indexed). |
 | **Stats domain adds complexity to frontend folder structure** | Justified by reusability (metrics facade can be injected elsewhere) and testability. Small price for Clean Architecture compliance. |
 
@@ -196,27 +196,31 @@ The landing page (`/`) is the primary entry point for the ClaudeForge marketplac
    - Style stats band with responsive grid, loading/error states.
    - Write component tests for stats band and landing page.
 
-5. **Phase 5: Prerender & Static Assets**
+5. **Phase 5: Angular SSR & Static Assets**
    - Install/upgrade `@angular/ssr` if not present.
-   - Configure `angular.json` prerender routes: /, /catalog, /docs.
+   - Configure `angular.json` SSR build configuration with server entry point.
    - Create `robots.txt` with allow/disallow rules.
    - Create `sitemap.xml` generation script (or use build-time generation).
-   - Update `ng build` command to include `--prerender` flag.
-   - Document build + deployment steps.
+   - Update `ng build` command to build SSR server bundle (`dist/frontend/server/server.mjs`).
+   - Update Docker and deployment configuration to run Node SSR server (`node dist/frontend/server/server.mjs` on port 4200 or configured port).
+   - Document build, deployment, and Node server resource requirements.
 
 6. **Phase 6: Testing & QA**
-   - Run `ng build --prerender` locally; inspect dist output for prerendered HTML.
-   - Verify `<title>`, `<meta>` tags, JSON-LD in prerendered HTML.
+   - Build SSR bundle locally: `ng build --configuration=ssr` or equivalent.
+   - Run SSR server locally: `node dist/frontend/server/server.mjs`.
+   - Verify `<title>`, `<meta>` tags, JSON-LD are rendered server-side in HTML response.
    - Test social media unfurls (use Facebook/Twitter Share Debugger, LinkedIn Post Inspector).
-   - Verify robots.txt/sitemap.xml are served correctly.
-   - E2E test landing page loads correctly; stats display; error handling works.
-   - Performance profiling (Lighthouse) on prerendered vs. non-prerendered.
+   - Verify robots.txt/sitemap.xml are served correctly by the SSR server.
+   - E2E test landing page loads correctly via SSR; stats display; error handling works.
+   - Verify TransferState transfers server-rendered data to client (browser DevTools check for transfer in HTML).
+   - Performance profiling (Lighthouse) on SSR-rendered pages.
 
 7. **Phase 7: Deployment**
    - Deploy backend stats endpoint first (blue-green if applicable).
-   - Deploy frontend with prerender flag.
-   - Verify hosting platform serves prerendered HTML files.
+   - Deploy frontend SSR bundle: ensure Node server process is running (`node dist/frontend/server/server.mjs`).
+   - Verify Docker/hosting infrastructure starts the Node SSR server correctly.
    - Monitor stats endpoint cache hit rate and response times.
+   - Monitor Node SSR server health: response times, memory usage, error rates.
    - Monitor SEO metrics (Google Search Console) for improved crawlability.
 
 ## Open Questions
