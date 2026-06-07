@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Injectable, Signal, signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { LandingPageComponent } from './landing-page.component';
 import { CatalogFacade } from '../../catalog/application/facades/catalog.facade';
 import type { PluginSummary } from '../../catalog/domain/models/catalog.models';
@@ -11,6 +12,87 @@ import { StructuredDataService } from '../../../shared/infrastructure/seo/struct
 import type { SeoConfig } from '../../../shared/infrastructure/seo/seo.models';
 import { HomeMetricsFacade } from '../application/facades/home-metrics.facade';
 import type { MarketplaceMetrics } from '../domain/models/marketplace-metrics.model';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for home scope (Wave 1 i18n)
+//
+// En map returns EXACT current literals so all existing rendered-text
+// assertions keep passing unchanged after migration.
+// Fr map returns French — assertions using fr are RED until migration done.
+//
+// Key namespace: 'home' scope loaded via provideTranslocoScope('home')
+// on the home route. In tests, scope keys are accessed via the scope alias
+// prefix or directly as flat dot-delimited keys in the langs map.
+//
+// Canonical key list:
+//   home.hero-title           → "The plugin marketplace for Claude Code"
+//                             / "La place de marché de plugins pour Claude Code"
+//   home.hero-tagline         → "Discover, install, and publish..."
+//                             / "Découvrez, installez et publiez..."
+//   home.browse-plugins       → "Browse plugins"       / "Parcourir les plugins"
+//   home.publish-plugin       → "Publish a plugin"     / "Publier un plugin"
+//   home.sign-in              → "Sign in"              / "Se connecter"
+//   home.search-aria          → "Search plugins"       / "Rechercher des plugins"
+//   home.search-placeholder   → "Search plugins — e.g. 'git commit helper'…"
+//                             / "Rechercher des plugins — ex. 'aide git commit'…"
+//   home.search-btn           → "Search"               / "Rechercher"
+//   home.popular-heading      → "Popular plugins"      / "Plugins populaires"
+//   home.loading-plugins      → "Loading plugins…"     / "Chargement des plugins…"
+//   home.error-plugins        → "Could not load plugins right now"
+//                             / "Impossible de charger les plugins"
+//   home.empty-plugins        → "No plugins available yet — be the first to publish one!"
+//                             / "Aucun plugin disponible — soyez le premier à en publier un !"
+//   home.view-all-plugins     → "View all plugins"     / "Voir tous les plugins"
+//   home.how-heading          → "How it works"         / "Comment ça marche"
+//   home.footer-catalog       → "Plugin Catalog"       / "Catalogue de plugins"
+//   home.footer-docs          → "Documentation"        / "Documentation"
+//   home.footer-search        → "Search"               / "Rechercher"
+//   home.footer-my-plugins    → "My Plugins"           / "Mes plugins"
+// ---------------------------------------------------------------------------
+
+const EN_HOME_LANGS: Record<string, string> = {
+  'home.hero-title': 'The plugin marketplace for Claude Code',
+  'home.hero-tagline': 'Discover, install, and publish Claude Code plugins from the community — all in one place.',
+  'home.browse-plugins': 'Browse plugins',
+  'home.publish-plugin': 'Publish a plugin',
+  'home.sign-in': 'Sign in',
+  'home.search-aria': 'Search plugins',
+  'home.search-placeholder': "Search plugins — e.g. 'git commit helper', 'typescript formatter'…",
+  'home.search-btn': 'Search',
+  'home.popular-heading': 'Popular plugins',
+  'home.loading-plugins': 'Loading plugins…',
+  'home.error-plugins': 'Could not load plugins right now — try refreshing or',
+  'home.empty-plugins': 'No plugins available yet — be the first to publish one!',
+  'home.view-all-plugins': 'View all plugins',
+  'home.how-heading': 'How it works',
+  'home.footer-catalog': 'Plugin Catalog',
+  'home.footer-docs': 'Documentation',
+  'home.footer-search': 'Search',
+  'home.footer-my-plugins': 'My Plugins',
+};
+
+const FR_HOME_LANGS: Record<string, string> = {
+  'home.hero-title': 'La place de marché de plugins pour Claude Code',
+  'home.hero-tagline': 'Découvrez, installez et publiez des plugins Claude Code de la communauté — au même endroit.',
+  'home.browse-plugins': 'Parcourir les plugins',
+  'home.publish-plugin': 'Publier un plugin',
+  'home.sign-in': 'Se connecter',
+  'home.search-aria': 'Rechercher des plugins',
+  'home.search-placeholder': "Rechercher des plugins — ex. 'aide git commit', 'formateur typescript'…",
+  'home.search-btn': 'Rechercher',
+  'home.popular-heading': 'Plugins populaires',
+  'home.loading-plugins': 'Chargement des plugins…',
+  'home.error-plugins': 'Impossible de charger les plugins pour le moment — essayez de rafraîchir ou',
+  'home.empty-plugins': 'Aucun plugin disponible — soyez le premier à en publier un !',
+  'home.view-all-plugins': 'Voir tous les plugins',
+  'home.how-heading': 'Comment ça marche',
+  'home.footer-catalog': 'Catalogue de plugins',
+  'home.footer-docs': 'Documentation',
+  'home.footer-search': 'Rechercher',
+  'home.footer-my-plugins': 'Mes plugins',
+};
 
 // ---------------------------------------------------------------------------
 // Stub facade — injectable, controllable signals
@@ -121,6 +203,7 @@ function setup(): {
   stub: StubCatalogFacade;
   seoMetadataSpy: StubSeoMetadataService;
   structuredDataSpy: StubStructuredDataService;
+  translocoService: TranslocoService;
 } {
   const stub = new StubCatalogFacade();
   const seoMetadataSpy = new StubSeoMetadataService();
@@ -128,7 +211,17 @@ function setup(): {
   const homeMetricsFacadeStub = new StubHomeMetricsFacade();
 
   TestBed.configureTestingModule({
-    imports: [LandingPageComponent],
+    imports: [
+      LandingPageComponent,
+      // Transloco test harness (Wave 1 pattern):
+      // flat dot-delimited keys; en=current literals, fr=French translations.
+      // home scope keys are prefixed with 'home.' — matches provideTranslocoScope('home').
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_HOME_LANGS, fr: FR_HOME_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
     providers: [
       provideRouter([]),
       { provide: CatalogFacade, useValue: stub },
@@ -137,14 +230,20 @@ function setup(): {
       // Provided so that StatsBandComponent (once added to the landing template)
       // can resolve its HomeMetricsFacade dependency without errors.
       { provide: HomeMetricsFacade, useValue: homeMetricsFacadeStub },
+      // Real I18nFacade — injects TranslocoService from the testing module above.
+      // Switching lang via translocoService.setActiveLang('fr') causes i18n.t()
+      // to re-evaluate because the facade reads transloco.activeLang() internally.
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
     ],
   });
 
   const fixture = TestBed.createComponent(LandingPageComponent);
   const component = fixture.componentInstance;
   fixture.detectChanges();
+  const translocoService = TestBed.inject(TranslocoService);
 
-  return { fixture, component, stub, seoMetadataSpy, structuredDataSpy };
+  return { fixture, component, stub, seoMetadataSpy, structuredDataSpy, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -159,7 +258,7 @@ describe('LandingPageComponent', () => {
   it('renders the hero section with product name', () => {
     const { fixture } = setup();
     const h1 = fixture.nativeElement.querySelector('h1') as HTMLElement | null;
-    expect(h1?.textContent).toContain('Claude Code');
+    expect(h1?.textContent).toContain('Claude Code');
   });
 
   it('renders Browse plugins CTA linking to /catalog', () => {
@@ -447,5 +546,93 @@ describe('LandingPageComponent', () => {
     ][0] as readonly PluginSummary[];
     // first element should be the highest-downloaded plugin
     expect(calledWith[0].pluginId).toBe('high');
+  });
+
+  // =========================================================================
+  // GROUP 6 — i18n Wave 1 (RED — fail until template migrated to Transloco)
+  //
+  // When these are RED: the component still has hardcoded EN strings; the
+  // TranslocoService.setActiveLang('fr') call has no effect because no
+  // Transloco pipe/directive is used.
+  //
+  // When GREEN: all nav/CTA text must be driven by the 'home' scope keys.
+  // =========================================================================
+
+  it('[FR] hero h1 renders French title when lang is fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const h1 = fixture.nativeElement.querySelector('h1') as HTMLElement | null;
+    expect(h1?.textContent).toContain('La place de marché de plugins pour Claude Code');
+  });
+
+  it('[FR] Browse plugins CTA renders "Parcourir les plugins" when lang is fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const anchors: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('a[href]');
+    const browse = Array.from(anchors).find((a) => a.textContent?.trim() === 'Parcourir les plugins');
+    expect(browse).toBeDefined();
+  });
+
+  it('[FR] Publish a plugin CTA renders "Publier un plugin" when lang is fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const anchors: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('a[href]');
+    const publish = Array.from(anchors).find((a) => a.textContent?.trim() === 'Publier un plugin');
+    expect(publish).toBeDefined();
+  });
+
+  it('[FR] Sign in button renders "Se connecter" when lang is fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const btn = fixture.nativeElement.querySelector('button[aria-disabled="true"]') as HTMLButtonElement | null;
+    expect(btn?.textContent?.trim()).toContain('Se connecter');
+  });
+
+  it('[FR] Popular plugins heading renders "Plugins populaires" when lang is fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const h2Elements: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('h2');
+    const headings = Array.from(h2Elements).map((h) => h.textContent?.trim());
+    expect(headings).toContain('Plugins populaires');
+  });
+
+  it('[FR] How it works heading renders "Comment ça marche" when lang is fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const h2Elements: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('h2');
+    const headings = Array.from(h2Elements).map((h) => h.textContent?.trim());
+    expect(headings).toContain('Comment ça marche');
+  });
+
+  it('[FR] footer Plugin Catalog link renders "Catalogue de plugins" when lang is fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const footerLinks: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.lp-footer__link');
+    const texts = Array.from(footerLinks).map((a) => a.textContent?.trim());
+    expect(texts).toContain('Catalogue de plugins');
+  });
+
+  it('[FR] loading state renders "Chargement des plugins…" when lang is fr', () => {
+    const { fixture, stub, translocoService } = setup();
+    stub.setLoading(true);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const loading = fixture.nativeElement.querySelector('[aria-busy="true"]') as HTMLElement | null;
+    expect(loading?.textContent?.trim()).toContain('Chargement des plugins…');
   });
 });

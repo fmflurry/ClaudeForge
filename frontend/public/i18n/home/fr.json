@@ -1,0 +1,30 @@
+{
+  "hero-title": "La place de marché de plugins pour Claude Code",
+  "hero-tagline": "Découvrez, installez et publiez des plugins Claude Code de la communauté — au même endroit.",
+  "browse-plugins": "Parcourir les plugins",
+  "publish-plugin": "Publier un plugin",
+  "sign-in": "Se connecter",
+  "search-aria": "Rechercher des plugins",
+  "search-placeholder": "Rechercher des plugins — ex. 'aide git commit', 'formateur typescript'…",
+  "search-btn": "Rechercher",
+  "popular-heading": "Plugins populaires",
+  "loading-plugins": "Chargement des plugins…",
+  "error-plugins": "Impossible de charger les plugins pour le moment — essayez de rafraîchir ou",
+  "empty-plugins": "Aucun plugin disponible — soyez le premier à en publier un !",
+  "view-all-plugins": "Voir tous les plugins",
+  "how-heading": "Comment ça marche",
+  "footer-catalog": "Catalogue de plugins",
+  "footer-docs": "Documentation",
+  "footer-search": "Rechercher",
+  "footer-my-plugins": "Mes plugins",
+  "stats": {
+    "section-aria": "Statistiques de la place de marché",
+    "total-plugins": "Total plugins",
+    "total-downloads": "Total téléchargements",
+    "publishers": "Éditeurs",
+    "categories": "Catégories",
+    "loading": "Chargement des statistiques…",
+    "error": "Impossible de charger les statistiques. Réessayez.",
+    "retry": "Réessayer"
+  }
+}

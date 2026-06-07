@@ -14,35 +14,41 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { HomeMetricsFacade } from '../../application/facades/home-metrics.facade';
 import { formatMetricCount } from '../../../../shared/utils/format-metric-count';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-stats-band',
   standalone: true,
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (facade.isLoadingStats()) {
-      <div role="status" aria-live="polite" class="sb-status">Loading statistics…</div>
+      <div role="status" aria-live="polite" class="sb-status">
+        {{ i18n.t('home.stats.loading') }}
+      </div>
     } @else if (facade.statsError()) {
       <div role="alert" class="sb-error">
-        <p>Could not load statistics. Please try again.</p>
-        <button type="button" data-testid="retry-btn" class="sb-retry-btn" (click)="facade.loadStats()">Retry</button>
+        <p>{{ i18n.t('home.stats.error') }}</p>
+        <button type="button" data-testid="retry-btn" class="sb-retry-btn" (click)="facade.loadStats()">
+          {{ i18n.t('home.stats.retry') }}
+        </button>
       </div>
     } @else if (facade.stats() !== null) {
-      <section aria-label="Marketplace statistics" class="sb-band">
-        <article data-testid="stat-card" class="sb-stat-card" aria-label="Total plugins">
-          <p class="sb-stat-card__label">Total plugins</p>
+      <section [attr.aria-label]="i18n.t('home.stats.section-aria')" class="sb-band">
+        <article data-testid="stat-card" class="sb-stat-card" [attr.aria-label]="i18n.t('home.stats.total-plugins')">
+          <p class="sb-stat-card__label">{{ i18n.t('home.stats.total-plugins') }}</p>
           <p class="sb-stat-card__value">{{ formatCount(facade.stats()!.totalPlugins) }}</p>
         </article>
-        <article data-testid="stat-card" class="sb-stat-card" aria-label="Total downloads">
-          <p class="sb-stat-card__label">Total downloads</p>
+        <article data-testid="stat-card" class="sb-stat-card" [attr.aria-label]="i18n.t('home.stats.total-downloads')">
+          <p class="sb-stat-card__label">{{ i18n.t('home.stats.total-downloads') }}</p>
           <p class="sb-stat-card__value">{{ formatCount(facade.stats()!.totalDownloads) }}</p>
         </article>
-        <article data-testid="stat-card" class="sb-stat-card" aria-label="Publishers">
-          <p class="sb-stat-card__label">Publishers</p>
+        <article data-testid="stat-card" class="sb-stat-card" [attr.aria-label]="i18n.t('home.stats.publishers')">
+          <p class="sb-stat-card__label">{{ i18n.t('home.stats.publishers') }}</p>
           <p class="sb-stat-card__value">{{ formatCount(facade.stats()!.publisherCount) }}</p>
         </article>
-        <article data-testid="stat-card" class="sb-stat-card" aria-label="Categories">
-          <p class="sb-stat-card__label">Categories</p>
+        <article data-testid="stat-card" class="sb-stat-card" [attr.aria-label]="i18n.t('home.stats.categories')">
+          <p class="sb-stat-card__label">{{ i18n.t('home.stats.categories') }}</p>
           <p class="sb-stat-card__value">{{ formatCount(facade.stats()!.categoryCount) }}</p>
         </article>
       </section>
@@ -113,6 +119,7 @@ import { formatMetricCount } from '../../../../shared/utils/format-metric-count'
 })
 export class StatsBandComponent implements OnInit {
   readonly facade = inject(HomeMetricsFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly formatCount = formatMetricCount;
 

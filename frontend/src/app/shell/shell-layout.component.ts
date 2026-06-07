@@ -14,6 +14,7 @@ import { ORG_ACTIVE_ORG_SWITCHED } from '../features/organizations/application/f
 import type { ActiveOrgSwitchedPayload } from '../features/organizations/application/facades/org-context.facade';
 import { CatalogFacade } from '../features/catalog/application/facades/catalog.facade';
 import { LanguageSwitcherComponent } from './language-switcher/language-switcher.component';
+import { I18nFacade } from '../application/i18n/i18n.facade';
 
 /**
  * Main application shell — header, primary navigation, and router outlet.
@@ -42,15 +43,19 @@ import { LanguageSwitcherComponent } from './language-switcher/language-switcher
         <div class="cf-shell__brand">
           <span class="cf-shell__logo">ClaudeForge</span>
         </div>
-        <nav class="cf-shell__nav" aria-label="Main navigation">
+        <nav class="cf-shell__nav" [attr.aria-label]="i18n.t('shell.nav-aria')">
           <a routerLink="/catalog" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
-            Catalog
+            {{ i18n.t('shell.nav.catalog') }}
           </a>
-          <a routerLink="/search" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link"> Search </a>
+          <a routerLink="/search" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
+            {{ i18n.t('shell.nav.search') }}
+          </a>
           <a routerLink="/dashboard" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
-            Dashboard
+            {{ i18n.t('shell.nav.dashboard') }}
           </a>
-          <a routerLink="/docs" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link"> Docs </a>
+          <a routerLink="/docs" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
+            {{ i18n.t('shell.nav.docs') }}
+          </a>
         </nav>
         <div class="cf-shell__team">
           <cf-team-switcher />
@@ -67,11 +72,18 @@ import { LanguageSwitcherComponent } from './language-switcher/language-switcher
         <div class="cf-shell__auth" aria-label="User account">
           @if (currentUser()) {
             <span class="cf-shell__user-email">{{ currentUser()!.email }}</span>
-            <button type="button" class="cf-shell__sign-out" (click)="onSignOut()" aria-label="Sign out">
-              Sign out
+            <button
+              type="button"
+              class="cf-shell__sign-out"
+              (click)="onSignOut()"
+              [attr.aria-label]="i18n.t('shell.auth.sign-out')"
+            >
+              {{ i18n.t('shell.auth.sign-out') }}
             </button>
           } @else {
-            <a routerLink="/login" class="cf-shell__sign-in" aria-label="Sign in"> Sign in </a>
+            <a routerLink="/login" class="cf-shell__sign-in" [attr.aria-label]="i18n.t('shell.auth.sign-in')">
+              {{ i18n.t('shell.auth.sign-in') }}
+            </a>
           }
         </div>
       </header>
@@ -181,6 +193,7 @@ export class ShellLayoutComponent implements OnInit, OnDestroy {
   protected readonly facade = inject(TeamContextFacade);
   private readonly authFacade = inject(AuthFacade);
   private readonly catalogFacade = inject(CatalogFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly currentUser: Signal<CurrentUser | undefined> = this.authFacade.currentUser;
 

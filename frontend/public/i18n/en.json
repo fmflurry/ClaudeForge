@@ -2,6 +2,7 @@
   "language-switcher.en": "English",
   "language-switcher.fr": "French",
   "shell.title": "ClaudeForge",
+  "shell.nav-aria": "Main navigation",
   "shell.nav.catalog": "Catalog",
   "shell.nav.search": "Search",
   "shell.nav.dashboard": "Dashboard",

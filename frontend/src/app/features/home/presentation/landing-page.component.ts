@@ -23,6 +23,7 @@ import { formatMetricCount } from '../../../shared/utils/format-metric-count';
 import { StatsBandComponent } from './stats-band/stats-band.component';
 import { SeoMetadataService } from '../../../shared/infrastructure/seo/seo-metadata.service';
 import { StructuredDataService } from '../../../shared/infrastructure/seo/structured-data.service';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
 
 /** Number of plugins shown in the featured section. */
 const FEATURED_LIMIT = 6;
@@ -38,19 +39,19 @@ const FEATURED_LIMIT = 6;
     <!-- ================================================================= -->
     <section class="lp-hero" aria-labelledby="lp-hero-title">
       <div class="lp-hero__inner">
-        <h1 id="lp-hero-title" class="lp-hero__title">
-          The plugin marketplace for&nbsp;<span class="lp-hero__brand">Claude&nbsp;Code</span>
-        </h1>
+        <h1 id="lp-hero-title" class="lp-hero__title">{{ i18n.t('home.hero-title') }}</h1>
         <p class="lp-hero__tagline">
-          Discover, install, and publish Claude Code plugins from the community — all in one place.
+          {{ i18n.t('home.hero-tagline') }}
         </p>
 
         <div class="lp-hero__ctas" role="group" aria-label="Primary actions">
-          <a routerLink="/catalog" class="lp-btn lp-btn--primary" aria-label="Browse all plugins"> Browse plugins </a>
+          <a routerLink="/catalog" class="lp-btn lp-btn--primary" aria-label="Browse all plugins">{{
+            i18n.t('home.browse-plugins')
+          }}</a>
 
-          <a routerLink="/docs" class="lp-btn lp-btn--secondary" aria-label="Learn how to publish a plugin">
-            Publish a plugin
-          </a>
+          <a routerLink="/docs" class="lp-btn lp-btn--secondary" aria-label="Learn how to publish a plugin">{{
+            i18n.t('home.publish-plugin')
+          }}</a>
 
           <!-- Sign-in CTA — routes to the login page -->
           <button
@@ -58,10 +59,10 @@ const FEATURED_LIMIT = 6;
             class="lp-btn lp-btn--ghost"
             aria-disabled="true"
             tabindex="-1"
-            title="Sign in"
+            [title]="i18n.t('home.sign-in')"
             (click)="onSignIn()"
           >
-            Sign in
+            {{ i18n.t('home.sign-in') }}
           </button>
         </div>
       </div>
@@ -70,20 +71,26 @@ const FEATURED_LIMIT = 6;
     <!-- ================================================================= -->
     <!-- SEARCH ENTRY                                                        -->
     <!-- ================================================================= -->
-    <section class="lp-search-entry" aria-label="Search plugins">
+    <section class="lp-search-entry" [attr.aria-label]="i18n.t('home.search-aria')">
       <form class="lp-search-entry__form" role="search" (submit)="onSearchSubmit($event)">
-        <label for="lp-search-input" class="lp-sr-only">Search plugins</label>
+        <label for="lp-search-input" class="lp-sr-only">{{ i18n.t('home.search-aria') }}</label>
         <input
           id="lp-search-input"
           type="search"
           class="lp-search-entry__input"
-          placeholder="Search plugins — e.g. 'git commit helper', 'typescript formatter'…"
+          [placeholder]="i18n.t('home.search-placeholder')"
           [value]="searchQuery()"
           (input)="onSearchInput($event)"
           autocomplete="off"
-          aria-label="Search plugins"
+          [attr.aria-label]="i18n.t('home.search-aria')"
         />
-        <button type="submit" class="lp-btn lp-btn--primary lp-search-entry__btn" aria-label="Search">Search</button>
+        <button
+          type="submit"
+          class="lp-btn lp-btn--primary lp-search-entry__btn"
+          [attr.aria-label]="i18n.t('home.search-btn')"
+        >
+          {{ i18n.t('home.search-btn') }}
+        </button>
       </form>
     </section>
 
@@ -97,23 +104,25 @@ const FEATURED_LIMIT = 6;
     <!-- ================================================================= -->
     <section class="lp-featured" aria-labelledby="lp-featured-title">
       <div class="lp-section-inner">
-        <h2 id="lp-featured-title" class="lp-section-title">Popular plugins</h2>
+        <h2 id="lp-featured-title" class="lp-section-title">
+          {{ i18n.t('home.popular-heading') }}
+        </h2>
 
         @if (isLoadingPlugins()) {
           <div class="lp-featured__loading" aria-busy="true" role="status" aria-label="Loading popular plugins">
-            Loading plugins…
+            {{ i18n.t('home.loading-plugins') }}
           </div>
         }
 
         @if (!isLoadingPlugins() && hasError()) {
           <div role="alert" class="lp-featured__error">
-            Could not load plugins right now — try refreshing or
+            {{ i18n.t('home.error-plugins') }}
             <a routerLink="/catalog" class="lp-link">browse the full catalog</a>.
           </div>
         }
 
         @if (!isLoadingPlugins() && !hasError() && featuredPlugins().length === 0) {
-          <cf-empty-state message="No plugins available yet — be the first to publish one!" />
+          <cf-empty-state [message]="i18n.t('home.empty-plugins')" />
         }
 
         @if (!isLoadingPlugins() && !hasError() && featuredPlugins().length > 0) {
@@ -145,7 +154,7 @@ const FEATURED_LIMIT = 6;
           </ul>
 
           <div class="lp-featured__cta">
-            <a routerLink="/catalog" class="lp-btn lp-btn--secondary"> View all plugins </a>
+            <a routerLink="/catalog" class="lp-btn lp-btn--secondary">{{ i18n.t('home.view-all-plugins') }}</a>
           </div>
         }
       </div>
@@ -156,7 +165,7 @@ const FEATURED_LIMIT = 6;
     <!-- ================================================================= -->
     <section class="lp-how" aria-labelledby="lp-how-title">
       <div class="lp-section-inner">
-        <h2 id="lp-how-title" class="lp-section-title">How it works</h2>
+        <h2 id="lp-how-title" class="lp-section-title">{{ i18n.t('home.how-heading') }}</h2>
         <ol class="lp-how__steps" role="list">
           @for (step of howItWorksSteps; track step.title) {
             <li class="lp-how__step">
@@ -174,10 +183,10 @@ const FEATURED_LIMIT = 6;
     <!-- ================================================================= -->
     <footer class="lp-footer" role="contentinfo">
       <nav class="lp-footer__nav" aria-label="Footer navigation">
-        <a routerLink="/catalog" class="lp-footer__link">Plugin Catalog</a>
-        <a routerLink="/docs" class="lp-footer__link">Documentation</a>
-        <a routerLink="/search" class="lp-footer__link">Search</a>
-        <a routerLink="/dashboard" class="lp-footer__link">My Plugins</a>
+        <a routerLink="/catalog" class="lp-footer__link">{{ i18n.t('home.footer-catalog') }}</a>
+        <a routerLink="/docs" class="lp-footer__link">{{ i18n.t('home.footer-docs') }}</a>
+        <a routerLink="/search" class="lp-footer__link">{{ i18n.t('home.footer-search') }}</a>
+        <a routerLink="/dashboard" class="lp-footer__link">{{ i18n.t('home.footer-my-plugins') }}</a>
       </nav>
       <p class="lp-footer__copy">&copy; {{ currentYear }} ClaudeForge — A plugin marketplace for Claude Code</p>
     </footer>
@@ -505,6 +514,7 @@ export class LandingPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly seoMetadata = inject(SeoMetadataService);
   private readonly structuredData = inject(StructuredDataService);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly isLoadingPlugins: Signal<boolean> = this.catalogFacade.isLoadingPlugins;
   readonly hasError: Signal<boolean> = computed(() => this.catalogFacade.pluginsError() !== undefined);

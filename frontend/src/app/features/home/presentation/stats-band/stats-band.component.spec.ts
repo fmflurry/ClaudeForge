@@ -12,9 +12,53 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Injectable, signal, Signal } from '@angular/core';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { StatsBandComponent } from './stats-band.component';
 import { HomeMetricsFacade } from '../../application/facades/home-metrics.facade';
 import type { MarketplaceMetrics } from '../../domain/models/marketplace-metrics.model';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for stats-band (Wave 1 i18n)
+//
+// Stats-band lives inside the home scope. Keys are prefixed 'home.stats.*'.
+// En map returns EXACT current literals so all existing assertions stay green.
+// Fr map returns French — fr assertions are RED until migration.
+//
+// Key list:
+//   home.stats.section-aria      → "Marketplace statistics" / "Statistiques de la place de marché"
+//   home.stats.total-plugins     → "Total plugins"          / "Total plugins"
+//   home.stats.total-downloads   → "Total downloads"        / "Total téléchargements"
+//   home.stats.publishers        → "Publishers"             / "Éditeurs"
+//   home.stats.categories        → "Categories"             / "Catégories"
+//   home.stats.loading           → "Loading statistics…"    / "Chargement des statistiques…"
+//   home.stats.error             → "Could not load statistics. Please try again."
+//                                / "Impossible de charger les statistiques. Réessayez."
+//   home.stats.retry             → "Retry"                  / "Réessayer"
+// ---------------------------------------------------------------------------
+
+const EN_STATS_LANGS: Record<string, string> = {
+  'home.stats.section-aria': 'Marketplace statistics',
+  'home.stats.total-plugins': 'Total plugins',
+  'home.stats.total-downloads': 'Total downloads',
+  'home.stats.publishers': 'Publishers',
+  'home.stats.categories': 'Categories',
+  'home.stats.loading': 'Loading statistics…',
+  'home.stats.error': 'Could not load statistics. Please try again.',
+  'home.stats.retry': 'Retry',
+};
+
+const FR_STATS_LANGS: Record<string, string> = {
+  'home.stats.section-aria': 'Statistiques de la place de marché',
+  'home.stats.total-plugins': 'Total plugins',
+  'home.stats.total-downloads': 'Total téléchargements',
+  'home.stats.publishers': 'Éditeurs',
+  'home.stats.categories': 'Catégories',
+  'home.stats.loading': 'Chargement des statistiques…',
+  'home.stats.error': 'Impossible de charger les statistiques. Réessayez.',
+  'home.stats.retry': 'Réessayer',
+};
 
 // ---------------------------------------------------------------------------
 // Stub facade — injectable, controllable signals
@@ -71,20 +115,38 @@ function setup(initialise?: (stub: StubHomeMetricsFacade) => void): {
   component: StatsBandComponent;
   stub: StubHomeMetricsFacade;
   el: HTMLElement;
+  translocoService: TranslocoService;
 } {
   const stub = new StubHomeMetricsFacade();
   initialise?.(stub);
 
   TestBed.configureTestingModule({
-    imports: [StatsBandComponent],
-    providers: [{ provide: HomeMetricsFacade, useValue: stub }],
+    imports: [
+      StatsBandComponent,
+      // Transloco test harness (Wave 1 pattern):
+      // flat dot-delimited keys; en=current literals, fr=French translations.
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_STATS_LANGS, fr: FR_STATS_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: HomeMetricsFacade, useValue: stub },
+      // Real I18nFacade — injects TranslocoService from the testing module above.
+      // translocoService.setActiveLang('fr') causes i18n.t() to re-evaluate
+      // because the facade reads transloco.activeLang() internally.
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   });
 
   const fixture = TestBed.createComponent(StatsBandComponent);
   const component = fixture.componentInstance;
   fixture.detectChanges();
+  const translocoService = TestBed.inject(TranslocoService);
 
-  return { fixture, component, stub, el: fixture.nativeElement as HTMLElement };
+  return { fixture, component, stub, el: fixture.nativeElement as HTMLElement, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -491,6 +553,101 @@ describe('StatsBandComponent', () => {
       fixture.detectChanges();
 
       expect(el.textContent).toContain('M');
+    });
+  });
+
+  // =========================================================================
+  // i18n Wave 1 — FR language (RED — fail until template migrated to Transloco)
+  //
+  // When RED: component has hardcoded EN strings; setActiveLang('fr') has
+  // no effect because no Transloco pipe/directive is used in the template.
+  //
+  // When GREEN: all metric labels, loading/error/retry text and section
+  // aria-label must be driven by the 'home.stats.*' keys.
+  // =========================================================================
+
+  describe('i18n — FR language rendering (RED until migration)', () => {
+    it('[FR] loading text is "Chargement des statistiques…" when lang is fr', () => {
+      const { el, fixture, translocoService } = setup((s) => {
+        s.setLoading(true);
+      });
+      fixture.detectChanges();
+      translocoService.setActiveLang('fr');
+      fixture.detectChanges();
+
+      const statusEl = el.querySelector('[role="status"]') as HTMLElement | null;
+      expect(statusEl?.textContent?.trim()).toContain('Chargement des statistiques…');
+    });
+
+    it('[FR] error message is French when lang is fr', () => {
+      const { el, fixture, translocoService } = setup((s) => {
+        s.setError('Network error');
+      });
+      fixture.detectChanges();
+      translocoService.setActiveLang('fr');
+      fixture.detectChanges();
+
+      const alertEl = el.querySelector('[role="alert"]') as HTMLElement | null;
+      expect(alertEl?.textContent).toContain('Impossible de charger les statistiques');
+    });
+
+    it('[FR] retry button text is "Réessayer" when lang is fr', () => {
+      const { el, fixture, translocoService } = setup((s) => {
+        s.setError('Network error');
+      });
+      fixture.detectChanges();
+      translocoService.setActiveLang('fr');
+      fixture.detectChanges();
+
+      const retryBtn =
+        (el.querySelector('[data-testid="retry-btn"]') as HTMLElement | null) ??
+        (el.querySelector('button') as HTMLElement | null);
+      expect(retryBtn?.textContent?.trim()).toBe('Réessayer');
+    });
+
+    it('[FR] "Total téléchargements" label rendered when lang is fr', () => {
+      const { el, fixture, translocoService } = setup((stub) => {
+        stub.setStats(SAMPLE_METRICS);
+      });
+      fixture.detectChanges();
+      translocoService.setActiveLang('fr');
+      fixture.detectChanges();
+
+      expect(el.textContent).toContain('Total téléchargements');
+    });
+
+    it('[FR] "Éditeurs" label rendered for publishers when lang is fr', () => {
+      const { el, fixture, translocoService } = setup((stub) => {
+        stub.setStats(SAMPLE_METRICS);
+      });
+      fixture.detectChanges();
+      translocoService.setActiveLang('fr');
+      fixture.detectChanges();
+
+      expect(el.textContent).toContain('Éditeurs');
+    });
+
+    it('[FR] "Catégories" label rendered for categories when lang is fr', () => {
+      const { el, fixture, translocoService } = setup((stub) => {
+        stub.setStats(SAMPLE_METRICS);
+      });
+      fixture.detectChanges();
+      translocoService.setActiveLang('fr');
+      fixture.detectChanges();
+
+      expect(el.textContent).toContain('Catégories');
+    });
+
+    it('[FR] section aria-label is "Statistiques de la place de marché" when lang is fr', () => {
+      const { el, fixture, translocoService } = setup((stub) => {
+        stub.setStats(SAMPLE_METRICS);
+      });
+      fixture.detectChanges();
+      translocoService.setActiveLang('fr');
+      fixture.detectChanges();
+
+      const section = el.querySelector('section') as HTMLElement | null;
+      expect(section?.getAttribute('aria-label')).toBe('Statistiques de la place de marché');
     });
   });
 });
