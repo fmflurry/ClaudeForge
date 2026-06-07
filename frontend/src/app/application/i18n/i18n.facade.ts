@@ -17,7 +17,17 @@ export class I18nFacade {
   private readonly _activeLang = signal<Lang>(DEFAULT_LANG);
 
   readonly activeLang: Signal<Lang> = this._activeLang.asReadonly();
-  readonly availableLangs: readonly Lang[] = LANG_VALUES;
+
+  /**
+   * Available languages, exposed as a getter so LANG_VALUES is read lazily at
+   * access time rather than captured as a class-field initialiser at construction
+   * time. This avoids an esbuild circular-dependency / module-loading-order edge
+   * case where LANG_VALUES could still be `undefined` when the constructor runs
+   * (manifests only when many spec files are bundled together with isolate:false).
+   */
+  get availableLangs(): readonly Lang[] {
+    return LANG_VALUES;
+  }
 
   /**
    * Translate a key using the current active language.

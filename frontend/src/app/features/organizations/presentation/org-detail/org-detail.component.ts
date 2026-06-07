@@ -6,21 +6,24 @@
 
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrganizationsFacade } from '../../application/facades/organizations.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 import { OrgMembersComponent } from '../org-members/org-members.component';
 import { OrgInvitationsComponent } from '../org-invitations/org-invitations.component';
 import { OrgContextFacade } from '../../application/facades/org-context.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-org-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, OrgMembersComponent, OrgInvitationsComponent],
+  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-org-detail">
-        <a routerLink="/orgs" class="cf-org-detail__back">← Back to Organisations</a>
+        <a routerLink="/orgs" class="cf-org-detail__back">{{ i18n.t('organizations.back-to-orgs') }}</a>
 
         @if (orgId) {
           <cf-org-members [orgId]="orgId" />
@@ -55,6 +58,7 @@ export class OrgDetailComponent implements OnInit {
   protected readonly orgsFacade = inject(OrganizationsFacade);
   protected readonly contextFacade = inject(OrgContextFacade);
   protected readonly authFacade = inject(AuthFacade);
+  protected readonly i18n = inject(I18nFacade);
   private readonly route = inject(ActivatedRoute);
 
   protected orgId: string | undefined;

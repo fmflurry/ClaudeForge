@@ -4,9 +4,42 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, signal } from '@angular/core';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { LoginPageComponent } from './login-page.component';
 import { AuthFacade } from '../../application/facades/auth.facade';
 import type { AuthStatus } from '../../domain/models/auth.models';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for auth scope
+//
+// En map returns EXACT current literals so all existing rendered-text
+// assertions keep passing unchanged after migration.
+// Fr map returns French — used in fr-switch assertions.
+//
+// Key namespace: 'auth' scope loaded via provideTranslocoScope('auth').
+// ---------------------------------------------------------------------------
+
+const EN_AUTH_LANGS: Record<string, string> = {
+  'auth.login.subtitle': 'Access your plugin marketplace account',
+  'auth.login.sign-in-google': 'Sign in with Google',
+  'auth.login.sign-in-microsoft': 'Sign in with Microsoft',
+  'auth.login.redirecting': 'Redirecting to provider…',
+  'auth.callback.completing': 'Completing sign-in…',
+  'auth.callback.error-title': 'Sign-in failed',
+  'auth.callback.retry': 'Try again',
+};
+
+const FR_AUTH_LANGS: Record<string, string> = {
+  'auth.login.subtitle': 'Accédez à votre compte de la place de marché de plugins',
+  'auth.login.sign-in-google': 'Se connecter avec Google',
+  'auth.login.sign-in-microsoft': 'Se connecter avec Microsoft',
+  'auth.login.redirecting': 'Redirection vers le fournisseur…',
+  'auth.callback.completing': 'Finalisation de la connexion…',
+  'auth.callback.error-title': 'Échec de la connexion',
+  'auth.callback.retry': 'Réessayer',
+};
 
 // ---------------------------------------------------------------------------
 // Fake AuthFacade
@@ -47,18 +80,34 @@ function setup(
     authError?: string | undefined;
     loginSpy?: (provider: string) => void;
   } = {},
-): { fixture: ComponentFixture<LoginPageComponent>; fakeFacade: Partial<AuthFacade> } {
+): {
+  fixture: ComponentFixture<LoginPageComponent>;
+  fakeFacade: Partial<AuthFacade>;
+  translocoService: TranslocoService;
+} {
   const fakeFacade = buildFakeAuthFacade(opts);
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    imports: [LoginPageComponent],
-    providers: [{ provide: AuthFacade, useValue: fakeFacade }],
+    imports: [
+      LoginPageComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_AUTH_LANGS, fr: FR_AUTH_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: AuthFacade, useValue: fakeFacade },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(LoginPageComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(LoginPageComponent);
   fixture.detectChanges();
-  return { fixture, fakeFacade };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, fakeFacade, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -137,6 +186,37 @@ describe('LoginPageComponent — render', () => {
     const msBtn = el.querySelector<HTMLButtonElement>('button[aria-label="Sign in with Microsoft"]');
     expect(googleBtn?.disabled).toBe(false);
     expect(msBtn?.disabled).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// i18n — French language switch
+// ---------------------------------------------------------------------------
+
+describe('LoginPageComponent — i18n French', () => {
+  it('should render French Google button label after switching to fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const btn = el.querySelector<HTMLButtonElement>('button[aria-label="Se connecter avec Google"]');
+    expect(btn).not.toBeNull();
+  });
+
+  it('should render French Microsoft button label after switching to fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const btn = el.querySelector<HTMLButtonElement>('button[aria-label="Se connecter avec Microsoft"]');
+    expect(btn).not.toBeNull();
+  });
+
+  it('should render French redirecting message after switching to fr', () => {
+    const { fixture, translocoService } = setup({ isAuthenticating: true });
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Redirection vers le fournisseur');
   });
 });
 

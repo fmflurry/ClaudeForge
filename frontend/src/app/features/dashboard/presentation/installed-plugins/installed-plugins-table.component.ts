@@ -1,28 +1,31 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { DashboardFacade } from '../../application/facades/dashboard.facade';
 import type { InstalledPlugin } from '../../domain/models/dashboard.models';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-installed-plugins-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
+  providers: [provideTranslocoScope('dashboard')],
   template: `
     @if (isLoading()) {
-      <div data-testid="loading" aria-busy="true" class="loading">Loading plugins…</div>
+      <div data-testid="loading" aria-busy="true" class="loading">{{ i18n.t('dashboard.loading') }}</div>
     } @else if (hasError()) {
-      <div data-testid="error-message" role="alert" class="error">Failed to load plugins. Please try again.</div>
+      <div data-testid="error-message" role="alert" class="error">{{ i18n.t('dashboard.error-load') }}</div>
     } @else if (plugins().length === 0) {
-      <div data-testid="empty-state" role="status" class="empty-state">No plugins installed yet.</div>
+      <div data-testid="empty-state" role="status" class="empty-state">{{ i18n.t('dashboard.empty-state') }}</div>
     } @else {
       <table data-testid="plugins-table" class="plugins-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Version</th>
-            <th>Installed</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>{{ i18n.t('dashboard.col-name') }}</th>
+            <th>{{ i18n.t('dashboard.col-version') }}</th>
+            <th>{{ i18n.t('dashboard.col-installed') }}</th>
+            <th>{{ i18n.t('dashboard.col-status') }}</th>
+            <th>{{ i18n.t('dashboard.col-actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -34,28 +37,28 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
               <td>
                 @if (plugin.status === 'update-available') {
                   <span data-testid="update-badge" class="update-badge">
-                    Update available: {{ plugin.latestVersion }}
+                    {{ i18n.t('dashboard.update-available', { version: plugin.latestVersion }) }}
                   </span>
                 } @else {
-                  <span class="up-to-date">Up to date</span>
+                  <span class="up-to-date">{{ i18n.t('dashboard.up-to-date') }}</span>
                 }
               </td>
               <td>
                 <button
                   data-testid="details-btn"
                   class="details-btn"
-                  aria-label="Details {{ plugin.name }}"
+                  [attr.aria-label]="i18n.t('dashboard.details-btn-aria', { name: plugin.name })"
                   (click)="onViewDetails(plugin.name)"
                 >
-                  Details
+                  {{ i18n.t('dashboard.details-btn') }}
                 </button>
                 <button
                   data-testid="remove-btn"
                   class="remove-btn"
-                  aria-label="Remove {{ plugin.name }}"
+                  [attr.aria-label]="i18n.t('dashboard.remove-btn-aria', { name: plugin.name })"
                   (click)="onRemove(plugin.name)"
                 >
-                  Remove
+                  {{ i18n.t('dashboard.remove-btn') }}
                 </button>
               </td>
             </tr>
@@ -67,6 +70,7 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
 })
 export class InstalledPluginsTableComponent {
   private readonly facade = inject(DashboardFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   // Derived signals from facade
   readonly plugins: Signal<InstalledPlugin[]> = computed(() => this.facade.installedPlugins());

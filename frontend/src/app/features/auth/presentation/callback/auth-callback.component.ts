@@ -6,24 +6,32 @@
 
 import { ChangeDetectionStrategy, Component, inject, OnInit, Signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { AuthFacade } from '../../application/facades/auth.facade';
 import type { AuthStatus } from '../../domain/models/auth.models';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-auth-callback',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('auth')],
   template: `
     <div class="cf-callback">
       @if (authStatus() === 'error') {
         <div class="cf-callback__error" role="alert">
-          <h2 class="cf-callback__error-title">Sign-in failed</h2>
+          <h2 class="cf-callback__error-title">{{ i18n.t('auth.callback.error-title') }}</h2>
           <p class="cf-callback__error-message">{{ authError() }}</p>
-          <a href="/login" class="cf-callback__retry">Try again</a>
+          <a href="/login" class="cf-callback__retry">{{ i18n.t('auth.callback.retry') }}</a>
         </div>
       } @else {
-        <div class="cf-callback__loading" role="status" aria-live="polite" aria-label="Completing sign-in">
-          <p>Completing sign-in…</p>
+        <div
+          class="cf-callback__loading"
+          role="status"
+          aria-live="polite"
+          [attr.aria-label]="i18n.t('auth.callback.completing')"
+        >
+          <p>{{ i18n.t('auth.callback.completing') }}</p>
         </div>
       }
     </div>
@@ -79,6 +87,7 @@ export class AuthCallbackComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authFacade = inject(AuthFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly authStatus: Signal<AuthStatus> = this.authFacade.authStatus;
   readonly authError: Signal<string | undefined> = this.authFacade.authError;

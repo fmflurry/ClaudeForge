@@ -5,24 +5,27 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrgContextFacade } from '../../application/facades/org-context.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-org-switcher',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-org-switcher">
         @if (contextFacade.activeOrg(); as org) {
-          <span class="cf-org-switcher__current" aria-label="Current organisation">
+          <span class="cf-org-switcher__current" [attr.aria-label]="i18n.t('organizations.current-org-aria')">
             {{ org.name }}
           </span>
           @if (contextFacade.organizations().length > 1) {
             <select
               class="cf-org-switcher__select"
-              aria-label="Switch organisation"
+              [attr.aria-label]="i18n.t('organizations.switch-org-aria')"
               [value]="org.orgId"
               (change)="onOrgChange($event)"
             >
@@ -32,7 +35,7 @@ import { AuthFacade } from '../../../auth/application/facades/auth.facade';
             </select>
           }
         } @else {
-          <span class="cf-org-switcher__none">No organisation</span>
+          <span class="cf-org-switcher__none">{{ i18n.t('organizations.no-org') }}</span>
         }
       </div>
     }
@@ -71,6 +74,7 @@ import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 export class OrgSwitcherComponent {
   protected readonly contextFacade = inject(OrgContextFacade);
   protected readonly authFacade = inject(AuthFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   onOrgChange(event: Event): void {
     const select = event.target as HTMLSelectElement;

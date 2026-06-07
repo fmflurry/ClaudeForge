@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { DashboardFacade } from '../application/facades/dashboard.facade';
 import { InstalledPluginsTableComponent } from './installed-plugins/installed-plugins-table.component';
 import { PluginDetailsModalComponent } from './plugin-details-modal/plugin-details-modal.component';
 import type { InstalledPlugin } from '../domain/models/dashboard.models';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
 
 /** Interval between background update checks (5 minutes). */
 const UPDATE_CHECK_INTERVAL_MS = 300_000;
@@ -12,14 +14,19 @@ const UPDATE_CHECK_INTERVAL_MS = 300_000;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InstalledPluginsTableComponent, PluginDetailsModalComponent],
+  providers: [provideTranslocoScope('dashboard')],
   template: `
     <div data-testid="dashboard-page" class="dashboard-page">
       @if (facade.hasUpdates()) {
-        <div data-testid="update-banner" class="update-banner">Updates are available for your installed plugins.</div>
+        <div data-testid="update-banner" class="update-banner">{{ i18n.t('dashboard.update-banner') }}</div>
       }
 
       <div data-testid="install-search" class="install-search">
-        <input type="text" placeholder="Search for plugins to install…" aria-label="Search for plugins to install" />
+        <input
+          type="text"
+          [placeholder]="i18n.t('dashboard.search-placeholder')"
+          [attr.aria-label]="i18n.t('dashboard.search-aria')"
+        />
       </div>
 
       <cf-installed-plugins-table
@@ -42,6 +49,7 @@ const UPDATE_CHECK_INTERVAL_MS = 300_000;
 })
 export class DashboardPageComponent implements OnInit, OnDestroy {
   readonly facade = inject(DashboardFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   private readonly _selectedPluginName = signal<string | null>(null);
   private timerId: ReturnType<typeof setTimeout> | null = null;

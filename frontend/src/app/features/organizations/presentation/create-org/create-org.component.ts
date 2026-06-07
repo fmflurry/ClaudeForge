@@ -6,17 +6,20 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrganizationsFacade } from '../../application/facades/organizations.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-create-org',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-create-org">
-        <h2 class="cf-create-org__title">Create Organisation</h2>
+        <h2 class="cf-create-org__title">{{ i18n.t('organizations.create-org-title') }}</h2>
 
         @if (orgsFacade.orgsError(); as errors) {
           <div class="cf-create-org__error" role="alert">
@@ -28,12 +31,12 @@ import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 
         <form class="cf-create-org__form" (ngSubmit)="onSubmit()">
           <div class="cf-create-org__field">
-            <label class="cf-create-org__label" for="org-name">Organisation Name</label>
+            <label class="cf-create-org__label" for="org-name">{{ i18n.t('organizations.org-name-label') }}</label>
             <input
               id="org-name"
               class="cf-create-org__input"
               type="text"
-              placeholder="My Organisation"
+              [placeholder]="i18n.t('organizations.org-name-placeholder')"
               [value]="name()"
               (input)="name.set(inputValue($event))"
               required
@@ -42,12 +45,12 @@ import { AuthFacade } from '../../../auth/application/facades/auth.facade';
           </div>
 
           <div class="cf-create-org__field">
-            <label class="cf-create-org__label" for="org-slug">Slug</label>
+            <label class="cf-create-org__label" for="org-slug">{{ i18n.t('organizations.slug-label') }}</label>
             <input
               id="org-slug"
               class="cf-create-org__input"
               type="text"
-              placeholder="my-organisation"
+              [placeholder]="i18n.t('organizations.slug-placeholder')"
               [value]="slug()"
               (input)="slug.set(inputValue($event))"
               required
@@ -61,9 +64,9 @@ import { AuthFacade } from '../../../auth/application/facades/auth.facade';
             [disabled]="orgsFacade.isLoadingOrgs() || !name() || !slug()"
           >
             @if (orgsFacade.isLoadingOrgs()) {
-              Creating…
+              {{ i18n.t('organizations.creating') }}
             } @else {
-              Create Organisation
+              {{ i18n.t('organizations.create-org-btn') }}
             }
           </button>
         </form>
@@ -154,6 +157,7 @@ import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 export class CreateOrgComponent {
   protected readonly orgsFacade = inject(OrganizationsFacade);
   protected readonly authFacade = inject(AuthFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly name = signal('');
   readonly slug = signal('');

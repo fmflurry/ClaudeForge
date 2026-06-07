@@ -1,0 +1,13 @@
+{
+  "login": {
+    "subtitle": "Access your plugin marketplace account",
+    "sign-in-google": "Sign in with Google",
+    "sign-in-microsoft": "Sign in with Microsoft",
+    "redirecting": "Redirecting to provider…"
+  },
+  "callback": {
+    "completing": "Completing sign-in…",
+    "error-title": "Sign-in failed",
+    "retry": "Try again"
+  }
+}

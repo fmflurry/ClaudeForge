@@ -7,33 +7,36 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrganizationsFacade } from '../../application/facades/organizations.facade';
 import { OrgContextFacade } from '../../application/facades/org-context.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 import { canChangeMemberRole, canRemoveMembers } from '../../domain/rules/org-role.rules';
 import type { OrgRole } from '../../domain/models/organizations.models';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-org-members',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-org-members">
-        <h3 class="cf-org-members__title">Members</h3>
+        <h3 class="cf-org-members__title">{{ i18n.t('organizations.members-title') }}</h3>
 
         @if (orgsFacade.isLoadingMembers()) {
-          <p class="cf-org-members__loading" aria-live="polite">Loading members…</p>
+          <p class="cf-org-members__loading" aria-live="polite">{{ i18n.t('organizations.loading-members') }}</p>
         } @else if (orgsFacade.members().length === 0) {
-          <p class="cf-org-members__empty">No members found.</p>
+          <p class="cf-org-members__empty">{{ i18n.t('organizations.no-members') }}</p>
         } @else {
-          <table class="cf-org-members__table" aria-label="Organisation members">
+          <table class="cf-org-members__table" [attr.aria-label]="i18n.t('organizations.members-table-aria')">
             <thead>
               <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Email</th>
-                <th scope="col">Role</th>
-                <th scope="col">Actions</th>
+                <th scope="col">{{ i18n.t('organizations.col-name') }}</th>
+                <th scope="col">{{ i18n.t('organizations.col-email') }}</th>
+                <th scope="col">{{ i18n.t('organizations.col-role') }}</th>
+                <th scope="col">{{ i18n.t('organizations.col-actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -48,9 +51,9 @@ import type { OrgRole } from '../../domain/models/organizations.models';
                         type="button"
                         class="cf-org-members__action"
                         (click)="onChangeRole(member.userId, member.role)"
-                        [attr.aria-label]="'Change role for ' + member.displayName"
+                        [attr.aria-label]="i18n.t('organizations.change-role-aria') + ' ' + member.displayName"
                       >
-                        Change Role
+                        {{ i18n.t('organizations.change-role-btn') }}
                       </button>
                     }
                     @if (canRemove(callerRole())) {
@@ -58,9 +61,9 @@ import type { OrgRole } from '../../domain/models/organizations.models';
                         type="button"
                         class="cf-org-members__action cf-org-members__action--danger"
                         (click)="onRemove(member.userId)"
-                        [attr.aria-label]="'Remove ' + member.displayName"
+                        [attr.aria-label]="i18n.t('organizations.remove-aria') + ' ' + member.displayName"
                       >
-                        Remove
+                        {{ i18n.t('organizations.remove-btn') }}
                       </button>
                     }
                   </td>
@@ -139,6 +142,7 @@ export class OrgMembersComponent {
   protected readonly orgsFacade = inject(OrganizationsFacade);
   protected readonly contextFacade = inject(OrgContextFacade);
   protected readonly authFacade = inject(AuthFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly orgId = input.required<string>();
 

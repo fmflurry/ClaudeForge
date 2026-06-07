@@ -11,23 +11,26 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, Signal } from '@angular/core';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { DeviceActivationFacade } from '../application/facades/device-activation.facade';
 import type { DeviceActivationErrorReason, DeviceActivationStatus } from '../domain/ports/device-activation.port';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-activate-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
+  providers: [provideTranslocoScope('device-activation')],
   template: `
     <div class="cf-activate">
       <div class="cf-activate__card">
-        <h1 class="cf-activate__title">Approve Device</h1>
-        <p class="cf-activate__subtitle">Enter the user code displayed on your device to authorize it.</p>
+        <h1 class="cf-activate__title">{{ i18n.t('device-activation.title') }}</h1>
+        <p class="cf-activate__subtitle">{{ i18n.t('device-activation.subtitle') }}</p>
 
         @if (status() === 'approved') {
           <div class="cf-activate__approved" role="status">
-            <p>Device successfully approved. You may close this page.</p>
+            <p>{{ i18n.t('device-activation.approved') }}</p>
           </div>
         }
 
@@ -39,21 +42,21 @@ import type { DeviceActivationErrorReason, DeviceActivationStatus } from '../dom
 
         @if (status() !== 'approved') {
           <form class="cf-activate__form" (ngSubmit)="onSubmit()">
-            <label class="cf-activate__label" for="userCode">User Code</label>
+            <label class="cf-activate__label" for="userCode">{{ i18n.t('device-activation.label-user-code') }}</label>
             <input
               id="userCode"
               class="cf-activate__input"
               type="text"
               [formControl]="userCodeControl"
-              placeholder="e.g. ABCD-1234"
+              [placeholder]="i18n.t('device-activation.placeholder')"
               autocomplete="off"
             />
 
             <button type="submit" class="cf-activate__btn" [disabled]="status() === 'submitting'">
               @if (status() === 'submitting') {
-                Approving…
+                {{ i18n.t('device-activation.btn-approving') }}
               } @else {
-                Approve Device
+                {{ i18n.t('device-activation.btn-approve') }}
               }
             </button>
           </form>
@@ -171,6 +174,7 @@ import type { DeviceActivationErrorReason, DeviceActivationStatus } from '../dom
 export class ActivatePageComponent implements OnInit {
   private readonly facade = inject(DeviceActivationFacade);
   private readonly route = inject(ActivatedRoute);
+  protected readonly i18n = inject(I18nFacade);
 
   // Expose facade signals to template (no any/$any)
   readonly status: Signal<DeviceActivationStatus> = this.facade.status;
@@ -198,19 +202,19 @@ export class ActivatePageComponent implements OnInit {
     const reason = this.errorReason();
     switch (reason) {
       case 'invalid':
-        return 'The code you entered is invalid or missing. Please check and try again.';
+        return this.i18n.t('device-activation.error.invalid');
       case 'not-found':
-        return 'The code was not found or is unrecognized. Please verify the code.';
+        return this.i18n.t('device-activation.error.not-found');
       case 'already-approved':
-        return 'This device has already been approved.';
+        return this.i18n.t('device-activation.error.already-approved');
       case 'expired':
-        return 'The code has expired. Please restart the device authorization flow.';
+        return this.i18n.t('device-activation.error.expired');
       case 'unauthorized':
-        return 'You are not authorized to approve this device. Please sign in and try again.';
+        return this.i18n.t('device-activation.error.unauthorized');
       case 'unknown':
-        return 'An unexpected error occurred. Please try again later.';
+        return this.i18n.t('device-activation.error.unknown');
       default:
-        return 'An unexpected error occurred. Please try again later.';
+        return this.i18n.t('device-activation.error.unknown');
     }
   }
 }

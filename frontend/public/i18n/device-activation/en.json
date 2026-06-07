@@ -1,0 +1,17 @@
+{
+  "title": "Approve Device",
+  "subtitle": "Enter the user code displayed on your device to authorize it.",
+  "approved": "Device successfully approved. You may close this page.",
+  "label-user-code": "User Code",
+  "placeholder": "e.g. ABCD-1234",
+  "btn-approve": "Approve Device",
+  "btn-approving": "Approving…",
+  "error": {
+    "invalid": "The code you entered is invalid or missing. Please check and try again.",
+    "not-found": "The code was not found or is unrecognized. Please verify the code.",
+    "already-approved": "This device has already been approved.",
+    "expired": "The code has expired. Please restart the device authorization flow.",
+    "unauthorized": "You are not authorized to approve this device. Please sign in and try again.",
+    "unknown": "An unexpected error occurred. Please try again later."
+  }
+}

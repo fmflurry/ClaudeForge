@@ -1,17 +1,25 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import type { InstalledPlugin } from '../../domain/models/dashboard.models';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-plugin-details-modal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
+  providers: [provideTranslocoScope('dashboard')],
   template: `
     <div class="modal-overlay">
       <div class="modal-content" role="dialog" aria-modal="true">
         <div class="modal-header">
           <h2 data-testid="modal-title" class="modal-title">{{ pluginName() }}</h2>
-          <button data-testid="modal-close-btn" class="modal-close" aria-label="Close modal" (click)="onClose()">
+          <button
+            data-testid="modal-close-btn"
+            class="modal-close"
+            [attr.aria-label]="i18n.t('dashboard.modal-close-aria')"
+            (click)="onClose()"
+          >
             &times;
           </button>
         </div>
@@ -19,31 +27,37 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
         <div class="modal-body">
           @if (plugin()) {
             <div>
-              <span data-testid="plugin-version">Version: {{ plugin()!.version }}</span>
+              <span data-testid="plugin-version">{{
+                i18n.t('dashboard.modal-version', { version: plugin()!.version })
+              }}</span>
             </div>
-            <div>Installed: {{ plugin()!.installedAt }}</div>
+            <div>{{ i18n.t('dashboard.modal-installed', { date: plugin()!.installedAt }) }}</div>
 
             @if (plugin()!.status === 'update-available') {
               <div data-testid="update-section" class="update-section">
-                <strong>Update available: {{ plugin()!.latestVersion }}</strong>
-                <button data-testid="modal-update-btn" (click)="onConfirmUpdate()">Update now</button>
+                <strong>{{ i18n.t('dashboard.modal-update-available', { version: plugin()!.latestVersion }) }}</strong>
+                <button data-testid="modal-update-btn" (click)="onConfirmUpdate()">
+                  {{ i18n.t('dashboard.modal-update-now') }}
+                </button>
               </div>
             }
 
             @if (plugin()!.latestVersion) {
               <div data-testid="release-notes" class="release-notes">
-                <h3>Release Notes</h3>
-                <p>Latest version: {{ plugin()!.latestVersion }}</p>
+                <h3>{{ i18n.t('dashboard.modal-release-notes-heading') }}</h3>
+                <p>{{ i18n.t('dashboard.modal-latest-version', { version: plugin()!.latestVersion }) }}</p>
               </div>
             }
           } @else {
             <div>
-              <span data-testid="plugin-version">Version: —</span>
+              <span data-testid="plugin-version">{{ i18n.t('dashboard.modal-version-unknown') }}</span>
             </div>
           }
 
           <div class="docs-section">
-            <a data-testid="docs-placeholder" href="#docs" class="docs-link"> View Documentation </a>
+            <a data-testid="docs-placeholder" href="#docs" class="docs-link">
+              {{ i18n.t('dashboard.modal-docs-link') }}
+            </a>
           </div>
         </div>
 
@@ -51,10 +65,10 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
           <button
             data-testid="modal-remove-btn"
             class="remove-btn"
-            aria-label="Remove plugin"
+            [attr.aria-label]="i18n.t('dashboard.modal-remove-btn-aria')"
             (click)="onConfirmRemove()"
           >
-            Remove Plugin
+            {{ i18n.t('dashboard.modal-remove-btn') }}
           </button>
         </div>
       </div>
@@ -62,6 +76,8 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
   `,
 })
 export class PluginDetailsModalComponent {
+  protected readonly i18n = inject(I18nFacade);
+
   readonly pluginName = input.required<string>();
   readonly plugin = input<InstalledPlugin | undefined>(undefined);
 

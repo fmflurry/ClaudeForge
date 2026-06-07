@@ -4,10 +4,29 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { OrgSwitcherComponent } from './org-switcher.component';
 import { OrgContextFacade } from '../../application/facades/org-context.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
 import type { OrgSummary } from '../../domain/models/organizations.models';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for organizations scope
+// ---------------------------------------------------------------------------
+
+const EN_LANGS: Record<string, string> = {
+  'organizations.current-org-aria': 'Current organisation',
+  'organizations.switch-org-aria': 'Switch organisation',
+  'organizations.no-org': 'No organisation',
+};
+
+const FR_LANGS: Record<string, string> = {
+  'organizations.current-org-aria': 'Organisation actuelle',
+  'organizations.switch-org-aria': "Changer d'organisation",
+  'organizations.no-org': 'Aucune organisation',
+};
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -47,14 +66,20 @@ function buildFakeAuthFacade(isAuthenticated: boolean): Partial<AuthFacade> {
   };
 }
 
-function setup(opts: {
-  organizations?: OrgSummary[];
-  activeOrg?: OrgSummary | undefined;
-  isAuthenticated?: boolean;
-}): ComponentFixture<OrgSwitcherComponent> {
+function setup(opts: { organizations?: OrgSummary[]; activeOrg?: OrgSummary | undefined; isAuthenticated?: boolean }): {
+  fixture: ComponentFixture<OrgSwitcherComponent>;
+  translocoService: TranslocoService;
+} {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    imports: [OrgSwitcherComponent],
+    imports: [
+      OrgSwitcherComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_LANGS, fr: FR_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
     providers: [
       {
         provide: OrgContextFacade,
@@ -67,11 +92,14 @@ function setup(opts: {
         provide: AuthFacade,
         useValue: buildFakeAuthFacade(opts.isAuthenticated ?? true),
       },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
     ],
   });
   const fixture = TestBed.createComponent(OrgSwitcherComponent);
   fixture.detectChanges();
-  return fixture;
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -80,7 +108,7 @@ function setup(opts: {
 
 describe('OrgSwitcherComponent — unauthenticated', () => {
   it('should not render switcher when unauthenticated', () => {
-    const fixture = setup({ isAuthenticated: false });
+    const { fixture } = setup({ isAuthenticated: false });
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.cf-org-switcher')).toBeNull();
   });
@@ -88,7 +116,7 @@ describe('OrgSwitcherComponent — unauthenticated', () => {
 
 describe('OrgSwitcherComponent — no active org', () => {
   it('should show "No organisation" when activeOrg is undefined', () => {
-    const fixture = setup({ isAuthenticated: true, organizations: [], activeOrg: undefined });
+    const { fixture } = setup({ isAuthenticated: true, organizations: [], activeOrg: undefined });
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('No organisation');
   });
@@ -96,13 +124,13 @@ describe('OrgSwitcherComponent — no active org', () => {
 
 describe('OrgSwitcherComponent — single org', () => {
   it('should display the active org name', () => {
-    const fixture = setup({ isAuthenticated: true, organizations: [ORG_A], activeOrg: ORG_A });
+    const { fixture } = setup({ isAuthenticated: true, organizations: [ORG_A], activeOrg: ORG_A });
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('Acme Corp');
   });
 
   it('should NOT render a select when only one org exists', () => {
-    const fixture = setup({ isAuthenticated: true, organizations: [ORG_A], activeOrg: ORG_A });
+    const { fixture } = setup({ isAuthenticated: true, organizations: [ORG_A], activeOrg: ORG_A });
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('select')).toBeNull();
   });
@@ -110,7 +138,7 @@ describe('OrgSwitcherComponent — single org', () => {
 
 describe('OrgSwitcherComponent — multiple orgs', () => {
   it('should render a select when multiple orgs exist', () => {
-    const fixture = setup({
+    const { fixture } = setup({
       isAuthenticated: true,
       organizations: [ORG_A, ORG_B],
       activeOrg: ORG_A,
@@ -120,7 +148,7 @@ describe('OrgSwitcherComponent — multiple orgs', () => {
   });
 
   it('should list all org options in the select', () => {
-    const fixture = setup({
+    const { fixture } = setup({
       isAuthenticated: true,
       organizations: [ORG_A, ORG_B],
       activeOrg: ORG_A,
@@ -128,5 +156,26 @@ describe('OrgSwitcherComponent — multiple orgs', () => {
     const el = fixture.nativeElement as HTMLElement;
     const options = el.querySelectorAll('option');
     expect(options.length).toBe(2);
+  });
+});
+
+describe('OrgSwitcherComponent — i18n FR', () => {
+  it('[FR] should show "Aucune organisation" when activeOrg is undefined and lang is fr', () => {
+    const { fixture, translocoService } = setup({ isAuthenticated: true, organizations: [], activeOrg: undefined });
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Aucune organisation');
+  });
+
+  it('[FR] switch org select aria-label should be "Changer d\'organisation" when lang is fr', () => {
+    const { fixture, translocoService } = setup({
+      isAuthenticated: true,
+      organizations: [ORG_A, ORG_B],
+      activeOrg: ORG_A,
+    });
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement | null;
+    expect(select?.getAttribute('aria-label')).toBe("Changer d'organisation");
   });
 });

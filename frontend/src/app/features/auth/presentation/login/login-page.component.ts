@@ -5,18 +5,21 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, Signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { AuthFacade } from '../../application/facades/auth.facade';
 import type { AuthProvider, AuthStatus } from '../../domain/models/auth.models';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-login-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('auth')],
   template: `
     <div class="cf-login">
       <div class="cf-login__card">
         <h1 class="cf-login__title">Sign in to ClaudeForge</h1>
-        <p class="cf-login__subtitle">Access your plugin marketplace account</p>
+        <p class="cf-login__subtitle">{{ i18n.t('auth.login.subtitle') }}</p>
 
         @if (authError()) {
           <div class="cf-login__error" role="alert">
@@ -30,10 +33,10 @@ import type { AuthProvider, AuthStatus } from '../../domain/models/auth.models';
             class="cf-login__btn cf-login__btn--google"
             [disabled]="isAuthenticating()"
             (click)="onLogin('google')"
-            aria-label="Sign in with Google"
+            [attr.aria-label]="i18n.t('auth.login.sign-in-google')"
           >
             <span class="cf-login__btn-icon" aria-hidden="true">G</span>
-            Sign in with Google
+            {{ i18n.t('auth.login.sign-in-google') }}
           </button>
 
           <button
@@ -41,15 +44,15 @@ import type { AuthProvider, AuthStatus } from '../../domain/models/auth.models';
             class="cf-login__btn cf-login__btn--microsoft"
             [disabled]="isAuthenticating()"
             (click)="onLogin('microsoft')"
-            aria-label="Sign in with Microsoft"
+            [attr.aria-label]="i18n.t('auth.login.sign-in-microsoft')"
           >
             <span class="cf-login__btn-icon" aria-hidden="true">M</span>
-            Sign in with Microsoft
+            {{ i18n.t('auth.login.sign-in-microsoft') }}
           </button>
         </div>
 
         @if (isAuthenticating()) {
-          <p class="cf-login__loading" role="status" aria-live="polite">Redirecting to provider…</p>
+          <p class="cf-login__loading" role="status" aria-live="polite">{{ i18n.t('auth.login.redirecting') }}</p>
         }
       </div>
     </div>
@@ -165,6 +168,7 @@ import type { AuthProvider, AuthStatus } from '../../domain/models/auth.models';
 })
 export class LoginPageComponent {
   private readonly authFacade = inject(AuthFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly isAuthenticating: Signal<boolean> = this.authFacade.isAuthenticating;
   readonly authStatus: Signal<AuthStatus> = this.authFacade.authStatus;

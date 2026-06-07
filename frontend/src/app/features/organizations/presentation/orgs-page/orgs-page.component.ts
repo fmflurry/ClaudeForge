@@ -6,31 +6,34 @@
 
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrganizationsFacade } from '../../application/facades/organizations.facade';
 import { OrgContextFacade } from '../../application/facades/org-context.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 import { CreateOrgComponent } from '../create-org/create-org.component';
 import { OrgMembersComponent } from '../org-members/org-members.component';
 import { OrgInvitationsComponent } from '../org-invitations/org-invitations.component';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-orgs-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, CreateOrgComponent, OrgMembersComponent, OrgInvitationsComponent],
+  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-orgs-page">
-        <h1 class="cf-orgs-page__title">Organisations</h1>
+        <h1 class="cf-orgs-page__title">{{ i18n.t('organizations.title') }}</h1>
 
         <cf-create-org />
 
         @if (orgsFacade.isLoadingOrgs()) {
-          <p class="cf-orgs-page__loading" aria-live="polite">Loading organisations…</p>
+          <p class="cf-orgs-page__loading" aria-live="polite">{{ i18n.t('organizations.loading-orgs') }}</p>
         } @else if (orgsFacade.organizations().length === 0) {
-          <p class="cf-orgs-page__empty">You are not a member of any organisation yet.</p>
+          <p class="cf-orgs-page__empty">{{ i18n.t('organizations.empty-orgs') }}</p>
         } @else {
-          <ul class="cf-orgs-page__list" aria-label="Your organisations">
+          <ul class="cf-orgs-page__list" [attr.aria-label]="i18n.t('organizations.your-orgs-aria')">
             @for (org of orgsFacade.organizations(); track org.orgId) {
               <li class="cf-orgs-page__item">
                 <a [routerLink]="['/orgs', org.orgId]" class="cf-orgs-page__link">
@@ -43,7 +46,7 @@ import { OrgInvitationsComponent } from '../org-invitations/org-invitations.comp
         }
 
         @if (contextFacade.activeOrgId(); as activeId) {
-          <section class="cf-orgs-page__active" aria-label="Active organisation details">
+          <section class="cf-orgs-page__active" [attr.aria-label]="i18n.t('organizations.active-org-aria')">
             <cf-org-members [orgId]="activeId" />
             <cf-org-invitations [orgId]="activeId" />
           </section>
@@ -51,7 +54,11 @@ import { OrgInvitationsComponent } from '../org-invitations/org-invitations.comp
       </div>
     } @else {
       <div class="cf-orgs-page__unauthenticated">
-        <p>Please <a routerLink="/login">sign in</a> to view organisations.</p>
+        <p>
+          {{ i18n.t('organizations.sign-in-prompt') }}
+          <a routerLink="/login">{{ i18n.t('organizations.sign-in-link') }}</a>
+          {{ i18n.t('organizations.sign-in-suffix') }}
+        </p>
       </div>
     }
   `,
@@ -132,6 +139,7 @@ export class OrgsPageComponent implements OnInit {
   protected readonly orgsFacade = inject(OrganizationsFacade);
   protected readonly contextFacade = inject(OrgContextFacade);
   protected readonly authFacade = inject(AuthFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   ngOnInit(): void {
     if (this.authFacade.isAuthenticated()) {

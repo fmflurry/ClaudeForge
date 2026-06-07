@@ -6,20 +6,23 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrganizationsFacade } from '../../application/facades/organizations.facade';
 import { OrgContextFacade } from '../../application/facades/org-context.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 import { canInviteMembers, canRevokeInvitation } from '../../domain/rules/org-role.rules';
 import type { OrgRole } from '../../domain/models/organizations.models';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-org-invitations',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-org-inv">
-        <h3 class="cf-org-inv__title">Invitations</h3>
+        <h3 class="cf-org-inv__title">{{ i18n.t('organizations.invitations-title') }}</h3>
 
         @if (canInvite(callerRole())) {
           <form class="cf-org-inv__send-form" (ngSubmit)="onSendInvite()">
@@ -29,26 +32,28 @@ import type { OrgRole } from '../../domain/models/organizations.models';
               placeholder="email@example.com"
               [value]="inviteEmail()"
               (input)="inviteEmail.set(inputValue($event))"
-              aria-label="Invite email address"
+              [attr.aria-label]="i18n.t('organizations.invite-email-aria')"
               required
             />
             <select
               class="cf-org-inv__select"
-              aria-label="Invite role"
+              [attr.aria-label]="i18n.t('organizations.invite-role-aria')"
               [value]="inviteRole()"
               (change)="inviteRole.set(selectValue($event))"
             >
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
+              <option value="member">{{ i18n.t('organizations.role-member') }}</option>
+              <option value="admin">{{ i18n.t('organizations.role-admin') }}</option>
             </select>
-            <button type="submit" class="cf-org-inv__send-btn" [disabled]="!inviteEmail()">Send Invite</button>
+            <button type="submit" class="cf-org-inv__send-btn" [disabled]="!inviteEmail()">
+              {{ i18n.t('organizations.send-invite-btn') }}
+            </button>
           </form>
         }
 
         @if (orgsFacade.invitations().length === 0) {
-          <p class="cf-org-inv__empty">No pending invitations.</p>
+          <p class="cf-org-inv__empty">{{ i18n.t('organizations.no-invitations') }}</p>
         } @else {
-          <ul class="cf-org-inv__list" aria-label="Pending invitations">
+          <ul class="cf-org-inv__list" [attr.aria-label]="i18n.t('organizations.invitations-list-aria')">
             @for (inv of orgsFacade.invitations(); track inv.invitationId) {
               <li class="cf-org-inv__item">
                 <span class="cf-org-inv__email">{{ inv.email }}</span>
@@ -59,18 +64,18 @@ import type { OrgRole } from '../../domain/models/organizations.models';
                     type="button"
                     class="cf-org-inv__action"
                     (click)="onAccept(inv.invitationId)"
-                    [attr.aria-label]="'Accept invitation from ' + inv.email"
+                    [attr.aria-label]="i18n.t('organizations.accept-aria') + ' ' + inv.email"
                   >
-                    Accept
+                    {{ i18n.t('organizations.accept-btn') }}
                   </button>
                   @if (canRevoke(callerRole())) {
                     <button
                       type="button"
                       class="cf-org-inv__action cf-org-inv__action--danger"
                       (click)="onRevoke(inv.invitationId)"
-                      [attr.aria-label]="'Revoke invitation for ' + inv.email"
+                      [attr.aria-label]="i18n.t('organizations.revoke-aria') + ' ' + inv.email"
                     >
-                      Revoke
+                      {{ i18n.t('organizations.revoke-btn') }}
                     </button>
                   }
                 }
@@ -196,6 +201,7 @@ export class OrgInvitationsComponent {
   protected readonly orgsFacade = inject(OrganizationsFacade);
   protected readonly contextFacade = inject(OrgContextFacade);
   protected readonly authFacade = inject(AuthFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly orgId = input.required<string>();
 

@@ -46,9 +46,81 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { InstalledPluginsTableComponent } from './installed-plugins-table.component';
 import { DashboardFacade } from '../../application/facades/dashboard.facade';
 import type { InstalledPlugin, DashboardGroup, RecommendedPlugin } from '../../domain/models/dashboard.models';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for dashboard scope (Wave 1 i18n pattern)
+//
+// En map returns EXACT current literals so all existing assertions stay green.
+// Fr map returns French — fr assertions verify the migration works.
+// ---------------------------------------------------------------------------
+
+const EN_DASHBOARD_LANGS: Record<string, string> = {
+  'dashboard.update-banner': 'Updates are available for your installed plugins.',
+  'dashboard.search-placeholder': 'Search for plugins to install…',
+  'dashboard.search-aria': 'Search for plugins to install',
+  'dashboard.col-name': 'Name',
+  'dashboard.col-version': 'Version',
+  'dashboard.col-installed': 'Installed',
+  'dashboard.col-status': 'Status',
+  'dashboard.col-actions': 'Actions',
+  'dashboard.loading': 'Loading plugins…',
+  'dashboard.error-load': 'Failed to load plugins. Please try again.',
+  'dashboard.empty-state': 'No plugins installed yet.',
+  'dashboard.update-available': 'Update available: {{ version }}',
+  'dashboard.up-to-date': 'Up to date',
+  'dashboard.details-btn': 'Details',
+  'dashboard.remove-btn': 'Remove',
+  'dashboard.details-btn-aria': 'Details {{ name }}',
+  'dashboard.remove-btn-aria': 'Remove {{ name }}',
+  'dashboard.modal-close-aria': 'Close modal',
+  'dashboard.modal-version': 'Version: {{ version }}',
+  'dashboard.modal-version-unknown': 'Version: —',
+  'dashboard.modal-installed': 'Installed: {{ date }}',
+  'dashboard.modal-update-available': 'Update available: {{ version }}',
+  'dashboard.modal-update-now': 'Update now',
+  'dashboard.modal-release-notes-heading': 'Release Notes',
+  'dashboard.modal-latest-version': 'Latest version: {{ version }}',
+  'dashboard.modal-docs-link': 'View Documentation',
+  'dashboard.modal-remove-btn': 'Remove Plugin',
+  'dashboard.modal-remove-btn-aria': 'Remove plugin',
+};
+
+const FR_DASHBOARD_LANGS: Record<string, string> = {
+  'dashboard.update-banner': 'Des mises à jour sont disponibles pour vos plugins installés.',
+  'dashboard.search-placeholder': 'Rechercher des plugins à installer…',
+  'dashboard.search-aria': 'Rechercher des plugins à installer',
+  'dashboard.col-name': 'Nom',
+  'dashboard.col-version': 'Version',
+  'dashboard.col-installed': 'Installé',
+  'dashboard.col-status': 'Statut',
+  'dashboard.col-actions': 'Actions',
+  'dashboard.loading': 'Chargement des plugins…',
+  'dashboard.error-load': 'Impossible de charger les plugins. Veuillez réessayer.',
+  'dashboard.empty-state': "Aucun plugin installé pour l'instant.",
+  'dashboard.update-available': 'Mise à jour disponible : {{ version }}',
+  'dashboard.up-to-date': 'À jour',
+  'dashboard.details-btn': 'Détails',
+  'dashboard.remove-btn': 'Supprimer',
+  'dashboard.details-btn-aria': 'Détails {{ name }}',
+  'dashboard.remove-btn-aria': 'Supprimer {{ name }}',
+  'dashboard.modal-close-aria': 'Fermer la fenêtre',
+  'dashboard.modal-version': 'Version : {{ version }}',
+  'dashboard.modal-version-unknown': 'Version : —',
+  'dashboard.modal-installed': 'Installé : {{ date }}',
+  'dashboard.modal-update-available': 'Mise à jour disponible : {{ version }}',
+  'dashboard.modal-update-now': 'Mettre à jour maintenant',
+  'dashboard.modal-release-notes-heading': 'Notes de version',
+  'dashboard.modal-latest-version': 'Dernière version : {{ version }}',
+  'dashboard.modal-docs-link': 'Voir la documentation',
+  'dashboard.modal-remove-btn': 'Supprimer le plugin',
+  'dashboard.modal-remove-btn-aria': 'Supprimer le plugin',
+};
 
 // ---------------------------------------------------------------------------
 // Stub DashboardFacade
@@ -141,16 +213,32 @@ const PLUGIN_UPDATE_AVAILABLE = makePlugin({
 // Setup helper (single TestBed per describe via beforeEach)
 // ---------------------------------------------------------------------------
 
-function setupComponent(): { fixture: ComponentFixture<InstalledPluginsTableComponent>; stub: StubDashboardFacade } {
+function setupComponent(): {
+  fixture: ComponentFixture<InstalledPluginsTableComponent>;
+  stub: StubDashboardFacade;
+  translocoService: TranslocoService;
+} {
   const stub = new StubDashboardFacade();
   TestBed.configureTestingModule({
-    imports: [InstalledPluginsTableComponent],
-    providers: [{ provide: DashboardFacade, useValue: stub }],
+    imports: [
+      InstalledPluginsTableComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_DASHBOARD_LANGS, fr: FR_DASHBOARD_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: DashboardFacade, useValue: stub },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(InstalledPluginsTableComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(InstalledPluginsTableComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -341,5 +429,52 @@ describe('InstalledPluginsTableComponent — architecture boundary', () => {
   it('should compile and instantiate using only DashboardFacade (no store or use-case injection)', () => {
     const { fixture } = setupComponent();
     expect(fixture.componentInstance).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// i18n — fr assertions
+// ---------------------------------------------------------------------------
+
+describe('InstalledPluginsTableComponent — i18n', () => {
+  it('[FR] loading indicator renders French text when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setLoading(true);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const loading = fixture.nativeElement.querySelector('[aria-busy="true"]') as HTMLElement | null;
+    expect(loading?.textContent?.trim()).toContain('Chargement des plugins…');
+  });
+
+  it('[FR] error message renders French text when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setError([{ code: 'LOAD_ERROR', message: 'Failed to load' }]);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const errorEl = fixture.nativeElement.querySelector('[role="alert"]') as HTMLElement | null;
+    expect(errorEl?.textContent?.trim()).toContain('Impossible de charger les plugins');
+  });
+
+  it('[FR] empty state renders French message when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setInstalled([]);
+    stub.setLoading(false);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Aucun plugin installé');
+  });
+
+  it('[FR] table column headers render French when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setInstalled([PLUGIN_UP_TO_DATE]);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Nom');
   });
 });

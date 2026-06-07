@@ -4,11 +4,48 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, signal } from '@angular/core';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { OrgInvitationsComponent } from './org-invitations.component';
 import { OrganizationsFacade } from '../../application/facades/organizations.facade';
 import { OrgContextFacade } from '../../application/facades/org-context.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
 import type { OrgInvitation, OrgSummary } from '../../domain/models/organizations.models';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for organizations scope
+// ---------------------------------------------------------------------------
+
+const EN_LANGS: Record<string, string> = {
+  'organizations.invitations-title': 'Invitations',
+  'organizations.no-invitations': 'No pending invitations.',
+  'organizations.invitations-list-aria': 'Pending invitations',
+  'organizations.invite-email-aria': 'Invite email address',
+  'organizations.invite-role-aria': 'Invite role',
+  'organizations.role-member': 'Member',
+  'organizations.role-admin': 'Admin',
+  'organizations.send-invite-btn': 'Send Invite',
+  'organizations.accept-btn': 'Accept',
+  'organizations.accept-aria': 'Accept invitation from',
+  'organizations.revoke-btn': 'Revoke',
+  'organizations.revoke-aria': 'Revoke invitation for',
+};
+
+const FR_LANGS: Record<string, string> = {
+  'organizations.invitations-title': 'Invitations',
+  'organizations.no-invitations': 'Aucune invitation en attente.',
+  'organizations.invitations-list-aria': 'Invitations en attente',
+  'organizations.invite-email-aria': 'Adresse e-mail à inviter',
+  'organizations.invite-role-aria': "Rôle de l'invitation",
+  'organizations.role-member': 'Membre',
+  'organizations.role-admin': 'Administrateur',
+  'organizations.send-invite-btn': "Envoyer l'invitation",
+  'organizations.accept-btn': 'Accepter',
+  'organizations.accept-aria': "Accepter l'invitation de",
+  'organizations.revoke-btn': 'Révoquer',
+  'organizations.revoke-aria': "Révoquer l'invitation pour",
+};
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -102,10 +139,17 @@ function setup(
     acceptSpy?: (orgId: string, invId: string) => void;
     revokeSpy?: (orgId: string, invId: string) => void;
   } = {},
-): ComponentFixture<OrgInvitationsComponent> {
+): { fixture: ComponentFixture<OrgInvitationsComponent>; translocoService: TranslocoService } {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    imports: [OrgInvitationsComponent],
+    imports: [
+      OrgInvitationsComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_LANGS, fr: FR_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
     providers: [
       {
         provide: OrganizationsFacade,
@@ -124,6 +168,8 @@ function setup(
         provide: AuthFacade,
         useValue: buildFakeAuthFacade(opts.isAuthenticated ?? true),
       },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
     ],
   }).overrideComponent(OrgInvitationsComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
@@ -131,7 +177,8 @@ function setup(
   const fixture = TestBed.createComponent(OrgInvitationsComponent);
   fixture.componentRef.setInput('orgId', opts.orgId ?? 'org-1');
   fixture.detectChanges();
-  return fixture;
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +187,7 @@ function setup(
 
 describe('OrgInvitationsComponent — unauthenticated', () => {
   it('should not render invitations section when unauthenticated', () => {
-    const fixture = setup({ isAuthenticated: false });
+    const { fixture } = setup({ isAuthenticated: false });
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.cf-org-inv')).toBeNull();
   });
@@ -148,25 +195,25 @@ describe('OrgInvitationsComponent — unauthenticated', () => {
 
 describe('OrgInvitationsComponent — empty state', () => {
   it('should show "No pending invitations" when list is empty', () => {
-    const fixture = setup({ invitations: [] });
+    const { fixture } = setup({ invitations: [] });
     expect(fixture.nativeElement.textContent).toContain('No pending invitations');
   });
 
   it('should render the Invitations heading', () => {
-    const fixture = setup({ invitations: [] });
+    const { fixture } = setup({ invitations: [] });
     expect(fixture.nativeElement.textContent).toContain('Invitations');
   });
 });
 
 describe('OrgInvitationsComponent — role-gated invite form', () => {
   it('should show invite form for owner', () => {
-    const fixture = setup({ activeOrg: OWNER_ORG });
+    const { fixture } = setup({ activeOrg: OWNER_ORG });
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.cf-org-inv__send-form')).not.toBeNull();
   });
 
   it('should NOT show invite form for member', () => {
-    const fixture = setup({ activeOrg: MEMBER_ORG });
+    const { fixture } = setup({ activeOrg: MEMBER_ORG });
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.cf-org-inv__send-form')).toBeNull();
   });
@@ -174,43 +221,43 @@ describe('OrgInvitationsComponent — role-gated invite form', () => {
 
 describe('OrgInvitationsComponent — invitation list rendering', () => {
   it('should render pending invitation email', () => {
-    const fixture = setup({ invitations: [PENDING_INV] });
+    const { fixture } = setup({ invitations: [PENDING_INV] });
     expect(fixture.nativeElement.textContent).toContain('bob@example.com');
   });
 
   it('should render invitation role', () => {
-    const fixture = setup({ invitations: [PENDING_INV] });
+    const { fixture } = setup({ invitations: [PENDING_INV] });
     expect(fixture.nativeElement.textContent).toContain('member');
   });
 
   it('should render invitation status', () => {
-    const fixture = setup({ invitations: [PENDING_INV] });
+    const { fixture } = setup({ invitations: [PENDING_INV] });
     expect(fixture.nativeElement.textContent).toContain('pending');
   });
 
   it('should show Accept button for pending invitation', () => {
-    const fixture = setup({ invitations: [PENDING_INV] });
+    const { fixture } = setup({ invitations: [PENDING_INV] });
     const el = fixture.nativeElement as HTMLElement;
     const btn = el.querySelector('button[aria-label^="Accept invitation from"]');
     expect(btn).not.toBeNull();
   });
 
   it('should show Revoke button for owner with pending invitation', () => {
-    const fixture = setup({ invitations: [PENDING_INV], activeOrg: OWNER_ORG });
+    const { fixture } = setup({ invitations: [PENDING_INV], activeOrg: OWNER_ORG });
     const el = fixture.nativeElement as HTMLElement;
     const btn = el.querySelector('button[aria-label^="Revoke invitation for"]');
     expect(btn).not.toBeNull();
   });
 
   it('should NOT show Revoke button for member role', () => {
-    const fixture = setup({ invitations: [PENDING_INV], activeOrg: MEMBER_ORG });
+    const { fixture } = setup({ invitations: [PENDING_INV], activeOrg: MEMBER_ORG });
     const el = fixture.nativeElement as HTMLElement;
     const btn = el.querySelector('button[aria-label^="Revoke invitation for"]');
     expect(btn).toBeNull();
   });
 
   it('should NOT show Accept/Revoke buttons for accepted invitation', () => {
-    const fixture = setup({ invitations: [ACCEPTED_INV], activeOrg: OWNER_ORG });
+    const { fixture } = setup({ invitations: [ACCEPTED_INV], activeOrg: OWNER_ORG });
     const el = fixture.nativeElement as HTMLElement;
     const acceptBtn = el.querySelector('button[aria-label^="Accept invitation from"]');
     const revokeBtn = el.querySelector('button[aria-label^="Revoke invitation for"]');
@@ -222,7 +269,7 @@ describe('OrgInvitationsComponent — invitation list rendering', () => {
 describe('OrgInvitationsComponent — actions', () => {
   it('should call orgsFacade.acceptInvitation when Accept is clicked', () => {
     const acceptSpy = vi.fn();
-    const fixture = setup({ invitations: [PENDING_INV], acceptSpy });
+    const { fixture } = setup({ invitations: [PENDING_INV], acceptSpy });
     const el = fixture.nativeElement as HTMLElement;
     const btn = el.querySelector<HTMLButtonElement>('button[aria-label^="Accept invitation from"]');
     btn?.click();
@@ -231,7 +278,7 @@ describe('OrgInvitationsComponent — actions', () => {
 
   it('should call orgsFacade.revokeInvitation when Revoke is clicked', () => {
     const revokeSpy = vi.fn();
-    const fixture = setup({ invitations: [PENDING_INV], activeOrg: OWNER_ORG, revokeSpy });
+    const { fixture } = setup({ invitations: [PENDING_INV], activeOrg: OWNER_ORG, revokeSpy });
     const el = fixture.nativeElement as HTMLElement;
     const btn = el.querySelector<HTMLButtonElement>('button[aria-label^="Revoke invitation for"]');
     btn?.click();
@@ -242,7 +289,7 @@ describe('OrgInvitationsComponent — actions', () => {
 describe('OrgInvitationsComponent — invite form submission', () => {
   it('should call invite with email and role on submit', () => {
     const inviteSpy = vi.fn();
-    const fixture = setup({ activeOrg: OWNER_ORG, inviteSpy });
+    const { fixture } = setup({ activeOrg: OWNER_ORG, inviteSpy });
     const comp = fixture.componentInstance;
     comp.inviteEmail.set('dave@example.com');
     comp.inviteRole.set('admin');
@@ -252,7 +299,7 @@ describe('OrgInvitationsComponent — invite form submission', () => {
 
   it('should NOT call invite when email is empty', () => {
     const inviteSpy = vi.fn();
-    const fixture = setup({ activeOrg: OWNER_ORG, inviteSpy });
+    const { fixture } = setup({ activeOrg: OWNER_ORG, inviteSpy });
     const comp = fixture.componentInstance;
     comp.inviteEmail.set('');
     comp.onSendInvite();
@@ -260,7 +307,7 @@ describe('OrgInvitationsComponent — invite form submission', () => {
   });
 
   it('should reset inviteEmail to empty string after successful invite', () => {
-    const fixture = setup({ activeOrg: OWNER_ORG });
+    const { fixture } = setup({ activeOrg: OWNER_ORG });
     const comp = fixture.componentInstance;
     comp.inviteEmail.set('someone@example.com');
     comp.onSendInvite();
@@ -270,16 +317,39 @@ describe('OrgInvitationsComponent — invite form submission', () => {
 
 describe('OrgInvitationsComponent — inputValue / selectValue helpers', () => {
   it('inputValue should extract value from event target', () => {
-    const fixture = setup();
+    const { fixture } = setup();
     const comp = fixture.componentInstance;
     const event = { target: { value: 'test@example.com' } } as unknown as Event;
     expect(comp.inputValue(event)).toBe('test@example.com');
   });
 
   it('selectValue should extract value from select event target', () => {
-    const fixture = setup();
+    const { fixture } = setup();
     const comp = fixture.componentInstance;
     const event = { target: { value: 'admin' } } as unknown as Event;
     expect(comp.selectValue(event)).toBe('admin');
+  });
+});
+
+describe('OrgInvitationsComponent — i18n FR', () => {
+  it('[FR] should show "Aucune invitation en attente" when list is empty and lang is fr', () => {
+    const { fixture, translocoService } = setup({ invitations: [] });
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Aucune invitation en attente');
+  });
+
+  it('[FR] should show "Envoyer l\'invitation" button when owner and lang is fr', () => {
+    const { fixture, translocoService } = setup({ activeOrg: OWNER_ORG });
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain("Envoyer l'invitation");
+  });
+
+  it('[FR] should show "Accepter" button for pending invitation when lang is fr', () => {
+    const { fixture, translocoService } = setup({ invitations: [PENDING_INV] });
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Accepter');
   });
 });

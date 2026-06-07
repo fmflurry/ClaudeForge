@@ -1,66 +1,63 @@
 /**
- * RED tests — ActivatePageComponent
+ * ActivatePageComponent — render + wiring tests.
  *
- * Expected production files (DO NOT exist yet — tests will FAIL):
- *   src/app/features/device-activation/presentation/activate-page.component.ts
- *   src/app/features/device-activation/application/facades/device-activation.facade.ts
- *   src/app/features/device-activation/domain/ports/device-activation.port.ts
- *
- * GREEN contract:
- *
- *   @Component({
- *     selector: 'cf-activate-page',
- *     standalone: true,
- *     changeDetection: ChangeDetectionStrategy.OnPush,
- *     imports: [ReactiveFormsModule],  // or FormsModule if using template-driven
- *     template: `...`
- *   })
- *   export class ActivatePageComponent implements OnInit {
- *     // Injections:
- *     private readonly facade = inject(DeviceActivationFacade);
- *     private readonly route   = inject(ActivatedRoute);
- *
- *     // Expose facade signals to template (no any/$any):
- *     readonly status = this.facade.status;
- *     readonly errorReason = this.facade.errorReason;
- *
- *     // Form: a single text input for the user_code
- *     // (FormControl or FormGroup — implementer's choice; must be type-safe)
- *
- *     ngOnInit(): void
- *       — reads queryParamMap.get('user_code')
- *       — if present, prefills the form control with that value
- *
- *     onSubmit(): void
- *       — if the control is empty/whitespace: do nothing (or mark invalid)
- *       — otherwise: facade.approve(trimmedCode)
- *
- *     // Template MUST contain:
- *     //   - a heading / title with text containing "Approve" or "activate" (case-insensitive)
- *     //   - a text input for the user_code (input[type=text] or input[type=search] or <input>)
- *     //   - a submit button with [disabled] bound to status()==='submitting'
- *     //   - @if (status() === 'approved')  — approved success block (role="status" or .cf-activate__approved)
- *     //   - @if (status() === 'error')     — error block (role="alert")
- *     //       — shows human-readable message per errorReason():
- *     //           'invalid'         → "invalid or missing"
- *     //           'not-found'       → "not found" or "unrecognized"
- *     //           'already-approved'→ "already been approved" or "already approved"
- *     //           'expired'         → "expired"
- *     //           'unauthorized'    → "sign in" or "not authorized" or "unauthorized"
- *     //           'unknown'         → generic fallback message
- *     //   - @if (status() === 'submitting') — loading indicator (optional but tested if present)
- *     //
- *     // Route: registered at path 'activate' behind FunctionalAuthGuard in app.routes.ts.
- *     // No any/$any in template or class.
- *   }
+ * Uses TranslocoTestingModule harness (same Wave-1 pattern as home / catalog).
+ * en map returns EXACT current literals so existing assertions stay green.
+ * fr map is used in French language switch assertions.
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { ActivatePageComponent } from './activate-page.component';
 import { DeviceActivationFacade } from '../application/facades/device-activation.facade';
 import type { DeviceActivationStatus, DeviceActivationErrorReason } from '../domain/ports/device-activation.port';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for device-activation scope
+//
+// En map returns EXACT current literals so all existing rendered-text
+// assertions keep passing unchanged after migration.
+// Fr map returns French — used in fr-switch assertions.
+// ---------------------------------------------------------------------------
+
+const EN_DEVICE_ACTIVATION_LANGS: Record<string, string> = {
+  'device-activation.title': 'Approve Device',
+  'device-activation.subtitle': 'Enter the user code displayed on your device to authorize it.',
+  'device-activation.approved': 'Device successfully approved. You may close this page.',
+  'device-activation.label-user-code': 'User Code',
+  'device-activation.placeholder': 'e.g. ABCD-1234',
+  'device-activation.btn-approve': 'Approve Device',
+  'device-activation.btn-approving': 'Approving…',
+  'device-activation.error.invalid': 'The code you entered is invalid or missing. Please check and try again.',
+  'device-activation.error.not-found': 'The code was not found or is unrecognized. Please verify the code.',
+  'device-activation.error.already-approved': 'This device has already been approved.',
+  'device-activation.error.expired': 'The code has expired. Please restart the device authorization flow.',
+  'device-activation.error.unauthorized':
+    'You are not authorized to approve this device. Please sign in and try again.',
+  'device-activation.error.unknown': 'An unexpected error occurred. Please try again later.',
+};
+
+const FR_DEVICE_ACTIVATION_LANGS: Record<string, string> = {
+  'device-activation.title': "Approuver l'appareil",
+  'device-activation.subtitle': "Entrez le code utilisateur affiché sur votre appareil pour l'autoriser.",
+  'device-activation.approved': 'Appareil approuvé avec succès. Vous pouvez fermer cette page.',
+  'device-activation.label-user-code': 'Code utilisateur',
+  'device-activation.placeholder': 'ex. ABCD-1234',
+  'device-activation.btn-approve': "Approuver l'appareil",
+  'device-activation.btn-approving': 'Approbation…',
+  'device-activation.error.invalid':
+    'Le code que vous avez saisi est invalide ou manquant. Veuillez vérifier et réessayer.',
+  'device-activation.error.not-found': 'Le code est introuvable ou non reconnu. Veuillez vérifier le code.',
+  'device-activation.error.already-approved': 'Cet appareil a déjà été approuvé.',
+  'device-activation.error.expired': "Le code a expiré. Veuillez redémarrer le flux d'autorisation de l'appareil.",
+  'device-activation.error.unauthorized':
+    "Vous n'êtes pas autorisé à approuver cet appareil. Veuillez vous connecter et réessayer.",
+  'device-activation.error.unknown': "Une erreur inattendue s'est produite. Veuillez réessayer plus tard.",
+};
 
 // ---------------------------------------------------------------------------
 // Fake DeviceActivationFacade
@@ -116,16 +113,26 @@ interface SetupOpts {
 function setup(opts: SetupOpts = {}): {
   fixture: ComponentFixture<ActivatePageComponent>;
   fakeFacade: Partial<DeviceActivationFacade>;
+  translocoService: TranslocoService;
 } {
   const fakeFacade = buildFakeFacade(opts);
   const fakeRoute = buildFakeRoute(opts.userCodeParam ?? null);
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    imports: [ActivatePageComponent],
+    imports: [
+      ActivatePageComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_DEVICE_ACTIVATION_LANGS, fr: FR_DEVICE_ACTIVATION_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
     providers: [
       { provide: DeviceActivationFacade, useValue: fakeFacade },
       { provide: ActivatedRoute, useValue: fakeRoute },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
     ],
   }).overrideComponent(ActivatePageComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
@@ -133,7 +140,8 @@ function setup(opts: SetupOpts = {}): {
 
   const fixture = TestBed.createComponent(ActivatePageComponent);
   fixture.detectChanges();
-  return { fixture, fakeFacade };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, fakeFacade, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -330,6 +338,36 @@ describe('ActivatePageComponent — error state: unknown reason', () => {
     // Any fallback text is acceptable — just must not be empty
     const alertEl = el.querySelector('[role="alert"]');
     expect(alertEl?.textContent?.trim().length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// i18n — French language switch
+// ---------------------------------------------------------------------------
+
+describe('ActivatePageComponent — i18n French', () => {
+  it('should render French title after switching to fr', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const h1 = (fixture.nativeElement as HTMLElement).querySelector('h1');
+    expect(h1?.textContent?.trim()).toContain('Approuver');
+  });
+
+  it('should render French approved message after switching to fr', () => {
+    const { fixture, translocoService } = setup({ status: 'approved' });
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('approuvé');
+  });
+
+  it('should render French error message for "invalid" after switching to fr', () => {
+    const { fixture, translocoService } = setup({ status: 'error', errorReason: 'invalid' });
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent?.toLowerCase()).toMatch(/invalide|manquant/);
   });
 });
 
