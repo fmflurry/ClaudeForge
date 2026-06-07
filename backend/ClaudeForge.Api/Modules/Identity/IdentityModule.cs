@@ -238,6 +238,21 @@ public sealed class IdentityModule : IModule
             new PollDeviceTokenUseCase(
                 sp.GetRequiredService<DeviceCodeStore>()));
 
+        // ApproveDeviceCodeUseCase — Scoped because it depends on ICurrentUser (scoped),
+        // IRefreshTokenStorePort (scoped), and IUserStorePort (scoped).
+        services.AddScoped<ApproveDeviceCodeUseCase>(sp =>
+        {
+            IConfiguration cfg = sp.GetRequiredService<IConfiguration>();
+            int rtd = int.TryParse(cfg["Jwt:RefreshTokenDays"], out int d) ? d : 30;
+            return new ApproveDeviceCodeUseCase(
+                sp.GetRequiredService<DeviceCodeStore>(),
+                sp.GetRequiredService<ICurrentUser>(),
+                sp.GetRequiredService<ITokenIssuerPort>(),
+                sp.GetRequiredService<IRefreshTokenStorePort>(),
+                sp.GetRequiredService<IUserStorePort>(),
+                rtd);
+        });
+
         // ── Group 5 — ICurrentUser (HttpContextCurrentUser) ─────────────────────
         // Use TryAdd to avoid duplicate registration if another module registers ICurrentUser.
         services.AddHttpContextAccessor();
@@ -535,6 +550,38 @@ public sealed class IdentityModule : IModule
             .WithName("IssueDeviceCode")
             .WithTags("Identity");
 
+        // ── POST /auth/device/approve {userCode} [Authorize] ────────────────────
+        endpoints.MapPost(
+            "/auth/device/approve",
+            async (
+                DeviceApproveRequest request,
+                [FromServices] ApproveDeviceCodeUseCase useCase,
+                CancellationToken ct) =>
+            {
+                if (string.IsNullOrWhiteSpace(request.UserCode))
+                {
+                    return Results.Problem(
+                        detail: "The 'userCode' field is required.",
+                        statusCode: 400);
+                }
+
+                ApproveDeviceCodeResult result = await useCase.ExecuteAsync(request.UserCode, ct);
+
+                return result switch
+                {
+                    ApproveDeviceCodeResult.Success => Results.Ok(new { status = "approved" }),
+                    ApproveDeviceCodeResult.NotFound => Results.NotFound(new { error = "user_code_not_found" }),
+                    ApproveDeviceCodeResult.Expired => Results.Problem(
+                        detail: "The device code has expired.",
+                        statusCode: 410),
+                    ApproveDeviceCodeResult.AlreadyApproved => Results.Conflict(new { error = "already_approved" }),
+                    _ => Results.Problem(statusCode: 500),
+                };
+            })
+            .RequireAuthorization("RequireAuthenticatedUser")
+            .WithName("ApproveDeviceCode")
+            .WithTags("Identity");
+
         // ── POST /auth/device/token {deviceCode} ─────────────────────────────────
         endpoints.MapPost(
             "/auth/device/token",
@@ -584,5 +631,6 @@ public sealed class IdentityModule : IModule
     private sealed record SignOutRequest(string RefreshToken);
     private sealed record DeviceCodeRequest(string Provider);
     private sealed record DeviceTokenRequest(string DeviceCode);
+    private sealed record DeviceApproveRequest(string UserCode);
 }
 

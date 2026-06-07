@@ -754,6 +754,29 @@
         }
       }
     },
+    "/auth/device/approve": {
+      "post": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "ApproveDeviceCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceApproveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/auth/device/token": {
       "post": {
         "tags": [
@@ -1114,6 +1137,17 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "DeviceApproveRequest": {
+        "required": [
+          "userCode"
+        ],
+        "type": "object",
+        "properties": {
+          "userCode": {
+            "type": "string"
           }
         }
       },

@@ -34,6 +34,24 @@ public sealed record DeviceCodeResponse(
     int ExpiresIn,
     int Interval);
 
+/// <summary>Discriminated union for the device code approval result.</summary>
+public abstract record ApproveDeviceCodeResult
+{
+    private ApproveDeviceCodeResult() { }
+
+    /// <summary>User code was valid and tokens have been minted.</summary>
+    public sealed record Success : ApproveDeviceCodeResult;
+
+    /// <summary>User code is unknown or was null/empty.</summary>
+    public sealed record NotFound : ApproveDeviceCodeResult;
+
+    /// <summary>User code was found but the device code has expired.</summary>
+    public sealed record Expired : ApproveDeviceCodeResult;
+
+    /// <summary>User code has already been approved (single-use).</summary>
+    public sealed record AlreadyApproved : ApproveDeviceCodeResult;
+}
+
 /// <summary>Discriminated union for the device token polling result.</summary>
 public abstract record DeviceTokenPollResult
 {

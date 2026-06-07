@@ -64,6 +64,25 @@ public sealed class DeviceCodeStore
         return _byDeviceCode.TryGetValue(deviceCode, out DeviceAuthState? state) ? state : null;
     }
 
+    /// <summary>
+    /// Looks up a device authorization state by user code (case-insensitive).
+    /// Returns <c>null</c> when <paramref name="userCode"/> is null, empty, or unknown.
+    /// </summary>
+    public DeviceAuthState? FindByUserCode(string? userCode)
+    {
+        if (string.IsNullOrEmpty(userCode))
+        {
+            return null;
+        }
+
+        if (!_userCodeToDeviceCode.TryGetValue(userCode, out string? deviceCode))
+        {
+            return null;
+        }
+
+        return FindByDeviceCode(deviceCode);
+    }
+
     public void Update(DeviceAuthState state)
     {
         _byDeviceCode[state.DeviceCode] = state;
