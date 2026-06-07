@@ -13,6 +13,7 @@ import { contextRegistry } from '../core/context/context-registry';
 import { ORG_ACTIVE_ORG_SWITCHED } from '../features/organizations/application/facades/org-context.facade';
 import type { ActiveOrgSwitchedPayload } from '../features/organizations/application/facades/org-context.facade';
 import { CatalogFacade } from '../features/catalog/application/facades/catalog.facade';
+import { LanguageSwitcherComponent } from './language-switcher/language-switcher.component';
 
 /**
  * Main application shell — header, primary navigation, and router outlet.
@@ -32,6 +33,7 @@ import { CatalogFacade } from '../features/catalog/application/facades/catalog.f
     TeamSwitcherComponent,
     TelemetrySettingsComponent,
     OrgSwitcherComponent,
+    LanguageSwitcherComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -58,6 +60,9 @@ import { CatalogFacade } from '../features/catalog/application/facades/catalog.f
         </div>
         <div class="cf-shell__settings">
           <cf-telemetry-settings />
+        </div>
+        <div class="cf-shell__lang">
+          <cf-language-switcher />
         </div>
         <div class="cf-shell__auth" aria-label="User account">
           @if (currentUser()) {

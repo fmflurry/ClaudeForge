@@ -1,11 +1,29 @@
-import { APP_INITIALIZER, ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  APP_INITIALIZER,
+  ApplicationConfig,
+  inject,
+  isDevMode,
+  PLATFORM_ID,
+  provideBrowserGlobalErrorListeners,
+  REQUEST,
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
+import { provideTransloco } from '@jsverse/transloco';
 
 import { routes } from './app.routes';
 import { API_BASE_URL } from './core/config/api-config';
+import { TranslocoTransferStateLoader } from './core/i18n/transloco-transfer-state.loader';
+import { LanguageStoragePort } from './core/i18n/language-storage.port';
+import { LocalStorageLanguageAdapter } from './core/i18n/local-storage-language.adapter';
+import { I18nFacade } from './application/i18n/i18n.facade';
+import { SERVER_ACTIVE_LANG } from './core/i18n/server-language.token';
+import { LANG_VALUES } from './core/i18n/active-language';
+import { parseAcceptLanguage, pickLanguage } from './core/i18n/language-detection';
+import type { Lang } from './core/i18n/active-language';
 import { TeamContextStoragePort } from './shared/domain/ports/team-context-storage.port';
 import { LocalStorageTeamContextAdapter } from './shared/infrastructure/storage/local-storage-team-context.adapter';
 import { InstalledPluginsStoragePort } from './shared/domain/ports/installed-plugins-storage.port';
@@ -66,6 +84,43 @@ function silentRefreshInitializer(facade: AuthFacade): () => void {
   return () => facade.silentRefresh();
 }
 
+/**
+ * APP_INITIALIZER factory: sets the active language based on platform.
+ * - Browser: reads from localStorage, falls back to navigator.languages.
+ * - Server: reads Accept-Language from the per-request REQUEST token.
+ */
+function i18nInitializer(
+  facade: I18nFacade,
+  platformId: object,
+  storage: LanguageStoragePort,
+  serverLang: Lang,
+  request: Request | null,
+): () => void {
+  return () => {
+    if (isPlatformBrowser(platformId)) {
+      const stored = storage.read();
+      if (stored) {
+        facade.setLanguage(stored);
+        return;
+      }
+      // Fall back to browser navigator languages
+      const navigatorLangs = typeof navigator !== 'undefined' ? (navigator.languages as readonly string[]) : [];
+      const detected = pickLanguage(navigatorLangs, LANG_VALUES, 'en');
+      facade.setLanguage(detected);
+    } else {
+      // On SSR: prefer ?lang query param, then Accept-Language, fall back to SERVER_ACTIVE_LANG
+      const urlLang = request ? (new URL(request.url).searchParams.get('lang') as Lang | null) : null;
+      if (urlLang && (LANG_VALUES as readonly string[]).includes(urlLang)) {
+        facade.setLanguage(urlLang);
+        return;
+      }
+      const acceptLang = request?.headers?.get('accept-language') ?? null;
+      const detected = pickLanguage(parseAcceptLanguage(acceptLang), LANG_VALUES, serverLang);
+      facade.setLanguage(detected);
+    }
+  };
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -76,6 +131,36 @@ export const appConfig: ApplicationConfig = {
       provide: API_BASE_URL,
       useFactory: (doc: Document) => resolveApiBaseUrl(doc),
       deps: [DOCUMENT],
+    },
+    // ---------------------------------------------------------------------------
+    // i18n — Transloco + language detection
+    // ---------------------------------------------------------------------------
+    provideTransloco({
+      config: {
+        availableLangs: [...LANG_VALUES],
+        defaultLang: 'en',
+        fallbackLang: 'en',
+        reRenderOnLangChange: true,
+        prodMode: !isDevMode(),
+      },
+      loader: TranslocoTransferStateLoader,
+    }),
+    {
+      provide: LanguageStoragePort,
+      useClass: LocalStorageLanguageAdapter,
+    },
+    I18nFacade,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (
+        facade: I18nFacade,
+        platformId: object,
+        storage: LanguageStoragePort,
+        serverLang: Lang,
+        request: Request | null,
+      ) => i18nInitializer(facade, platformId, storage, serverLang, request),
+      deps: [I18nFacade, PLATFORM_ID, LanguageStoragePort, SERVER_ACTIVE_LANG, REQUEST],
+      multi: true,
     },
     {
       provide: TeamContextStoragePort,
