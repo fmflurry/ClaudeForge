@@ -115,17 +115,30 @@ export class StructuredDataService {
   }
 
   private upsertScript(marker: string, json: string): void {
-    const selector = `script[${SEO_ATTR}="${marker}"]`;
-    const existing = this.document.head.querySelector(selector) as HTMLScriptElement | null;
+    // Guard: document.head may be null/undefined during SSR.
+    // Fall through silently — the JSON-LD will be injected on hydration.
+    if (!this.document.head) {
+      return;
+    }
 
-    if (existing !== null) {
+    const selector = `script[${SEO_ATTR}="${marker}"]`;
+    // querySelector may return undefined (not null) in some server-side DOM
+    // implementations — use a falsy check for safety.
+    const existing = this.document.head.querySelector(selector) as HTMLScriptElement | null | undefined;
+
+    if (existing) {
       existing.textContent = json;
     } else {
-      const script = this.document.createElement('script');
-      script.type = LD_JSON_TYPE;
-      script.setAttribute(SEO_ATTR, marker);
-      script.textContent = json;
-      this.document.head.appendChild(script);
+      try {
+        const script = this.document.createElement('script');
+        script.type = LD_JSON_TYPE;
+        script.setAttribute(SEO_ATTR, marker);
+        script.textContent = json;
+        this.document.head.appendChild(script);
+      } catch {
+        // SSR environment may restrict script element manipulation — skip silently.
+        // The JSON-LD will be re-injected on browser hydration.
+      }
     }
   }
 }

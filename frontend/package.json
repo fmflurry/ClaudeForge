@@ -10,7 +10,8 @@
     "lint": "eslint . --ext .ts,.html",
     "lint:fix": "eslint . --ext .ts,.html --fix",
     "format": "prettier --write \"src/**/*.{ts,html,scss,json}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\""
+    "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\"",
+    "serve:ssr:frontend": "node dist/frontend/server/server.mjs"
   },
   "prettier": {
     "printWidth": 120,
@@ -37,7 +38,10 @@
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0",
     "@angular/platform-browser": "^22.0.0",
+    "@angular/platform-server": "^22.0.0",
     "@angular/router": "^22.0.0",
+    "@angular/ssr": "^22.0.0",
+    "express": "^5.2.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zod": "^4.4.3"
@@ -49,6 +53,7 @@
     "@angular/build": "^22.0.0",
     "@angular/cli": "^22.0.0",
     "@angular/compiler-cli": "^22.0.0",
+    "@types/express": "^5.0.6",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vitest/coverage-v8": "^4.1.8",

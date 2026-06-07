@@ -10,10 +10,13 @@
  *    - Success: updates in-memory token, retries request with new Bearer header.
  *    - Failure: clears AuthStore, navigates to /login, propagates the error.
  * 4. Non-401 errors pass through unchanged.
+ *
+ * SSR-safe: uses injected DOCUMENT (not window) for origin resolution.
  */
 
 import { HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable, shareReplay, switchMap, tap, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -40,12 +43,16 @@ const SKIP_PREFIXES: readonly string[] = [
   '/auth/refresh',
 ];
 
-function isSkipped(req: HttpRequest<unknown>): boolean {
+/**
+ * SSR-safe origin check: uses the injected DOCUMENT for origin resolution
+ * instead of the global `window` (which is not available on the server).
+ */
+function isSkipped(req: HttpRequest<unknown>, documentOrigin: string): boolean {
   let path: string;
   try {
-    const url = new URL(req.url, window.location.origin);
+    const url = new URL(req.url, documentOrigin);
     // External origin → skip
-    if (url.origin !== window.location.origin) {
+    if (url.origin !== documentOrigin) {
       return true;
     }
     path = url.pathname;
@@ -74,8 +81,10 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn):
   const store = inject(AuthStore);
   const port = inject(AuthPort);
   const router = inject(Router);
+  const document = inject(DOCUMENT);
 
-  const skip = isSkipped(req);
+  const documentOrigin = document.location?.origin ?? '';
+  const skip = isSkipped(req, documentOrigin);
 
   // Attach Bearer header if a token is in-memory and the request is not skipped
   const token = store.get(AuthStoreEnum.AUTH)().data?.token?.accessToken;

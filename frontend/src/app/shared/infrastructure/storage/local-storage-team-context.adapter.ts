@@ -3,11 +3,12 @@ import { TeamContextStoragePort } from '../../domain/ports/team-context-storage.
 /**
  * localStorage-backed adapter for TeamContextStoragePort.
  * JSON round-trip is not needed here (raw string). try/catch guards corruption.
+ * SSR-safe: localStorage is not available on the server — try/catch returns null/no-op.
  */
 export class LocalStorageTeamContextAdapter extends TeamContextStoragePort {
   getTeamId(): string | null {
     try {
-      return window.localStorage.getItem(TeamContextStoragePort.STORAGE_KEY);
+      return localStorage.getItem(TeamContextStoragePort.STORAGE_KEY);
     } catch {
       return null;
     }
@@ -15,7 +16,7 @@ export class LocalStorageTeamContextAdapter extends TeamContextStoragePort {
 
   setTeamId(id: string): void {
     try {
-      window.localStorage.setItem(TeamContextStoragePort.STORAGE_KEY, id);
+      localStorage.setItem(TeamContextStoragePort.STORAGE_KEY, id);
     } catch {
       // Storage unavailable — silently ignore.
     }
@@ -23,7 +24,7 @@ export class LocalStorageTeamContextAdapter extends TeamContextStoragePort {
 
   clear(): void {
     try {
-      window.localStorage.removeItem(TeamContextStoragePort.STORAGE_KEY);
+      localStorage.removeItem(TeamContextStoragePort.STORAGE_KEY);
     } catch {
       // Storage unavailable — silently ignore.
     }

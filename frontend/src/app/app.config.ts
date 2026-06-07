@@ -1,6 +1,8 @@
 import { APP_INITIALIZER, ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { DOCUMENT } from '@angular/common';
 
 import { routes } from './app.routes';
 import { API_BASE_URL } from './core/config/api-config';
@@ -44,14 +46,15 @@ import { HomeMetricsFacade } from './features/home/application/facades/home-metr
 
 /**
  * Reads the runtime API base URL from:
- * 1. A <meta name="api-base-url"> tag injected by the server/nginx at deploy time.
- * 2. Falls back to empty string (relative URLs) for local dev.
+ * 1. SSR_API_BASE_URL environment variable (server-side only — absolute URL required for SSR).
+ * 2. A <meta name="api-base-url"> tag injected by the server/nginx at deploy time (browser).
+ * 3. Falls back to empty string (relative URLs) for local dev.
+ *
+ * Uses the injected DOCUMENT token so it works on both browser and server platforms.
  */
-function resolveApiBaseUrl(): string {
-  if (typeof document !== 'undefined') {
-    const meta = document.querySelector<HTMLMetaElement>('meta[name="api-base-url"]');
-    if (meta?.content) return meta.content;
-  }
+function resolveApiBaseUrl(doc: Document): string {
+  const meta = doc.querySelector<HTMLMetaElement>('meta[name="api-base-url"]');
+  if (meta?.content) return meta.content;
   return '';
 }
 
@@ -67,10 +70,12 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
+    provideClientHydration(withEventReplay(), withHttpTransferCacheOptions({ includePostRequests: false })),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     {
       provide: API_BASE_URL,
-      useFactory: resolveApiBaseUrl,
+      useFactory: (doc: Document) => resolveApiBaseUrl(doc),
+      deps: [DOCUMENT],
     },
     {
       provide: TeamContextStoragePort,

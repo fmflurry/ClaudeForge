@@ -4,11 +4,12 @@ import { InstalledPluginRecord, InstalledPluginsStoragePort } from '../../domain
  * localStorage-backed adapter for InstalledPluginsStoragePort.
  * JSON round-trip; returns [] on corruption, missing key, or storage error.
  * list() always returns a NEW array (immutable).
+ * SSR-safe: localStorage is not available on the server — try/catch returns []/no-op.
  */
 export class LocalStorageInstalledPluginsAdapter extends InstalledPluginsStoragePort {
   list(): InstalledPluginRecord[] {
     try {
-      const raw = window.localStorage.getItem(InstalledPluginsStoragePort.STORAGE_KEY);
+      const raw = localStorage.getItem(InstalledPluginsStoragePort.STORAGE_KEY);
       if (raw === null) return [];
       const parsed: unknown = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
@@ -32,7 +33,7 @@ export class LocalStorageInstalledPluginsAdapter extends InstalledPluginsStorage
 
   clear(): void {
     try {
-      window.localStorage.removeItem(InstalledPluginsStoragePort.STORAGE_KEY);
+      localStorage.removeItem(InstalledPluginsStoragePort.STORAGE_KEY);
     } catch {
       // Storage unavailable — silently ignore.
     }
@@ -40,7 +41,7 @@ export class LocalStorageInstalledPluginsAdapter extends InstalledPluginsStorage
 
   private persist(records: InstalledPluginRecord[]): void {
     try {
-      window.localStorage.setItem(InstalledPluginsStoragePort.STORAGE_KEY, JSON.stringify(records));
+      localStorage.setItem(InstalledPluginsStoragePort.STORAGE_KEY, JSON.stringify(records));
     } catch {
       // Storage unavailable — silently ignore.
     }

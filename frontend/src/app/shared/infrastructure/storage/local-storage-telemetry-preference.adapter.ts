@@ -4,11 +4,12 @@ import { TelemetryPreferencePort } from '../../domain/ports/telemetry-preference
  * localStorage-backed adapter for TelemetryPreferencePort.
  * Stores the string 'true' when telemetry is disabled.
  * Returns false (enabled) on corruption, missing key, or storage error.
+ * SSR-safe: localStorage is not available on the server — try/catch returns false/no-op.
  */
 export class LocalStorageTelemetryPreferenceAdapter extends TelemetryPreferencePort {
   isDisabled(): boolean {
     try {
-      const raw = window.localStorage.getItem(TelemetryPreferencePort.STORAGE_KEY);
+      const raw = localStorage.getItem(TelemetryPreferencePort.STORAGE_KEY);
       if (raw === null) return false;
       return raw === 'true';
     } catch {
@@ -18,7 +19,7 @@ export class LocalStorageTelemetryPreferenceAdapter extends TelemetryPreferenceP
 
   setDisabled(disabled: boolean): void {
     try {
-      window.localStorage.setItem(TelemetryPreferencePort.STORAGE_KEY, String(disabled));
+      localStorage.setItem(TelemetryPreferencePort.STORAGE_KEY, String(disabled));
     } catch {
       // Storage unavailable — silently ignore.
     }
@@ -26,7 +27,7 @@ export class LocalStorageTelemetryPreferenceAdapter extends TelemetryPreferenceP
 
   clear(): void {
     try {
-      window.localStorage.removeItem(TelemetryPreferencePort.STORAGE_KEY);
+      localStorage.removeItem(TelemetryPreferencePort.STORAGE_KEY);
     } catch {
       // Storage unavailable — silently ignore.
     }

@@ -9,7 +9,8 @@
  * - Components consume AuthFacade only — never store or port directly.
  */
 
-import { computed, inject, Injectable, Signal } from '@angular/core';
+import { computed, inject, Injectable, PLATFORM_ID, Signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { switchMap } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthPort } from '../../domain/ports/auth.port';
@@ -22,6 +23,7 @@ export class AuthFacade {
   private readonly store = inject(AuthStore);
   private readonly port = inject(AuthPort);
   private readonly router = inject(Router);
+  private readonly platformId = inject(PLATFORM_ID);
 
   // ---------------------------------------------------------------------------
   // Private helpers
@@ -167,8 +169,15 @@ export class AuthFacade {
    * Attempts a silent token refresh using the HttpOnly refresh cookie.
    * On success, updates the in-memory token and user.
    * On failure, clears the store (user stays unauthenticated — not an error state).
+   *
+   * SSR-safe: is a complete NO-OP on the server platform (PLATFORM_ID !== 'browser').
+   * Silent refresh requires an HttpOnly cookie which is not accessible server-side.
    */
   silentRefresh(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     this.port
       .refreshToken()
       .pipe(
