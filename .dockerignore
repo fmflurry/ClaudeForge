@@ -1,0 +1,35 @@
+# Docker build context excludes for the web (Angular SSR) build.
+# Context root = repo root (required for npm workspace lockfile).
+# Exclude everything not needed for the frontend SSR build.
+
+# Root-level node_modules — Docker build installs its own inside the image
+node_modules/
+
+# Backend source (not needed for frontend build)
+backend/
+
+# Other workspaces (not needed for frontend build)
+cli/
+plugin-template/
+
+# Infrastructure / docs / seeds (not needed in image)
+infra/
+docs/
+openspec/
+seed-plugins/
+
+# Git history and local tooling
+.git/
+.github/
+.claude/
+
+# Frontend node_modules — Docker reinstalls inside the image
+frontend/node_modules/
+frontend/dist/
+
+# Local secrets / env
+*.pem
+*.key
+.env
+.env.*
+infra/secrets/

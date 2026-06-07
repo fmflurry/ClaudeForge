@@ -88,21 +88,26 @@ services:
           cpus: "2.0"
           memory: 1G
 
-  # ─── Angular Frontend (production nginx build) ─────────────────────────────
+  # ─── Angular SSR Frontend (production Node build) ─────────────────────────
   web:
     build:
-      context: ../frontend
-      dockerfile: Dockerfile          # production multi-stage nginx build
+      context: ..                     # repo root — npm workspace; root lockfile required
+      dockerfile: frontend/Dockerfile # production multi-stage Node SSR build
     image: claudeforge-web:latest
     environment:
-      API_BASE_URL: "${API_BASE_URL:-http://api:8080/api/v1}"
+      PORT: "4000"
+      # Internal API URL for server-side rendering requests (container network)
+      SSR_API_BASE_URL: "${SSR_API_BASE_URL:-http://api:8080}"
+      # Allowed Host header values — set to the production hostname(s)
+      # e.g. claudeforge.dev,www.claudeforge.dev
+      NG_ALLOWED_HOSTS: "${NG_ALLOWED_HOSTS:-claudeforge.dev,www.claudeforge.dev}"
     volumes: []
     restart: on-failure:3
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: 128M
+          cpus: "1.0"
+          memory: 256M
 
   # ─── Postgres — disabled in production (use managed service) ───────────────
   # The postgres service from docker-compose.yml is not started.

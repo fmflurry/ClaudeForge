@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /catalog
+Allow: /docs
+Allow: /search
+Disallow: /dashboard
+Disallow: /login
+Disallow: /auth
+Disallow: /activate
+Disallow: /orgs
+
+Sitemap: https://claudeforge.dev/sitemap.xml
