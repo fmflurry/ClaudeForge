@@ -42,13 +42,18 @@ public sealed class MarketplaceDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        ConfigurePlugins(modelBuilder);
+        // The NpgsqlTsVector value converter is only valid for the PostgreSQL provider.
+        // When running against the in-memory provider (unit tests) the converter must
+        // be skipped to avoid a model-validation failure on the tsvector columns.
+        bool isPostgres = Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) ?? false;
+
+        ConfigurePlugins(modelBuilder, isPostgres);
         ConfigurePluginVersions(modelBuilder);
         ConfigureCategories(modelBuilder);
         ConfigurePluginCategories(modelBuilder);
         ConfigureTelemetryEvents(modelBuilder);
         ConfigureTelemetryAggregates(modelBuilder);
-        ConfigureDocPages(modelBuilder);
+        ConfigureDocPages(modelBuilder, isPostgres);
         ConfigureUsers(modelBuilder);
         ConfigureUserIdentities(modelBuilder);
         ConfigureOrganizations(modelBuilder);
@@ -58,7 +63,7 @@ public sealed class MarketplaceDbContext : DbContext
         ConfigureOrgAuditLog(modelBuilder);
     }
 
-    private static void ConfigurePlugins(ModelBuilder modelBuilder)
+    private static void ConfigurePlugins(ModelBuilder modelBuilder, bool isPostgres = true)
     {
         modelBuilder.Entity<PluginEntity>(entity =>
         {
@@ -98,22 +103,31 @@ public sealed class MarketplaceDbContext : DbContext
             // A ValueConverter bridges string? ↔ NpgsqlTsVector? for the Npgsql provider.
             // ValueComparer is required to avoid a NullReferenceException in the EF Core 9.x
             // MigrationsModelDiffer when generating migrations (ProviderValueComparer NPE).
-            ValueConverter<string?, NpgsqlTsVector?> tsVectorConverter = new(
-                v => v == null ? null : NpgsqlTsVector.Parse(v),
-                v => v == null ? null : v.ToString());
-            ValueComparer<string?> tsVectorComparer = new(
-                (a, b) => a == b,
-                v => v == null ? 0 : v.GetHashCode(),
-                v => v);
+            // The converter is skipped for the in-memory provider (unit tests) because
+            // NpgsqlTsVector is not supported by that provider.
+            if (isPostgres)
+            {
+                ValueConverter<string?, NpgsqlTsVector?> tsVectorConverter = new(
+                    v => v == null ? null : NpgsqlTsVector.Parse(v),
+                    v => v == null ? null : v.ToString());
+                ValueComparer<string?> tsVectorComparer = new(
+                    (a, b) => a == b,
+                    v => v == null ? 0 : v.GetHashCode(),
+                    v => v);
 
-            entity.Property(p => p.SearchVector)
-                  .HasColumnName("search_vector")
-                  .HasColumnType("tsvector")
-                  .HasConversion(tsVectorConverter, tsVectorComparer)
-                  .HasComputedColumnSql(
-                      "to_tsvector('english', coalesce(name,'') || ' ' || coalesce(description,''))",
-                      stored: true)
-                  .IsRequired(false);
+                entity.Property(p => p.SearchVector)
+                      .HasColumnName("search_vector")
+                      .HasColumnType("tsvector")
+                      .HasConversion(tsVectorConverter, tsVectorComparer)
+                      .HasComputedColumnSql(
+                          "to_tsvector('english', coalesce(name,'') || ' ' || coalesce(description,''))",
+                          stored: true)
+                      .IsRequired(false);
+            }
+            else
+            {
+                entity.Property(p => p.SearchVector).IsRequired(false);
+            }
 
             entity.Property(p => p.CreatedAt)
                   .HasColumnName("created_at")
@@ -752,7 +766,7 @@ public sealed class MarketplaceDbContext : DbContext
         });
     }
 
-    private static void ConfigureDocPages(ModelBuilder modelBuilder)
+    private static void ConfigureDocPages(ModelBuilder modelBuilder, bool isPostgres = true)
     {
         modelBuilder.Entity<DocPageEntity>(entity =>
         {
@@ -788,23 +802,32 @@ public sealed class MarketplaceDbContext : DbContext
             // A ValueConverter bridges string? ↔ NpgsqlTsVector? for the Npgsql provider.
             // ValueComparer is required to avoid a NullReferenceException in the EF Core 9.x
             // MigrationsModelDiffer when generating migrations (ProviderValueComparer NPE).
-            ValueConverter<string?, NpgsqlTsVector?> tsVectorConverter = new(
-                v => v == null ? null : NpgsqlTsVector.Parse(v),
-                v => v == null ? null : v.ToString());
-            ValueComparer<string?> tsVectorComparer = new(
-                (a, b) => a == b,
-                v => v == null ? 0 : v.GetHashCode(),
-                v => v);
+            // The converter is skipped for the in-memory provider (unit tests) because
+            // NpgsqlTsVector is not supported by that provider.
+            if (isPostgres)
+            {
+                ValueConverter<string?, NpgsqlTsVector?> tsVectorConverter = new(
+                    v => v == null ? null : NpgsqlTsVector.Parse(v),
+                    v => v == null ? null : v.ToString());
+                ValueComparer<string?> tsVectorComparer = new(
+                    (a, b) => a == b,
+                    v => v == null ? 0 : v.GetHashCode(),
+                    v => v);
 
-            entity.Property(d => d.SearchVector)
-                  .HasColumnName("search_vector")
-                  .HasColumnType("tsvector")
-                  .HasConversion(tsVectorConverter, tsVectorComparer)
-                  .HasComputedColumnSql(
-                      "setweight(to_tsvector('english', coalesce(title,'')), 'A') || " +
-                      "setweight(to_tsvector('english', coalesce(content_markdown,'')), 'B')",
-                      stored: true)
-                  .IsRequired(false);
+                entity.Property(d => d.SearchVector)
+                      .HasColumnName("search_vector")
+                      .HasColumnType("tsvector")
+                      .HasConversion(tsVectorConverter, tsVectorComparer)
+                      .HasComputedColumnSql(
+                          "setweight(to_tsvector('english', coalesce(title,'')), 'A') || " +
+                          "setweight(to_tsvector('english', coalesce(content_markdown,'')), 'B')",
+                          stored: true)
+                      .IsRequired(false);
+            }
+            else
+            {
+                entity.Property(d => d.SearchVector).IsRequired(false);
+            }
 
             // UNIQUE constraint on slug
             entity.HasIndex(d => d.Slug)
