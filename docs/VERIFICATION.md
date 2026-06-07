@@ -271,18 +271,25 @@ CLI exceeds 80% across all metrics. Coverage includes login/logout/whoami comman
 
 ---
 
-## 23.6 Explicitly Deferred (tracked in change tasks.md)
+## 23.6 Explicitly Deferred & Decided
 
-The following work is acknowledged and deferred to Phase 2 per the authentication/authorization change:
+### Decided — Not Pursuing
+
+The following items were evaluated and consciously rejected per KISS principle:
+
+| Item | Rationale |
+|------|-----------|
+| OS-keychain CLI credential storage | Avoid native platform-toolchain dependency (e.g. keytar) and per-OS complexity. File-based store at `~/.claude-plugins/credentials.json` with strict `0600` (dir `0700`) permissions + runtime verification sufficient. |
+| Redis-backed `jti` denylist | Redis adds infrastructure overhead for negligible gain at current scale. Postgres-backed denylist (TTL'd to ≤15-min access-token lifetime) checked on validation is sufficient. Revisit only if a future caching/rate-limiting need independently justifies adding Redis. |
+
+### Deferred to Phase 2
+
+The following work is acknowledged and deferred per the authentication/authorization change:
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Per-endpoint auth rate-limiting tuning | In place, deferred tuning | Global limits (login 5/min, token 10/min, refresh 10/min) active; per-endpoint granularity deferred |
-| Device-code /activate browser-approval endpoint | Phase 2 | Required for desktop app OAuth support; not blocking web-based OIDC |
 | Live browser e2e with real Google/Microsoft | Phase 2 | Requires provider credentials; integration test suite with mocked OIDC is sufficient for CI |
 | Legacy plugin "claim ownership" | Phase 2 | Org-based authZ now primary; ownership migration deferred |
-| OS-keychain CLI credential storage | Phase 2 | CLI currently requires token env var; keychain integration deferred |
-| Redis-backed jti denylist | Phase 2 | In-memory denylist in use; Redis for distributed cache deferred |
 
 ---
 
