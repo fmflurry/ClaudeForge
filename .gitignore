@@ -35,8 +35,10 @@ infra/secrets/*.key
 .vs/
 _ReSharper*/
 [Tt]est[Rr]esult*/
+TestResults/
 *.coverage
 *.coveragexml
+**/*.cobertura.xml
 [Ll]og/
 [Ll]ogs/
 BenchmarkDotNet.Artifacts/
@@ -78,6 +80,7 @@ coverage/
 *.log
 .mocha_output
 TestResults/
+coverage-summary.json
 
 # ─── Plugin Artifacts ────────────────────────────────────────────────────────
 /packages/
