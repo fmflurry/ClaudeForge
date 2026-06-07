@@ -35,8 +35,15 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                     _ => "Bad Request",
                 },
                 Detail = domainEx.Message,
+                Type = domainEx.StatusCode switch
+                {
+                    StatusCodes.Status404NotFound => "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+                    StatusCodes.Status401Unauthorized => "https://tools.ietf.org/html/rfc7235#section-3.1",
+                    _ => "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                },
+                Instance = httpContext.Request.Path,
             },
-            _ => CreateUnexpectedError(exception),
+            _ => CreateUnexpectedError(exception, httpContext.Request.Path),
         };
 
         httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
@@ -44,7 +51,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         return true;
     }
 
-    private ProblemDetails CreateUnexpectedError(Exception exception)
+    private ProblemDetails CreateUnexpectedError(Exception exception, PathString instance)
     {
         _logger.LogError(exception, "Unexpected error: {Message}", exception.Message);
         return new ProblemDetails
@@ -52,6 +59,8 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             Status = StatusCodes.Status500InternalServerError,
             Title = "Internal Server Error",
             Detail = "An unexpected error occurred. Please try again later.",
+            Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
+            Instance = instance,
         };
     }
 }
