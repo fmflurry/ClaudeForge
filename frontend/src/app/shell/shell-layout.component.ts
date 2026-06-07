@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit, Signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TeamContextFacade } from '../features/team-context/application/facades/team-context.facade';
+import { TeamContextStore } from '../features/team-context/application/store/team-context.store';
 import { TeamWelcomeOverlayComponent } from '../features/team-context/presentation/welcome-overlay/team-welcome-overlay.component';
 import { TeamSwitcherComponent } from '../features/team-context/presentation/team-switcher/team-switcher.component';
 import { TelemetrySettingsComponent } from '../features/telemetry/presentation/settings/telemetry-settings.component';
@@ -22,7 +23,7 @@ import { CatalogFacade } from '../features/catalog/application/facades/catalog.f
 @Component({
   selector: 'cf-shell-layout',
   standalone: true,
-  providers: [TeamContextFacade, AuthFacade, OrgContextFacade],
+  providers: [TeamContextStore, TeamContextFacade, AuthFacade, OrgContextFacade],
   imports: [
     RouterOutlet,
     RouterLink,
