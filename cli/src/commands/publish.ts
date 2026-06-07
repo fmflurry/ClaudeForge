@@ -6,6 +6,7 @@ import * as nodeFsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import type { IMarketplaceClient } from '../api/client.js';
 import { MarketplaceApiError } from '../api/client.js';
+import { SessionExpiredError } from '../auth/token-attachment.js';
 import { validateManifest } from './validate.js';
 import type { PluginManifest } from './validate.js';
 
@@ -26,6 +27,8 @@ export interface PublishFsPort {
 
 export interface PublishArgs {
   pluginPath?: string;
+  /** Override the active org for private publishing. */
+  org?: string;
 }
 
 export interface PublishDeps {
@@ -65,7 +68,7 @@ export async function runPublish(
   args: PublishArgs,
   deps: PublishDeps,
 ): Promise<CommandResult> {
-  const { pluginPath } = args;
+  const { pluginPath, org } = args;
   const { client, fs: fsPort = realPublishFsPort } = deps;
 
   const dir = pluginPath ?? process.cwd();
@@ -118,6 +121,9 @@ export async function runPublish(
   formData.append('package', archive, 'plugin.tar.gz');
   formData.append('name', m.name);
   formData.append('version', m.version);
+  if (org !== undefined) {
+    formData.append('orgId', org);
+  }
 
   try {
     const response = await client.uploadPlugin(formData);
@@ -127,6 +133,12 @@ export async function runPublish(
       output: `Published ${m.name}@${m.version} at ${marketplaceUrl}`,
     };
   } catch (err) {
+    if (err instanceof SessionExpiredError) {
+      return {
+        exitCode: 1,
+        output: err.message,
+      };
+    }
     if (err instanceof MarketplaceApiError && err.status === 409) {
       return {
         exitCode: 1,

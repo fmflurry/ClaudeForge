@@ -33,6 +33,7 @@ import type { CommandResult, PublishFsPort } from '../commands/publish.js';
 import type { IMarketplaceClient, UploadResponse } from '../api/client.js';
 import { MarketplaceApiError } from '../api/client.js';
 import type { ProblemDetails } from '../api/client.js';
+import { SessionExpiredError } from '../auth/token-attachment.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -276,5 +277,50 @@ describe('runPublish – missing plugin.json', () => {
       { client, homeDir: '/tmp/home', fs: fakeFs },
     );
     expect(result.output).toContain('plugin.json');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runPublish – authentication
+// ---------------------------------------------------------------------------
+
+describe('runPublish – authentication', () => {
+  it('returns non-zero exitCode and SessionExpiredError message when client throws SessionExpiredError', async () => {
+    const client = makeFakeClient({
+      uploadPlugin: vi.fn().mockRejectedValue(new SessionExpiredError()),
+    });
+    const fakeFs = makeFakeFs(makeValidManifestJson());
+    const result = await runPublish(
+      { pluginPath: '/my/plugin' },
+      { client, homeDir: '/tmp/home', fs: fakeFs },
+    );
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain('Session expired');
+    expect(result.output).toContain('claude-plugin login');
+  });
+
+  it('appends org to FormData when --org is provided', async () => {
+    const uploadFn = vi.fn().mockResolvedValue(SUCCESS_UPLOAD);
+    const client = makeFakeClient({ uploadPlugin: uploadFn });
+    const fakeFs = makeFakeFs(makeValidManifestJson());
+    await runPublish(
+      { pluginPath: '/my/plugin', org: 'my-org' },
+      { client, homeDir: '/tmp/home', fs: fakeFs },
+    );
+    expect(uploadFn).toHaveBeenCalled();
+    const [formData] = uploadFn.mock.calls[0] as [FormData];
+    expect(formData.get('orgId')).toBe('my-org');
+  });
+
+  it('does NOT append orgId to FormData when --org is not provided', async () => {
+    const uploadFn = vi.fn().mockResolvedValue(SUCCESS_UPLOAD);
+    const client = makeFakeClient({ uploadPlugin: uploadFn });
+    const fakeFs = makeFakeFs(makeValidManifestJson());
+    await runPublish(
+      { pluginPath: '/my/plugin' },
+      { client, homeDir: '/tmp/home', fs: fakeFs },
+    );
+    const [formData] = uploadFn.mock.calls[0] as [FormData];
+    expect(formData.get('orgId')).toBeNull();
   });
 });

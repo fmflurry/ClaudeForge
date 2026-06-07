@@ -172,6 +172,14 @@ describe('createProgram – flags', () => {
     const optionNames = scaffoldCmd!.options.map((o) => o.long);
     expect(optionNames).toContain('--interactive');
   });
+
+  it('publish --org flag is registered', () => {
+    const program = createProgram();
+    const publishCmd = program.commands.find((c) => c.name() === 'publish');
+    expect(publishCmd).toBeDefined();
+    const optionNames = publishCmd!.options.map((o) => o.long);
+    expect(optionNames).toContain('--org');
+  });
 });
 
 // ---------------------------------------------------------------------------

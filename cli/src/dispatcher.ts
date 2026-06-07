@@ -7,6 +7,9 @@ import { Command } from 'commander';
 import type { ParseOptions } from 'commander';
 import { resolveHome, resolveApiUrl, readConfig } from './config/config.js';
 import { createMarketplaceClient } from './api/client.js';
+import { readCredentials } from './auth/credentials-store.js';
+import { readActiveOrg } from './auth/active-org-store.js';
+import { createAuthenticatedClient } from './auth/token-attachment.js';
 
 import type { CommandResult } from './commands/config.js';
 import {
@@ -21,6 +24,9 @@ import { runRemove as defaultRunRemove } from './commands/remove.js';
 import { runValidate as defaultRunValidate } from './commands/validate.js';
 import { runPublish as defaultRunPublish } from './commands/publish.js';
 import { runScaffold as defaultRunScaffold } from './commands/scaffold.js';
+import { runLogin as defaultRunLogin } from './commands/login.js';
+import { runLogout as defaultRunLogout } from './commands/logout.js';
+import { runWhoami as defaultRunWhoami } from './commands/whoami.js';
 
 import type { runInstall } from './commands/install.js';
 import type { runRemove } from './commands/remove.js';
@@ -32,6 +38,9 @@ import type { runScaffold } from './commands/scaffold.js';
 import type { runValidate } from './commands/validate.js';
 import type { runConfigSet, runConfigShow } from './commands/config.js';
 import type { ScaffoldLanguage } from './commands/scaffold.js';
+import type { runLogin } from './commands/login.js';
+import type { runLogout } from './commands/logout.js';
+import type { runWhoami } from './commands/whoami.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,6 +57,9 @@ export interface DispatcherDeps {
   runValidate?: typeof runValidate;
   runConfigSet?: typeof runConfigSet;
   runConfigShow?: typeof runConfigShow;
+  runLogin?: typeof runLogin;
+  runLogout?: typeof runLogout;
+  runWhoami?: typeof runWhoami;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,6 +77,39 @@ async function getClient(env?: NodeJS.ProcessEnv): Promise<ReturnType<typeof cre
   const config = await readConfig(homeDir);
   const apiUrl = resolveApiUrl(config.apiUrl, env);
   return createMarketplaceClient(apiUrl);
+}
+
+/**
+ * Returns an authenticated client for publish (always requires credentials).
+ * Credentials are loaded from homeDir; the returned client will throw
+ * SessionExpiredError when credentials are absent or locally expired.
+ */
+async function getAuthenticatedPublishClient(
+  env?: NodeJS.ProcessEnv,
+): Promise<ReturnType<typeof createAuthenticatedClient>> {
+  const homeDir = resolveHome(env);
+  const config = await readConfig(homeDir);
+  const apiUrl = resolveApiUrl(config.apiUrl, env);
+  const base = createMarketplaceClient(apiUrl);
+  const credentials = await readCredentials(homeDir);
+  return createAuthenticatedClient(base, { credentials });
+}
+
+/**
+ * Returns an auth-aware client for install/pull commands.
+ * If credentials exist the client attaches Bearer to download requests
+ * (enabling private pulls). If credentials are absent the client falls
+ * back to anonymous downloads — preserving the public-pull guarantee.
+ */
+async function getInstallClient(
+  env?: NodeJS.ProcessEnv,
+): Promise<ReturnType<typeof createAuthenticatedClient>> {
+  const homeDir = resolveHome(env);
+  const config = await readConfig(homeDir);
+  const apiUrl = resolveApiUrl(config.apiUrl, env);
+  const base = createMarketplaceClient(apiUrl);
+  const credentials = await readCredentials(homeDir);
+  return createAuthenticatedClient(base, { credentials });
 }
 
 // ---------------------------------------------------------------------------
@@ -90,6 +135,9 @@ export function createProgram(deps: DispatcherDeps = {}): Command {
     runValidate: injectedValidate = defaultRunValidate,
     runConfigSet: injectedConfigSet = defaultRunConfigSet,
     runConfigShow: injectedConfigShow = defaultRunConfigShow,
+    runLogin: injectedLogin = defaultRunLogin,
+    runLogout: injectedLogout = defaultRunLogout,
+    runWhoami: injectedWhoami = defaultRunWhoami,
   } = deps;
 
   // ── install ──────────────────────────────────────────────────────────────
@@ -98,7 +146,7 @@ export function createProgram(deps: DispatcherDeps = {}): Command {
     .description('Install a plugin from the marketplace')
     .option('--version <version>', 'Specific version to install')
     .action(async (pluginName: string, options: { version?: string }) => {
-      const client = await getClient();
+      const client = await getInstallClient();
       const homeDir = resolveHome();
       const result = await injectedInstall(
         { pluginName, ...(options.version !== undefined ? { version: options.version } : {}) },
@@ -161,11 +209,18 @@ export function createProgram(deps: DispatcherDeps = {}): Command {
     .command('publish')
     .description('Publish a plugin to the marketplace')
     .option('--path <path>', 'Plugin directory (default: cwd)')
-    .action(async (options: { path?: string }) => {
-      const client = await getClient();
+    .option('--org <orgId>', 'Override active org for private publishing')
+    .action(async (options: { path?: string; org?: string }) => {
+      const client = await getAuthenticatedPublishClient();
       const homeDir = resolveHome();
+      // Resolve org: CLI flag takes priority over stored activeOrg
+      const activeOrg = await readActiveOrg(homeDir);
+      const org = options.org ?? activeOrg ?? undefined;
       const result = await injectedPublish(
-        { ...(options.path !== undefined ? { pluginPath: options.path } : {}) },
+        {
+          ...(options.path !== undefined ? { pluginPath: options.path } : {}),
+          ...(org !== undefined ? { org } : {}),
+        },
         { client, homeDir },
       );
       printResult(result);
@@ -229,6 +284,48 @@ export function createProgram(deps: DispatcherDeps = {}): Command {
     });
 
   program.addCommand(configCmd);
+
+  // ── login ─────────────────────────────────────────────────────────────────
+  program
+    .command('login')
+    .description('Authenticate with the plugin marketplace')
+    .option('--provider <provider>', 'Identity provider: google|microsoft', 'google')
+    .option('--device-code', 'Use device-code flow (headless environments)')
+    .action(async (options: { provider?: string; deviceCode?: boolean }) => {
+      const homeDir = resolveHome();
+      const config = await readConfig(homeDir);
+      const apiUrl = resolveApiUrl(config.apiUrl);
+      const provider = (options.provider ?? 'google') as 'google' | 'microsoft';
+      const result = await injectedLogin(
+        { provider, ...(options.deviceCode !== undefined ? { deviceCode: options.deviceCode } : {}) },
+        { homeDir, apiUrl },
+      );
+      printResult(result);
+    });
+
+  // ── logout ───────────────────────────────────────────────────────────────
+  program
+    .command('logout')
+    .description('Log out and remove stored credentials')
+    .action(async () => {
+      const homeDir = resolveHome();
+      const result = await injectedLogout({}, { homeDir });
+      printResult(result);
+    });
+
+  // ── whoami ───────────────────────────────────────────────────────────────
+  program
+    .command('whoami')
+    .description('Show current authenticated user')
+    .option('--org <orgId>', 'Override active org')
+    .action(async (options: { org?: string }) => {
+      const homeDir = resolveHome();
+      const result = await injectedWhoami(
+        { ...(options.org !== undefined ? { org: options.org } : {}) },
+        { homeDir },
+      );
+      printResult(result);
+    });
 
   // ── Normalize parseAsync to support from: 'user' with node-prefixed arrays ──
   // Tests call parseAsync(['node', 'claude-plugin', 'install', ...], { from: 'user' })

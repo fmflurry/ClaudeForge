@@ -36,6 +36,9 @@ import * as os from 'node:os';
 import { runInstall } from '../commands/install.js';
 import type { CommandResult, FsPort } from '../commands/install.js';
 import type { IMarketplaceClient, PluginDetail, VersionSummary } from '../api/client.js';
+import { MarketplaceApiError } from '../api/client.js';
+import type { ProblemDetails } from '../api/client.js';
+import { SessionExpiredError } from '../auth/token-attachment.js';
 import { readRegistry } from '../registry/registry.js';
 
 // ---------------------------------------------------------------------------
@@ -282,5 +285,77 @@ describe('runInstall – network error', () => {
     );
     // Spec says: "Suggest retry or manual configuration of API URL"
     expect(result.output).toMatch(/retry|api.url|config/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Authentication — private pull and session errors
+// ---------------------------------------------------------------------------
+
+describe('runInstall – authentication', () => {
+  let homeDir: string;
+
+  beforeEach(async () => {
+    homeDir = await makeTmpDir();
+  });
+
+  afterEach(async () => {
+    await removeTmpDir(homeDir);
+  });
+
+  it('returns non-zero exitCode and SessionExpiredError message when download returns 401', async () => {
+    const pd: ProblemDetails = { title: 'Unauthorized', status: 401 };
+    const client = makeFakeClient({
+      downloadPlugin: vi.fn().mockRejectedValue(new SessionExpiredError()),
+    });
+    const fakeFs = makeFakeFs();
+    const result: CommandResult = await runInstall(
+      { pluginName: '@namespace/plugin-name' },
+      { client, homeDir, fs: fakeFs },
+    );
+    void pd; // used above for context
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain('Session expired');
+    expect(result.output).toContain('claude-plugin login');
+  });
+
+  it('returns non-zero exitCode and access-denied message when download returns 403', async () => {
+    const pd: ProblemDetails = { title: 'Forbidden', status: 403 };
+    const client = makeFakeClient({
+      downloadPlugin: vi.fn().mockRejectedValue(new MarketplaceApiError(pd, 403)),
+    });
+    const fakeFs = makeFakeFs();
+    const result: CommandResult = await runInstall(
+      { pluginName: '@namespace/plugin-name' },
+      { client, homeDir, fs: fakeFs },
+    );
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toMatch(/access denied|not a member/i);
+  });
+
+  it('does NOT write to the registry when download returns 401', async () => {
+    const client = makeFakeClient({
+      downloadPlugin: vi.fn().mockRejectedValue(new SessionExpiredError()),
+    });
+    const fakeFs = makeFakeFs();
+    await runInstall(
+      { pluginName: '@namespace/plugin-name' },
+      { client, homeDir, fs: fakeFs },
+    );
+    const registry = await readRegistry(homeDir);
+    expect(registry.plugins).toHaveLength(0);
+  });
+
+  it('anonymous public install succeeds without auth header (client with null credentials)', async () => {
+    // Simulates: createAuthenticatedClient(base, { credentials: null }) → public download
+    const downloadFn = vi.fn().mockResolvedValue(new ReadableStream());
+    const client = makeFakeClient({ downloadPlugin: downloadFn });
+    const fakeFs = makeFakeFs();
+    const result: CommandResult = await runInstall(
+      { pluginName: '@namespace/plugin-name' },
+      { client, homeDir, fs: fakeFs },
+    );
+    expect(result.exitCode).toBe(0);
+    expect(downloadFn).toHaveBeenCalled();
   });
 });

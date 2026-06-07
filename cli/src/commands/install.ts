@@ -6,6 +6,8 @@
 import * as nodeFsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import type { IMarketplaceClient } from '../api/client.js';
+import { MarketplaceApiError } from '../api/client.js';
+import { SessionExpiredError } from '../auth/token-attachment.js';
 import { readRegistry, addRecord, writeRegistry } from '../registry/registry.js';
 
 // ---------------------------------------------------------------------------
@@ -112,6 +114,21 @@ export async function runInstall(
   try {
     stream = await client.downloadPlugin(pluginDetail.id, targetVersion);
   } catch (err) {
+    if (err instanceof SessionExpiredError) {
+      return {
+        exitCode: 1,
+        output: err.message,
+      };
+    }
+    if (err instanceof MarketplaceApiError && err.status === 403) {
+      return {
+        exitCode: 1,
+        output: [
+          `Access denied: you are not a member of the org that owns this plugin.`,
+          `Contact the plugin owner or run 'claude-plugin login' with the correct account.`,
+        ].join('\n'),
+      };
+    }
     const message = err instanceof Error ? err.message : String(err);
     return {
       exitCode: 1,

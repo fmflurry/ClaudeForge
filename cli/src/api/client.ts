@@ -86,8 +86,12 @@ export class MarketplaceApiError extends Error {
 export interface IMarketplaceClient {
   searchPlugins(q: string, limit: number): Promise<PaginatedResponse<SearchResult>>;
   getPlugin(name: string): Promise<PluginDetail>;
-  downloadPlugin(pluginId: string, version?: string): Promise<ReadableStream<Uint8Array>>;
-  uploadPlugin(formData: FormData): Promise<UploadResponse>;
+  downloadPlugin(
+    pluginId: string,
+    version?: string,
+    headers?: Record<string, string>,
+  ): Promise<ReadableStream<Uint8Array>>;
+  uploadPlugin(formData: FormData, headers?: Record<string, string>): Promise<UploadResponse>;
   getLatestVersion(pluginId: string): Promise<VersionSummary>;
   checkVersionExists(pluginId: string, version: string): Promise<boolean>;
 }
@@ -139,10 +143,10 @@ export function createMarketplaceClient(apiUrl: string): IMarketplaceClient {
       return paged.data[0];
     },
 
-    async downloadPlugin(pluginId, version) {
+    async downloadPlugin(pluginId, version, headers) {
       const versionSegment = version ? `/${encodeURIComponent(version)}` : '/latest';
       const url = `${base}/api/v1/plugins/${encodeURIComponent(pluginId)}/download${versionSegment}`;
-      const response = await fetch(url);
+      const response = await fetch(url, headers ? { headers } : undefined);
       if (!response.ok) {
         let problemDetails: ProblemDetails;
         try {
@@ -161,11 +165,12 @@ export function createMarketplaceClient(apiUrl: string): IMarketplaceClient {
       return response.body as ReadableStream<Uint8Array>;
     },
 
-    async uploadPlugin(formData) {
+    async uploadPlugin(formData, headers) {
       const url = `${base}/api/v1/plugins/upload`;
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
+        ...(headers ? { headers } : {}),
       });
       return handleResponse<UploadResponse>(response);
     },
