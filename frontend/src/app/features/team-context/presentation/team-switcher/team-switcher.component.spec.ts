@@ -104,6 +104,16 @@ function setupComponent(): {
 }
 
 // ---------------------------------------------------------------------------
+// Test helper — constructs an Event whose target has the given value
+// ---------------------------------------------------------------------------
+
+function makeInputEvent(value: string): Event {
+  const input = document.createElement('input');
+  input.value = value;
+  return { target: input } as unknown as Event;
+}
+
+// ---------------------------------------------------------------------------
 // Component selector
 // ---------------------------------------------------------------------------
 
@@ -237,7 +247,7 @@ describe('TeamSwitcherComponent — confirmEdit', () => {
     const { fixture, stub } = setupComponent();
     fixture.detectChanges();
     fixture.componentInstance.openEdit();
-    fixture.componentInstance.onEditInputChange('Product');
+    fixture.componentInstance.onInput(makeInputEvent('Product'));
     fixture.componentInstance.confirmEdit();
     expect(stub.setTeamCalls).toContain('Product');
   });
@@ -251,28 +261,28 @@ describe('TeamSwitcherComponent — confirmEdit', () => {
   it('should call facade.setTeam even with invalid input (facade validates)', () => {
     const { fixture, stub } = setupComponent();
     fixture.detectChanges();
-    fixture.componentInstance.onEditInputChange('bad@input');
+    fixture.componentInstance.onInput(makeInputEvent('bad@input'));
     fixture.componentInstance.confirmEdit();
     expect(stub.setTeamCalls).toContain('bad@input');
   });
 });
 
 // ---------------------------------------------------------------------------
-// onEditInputChange
+// onInput
 // ---------------------------------------------------------------------------
 
-describe('TeamSwitcherComponent — onEditInputChange', () => {
+describe('TeamSwitcherComponent — onInput', () => {
   it('should update editInput signal', () => {
     const { fixture } = setupComponent();
     fixture.detectChanges();
-    fixture.componentInstance.onEditInputChange('Design');
+    fixture.componentInstance.onInput(makeInputEvent('Design'));
     expect(fixture.componentInstance.editInput()).toBe('Design');
   });
 
   it('should handle empty string', () => {
     const { fixture } = setupComponent();
     fixture.detectChanges();
-    fixture.componentInstance.onEditInputChange('');
+    fixture.componentInstance.onInput(makeInputEvent(''));
     expect(fixture.componentInstance.editInput()).toBe('');
   });
 });
@@ -414,8 +424,8 @@ describe('TeamSwitcherComponent — public API surface', () => {
     expect(typeof fixture.componentInstance.clearTeam).toBe('function');
   });
 
-  it('should expose onEditInputChange as a function', () => {
+  it('should expose onInput as a function', () => {
     const { fixture } = setupComponent();
-    expect(typeof fixture.componentInstance.onEditInputChange).toBe('function');
+    expect(typeof fixture.componentInstance.onInput).toBe('function');
   });
 });

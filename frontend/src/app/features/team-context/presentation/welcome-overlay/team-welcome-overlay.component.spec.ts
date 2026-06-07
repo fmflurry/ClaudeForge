@@ -102,6 +102,16 @@ function setupComponent(): {
 }
 
 // ---------------------------------------------------------------------------
+// Test helper — constructs an Event whose target has the given value
+// ---------------------------------------------------------------------------
+
+function makeInputEvent(value: string): Event {
+  const input = document.createElement('input');
+  input.value = value;
+  return { target: input } as unknown as Event;
+}
+
+// ---------------------------------------------------------------------------
 // Component selector
 // ---------------------------------------------------------------------------
 
@@ -226,10 +236,10 @@ describe('TeamWelcomeOverlayComponent — custom input', () => {
     expect(inputEl).not.toBeNull();
   });
 
-  it('should update customInput signal when onCustomInputChange is called', () => {
+  it('should update customInput signal when onInput is called', () => {
     const { fixture } = setupComponent();
     fixture.detectChanges();
-    fixture.componentInstance.onCustomInputChange('My Custom Team');
+    fixture.componentInstance.onInput(makeInputEvent('My Custom Team'));
     expect(fixture.componentInstance.customInput()).toBe('My Custom Team');
   });
 });
@@ -242,7 +252,7 @@ describe('TeamWelcomeOverlayComponent — custom submission', () => {
   it('should call facade.setTeam when submitCustom is called with valid input', () => {
     const { fixture, stub } = setupComponent();
     fixture.detectChanges();
-    fixture.componentInstance.onCustomInputChange('My Team');
+    fixture.componentInstance.onInput(makeInputEvent('My Team'));
     fixture.componentInstance.submitCustom();
     expect(stub.setTeamCalls).toContain('My Team');
   });
@@ -250,14 +260,14 @@ describe('TeamWelcomeOverlayComponent — custom submission', () => {
   it('should not throw when submitCustom is called with empty custom input', () => {
     const { fixture } = setupComponent();
     fixture.detectChanges();
-    fixture.componentInstance.onCustomInputChange('');
+    fixture.componentInstance.onInput(makeInputEvent(''));
     expect(() => fixture.componentInstance.submitCustom()).not.toThrow();
   });
 
   it('should call facade.setTeam even with invalid input (facade validates internally)', () => {
     const { fixture, stub } = setupComponent();
     fixture.detectChanges();
-    fixture.componentInstance.onCustomInputChange('bad@input');
+    fixture.componentInstance.onInput(makeInputEvent('bad@input'));
     fixture.componentInstance.submitCustom();
     expect(stub.setTeamCalls).toContain('bad@input');
   });

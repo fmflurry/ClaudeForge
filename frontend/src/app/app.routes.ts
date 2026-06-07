@@ -36,7 +36,10 @@ export const routes: Routes = [
       },
       {
         path: '',
-        redirectTo: 'catalog',
+        loadComponent: () =>
+          import('./features/home/presentation/landing-page.component').then(
+            (m) => m.LandingPageComponent,
+          ),
         pathMatch: 'full',
       },
     ],
