@@ -8,8 +8,8 @@ and manage them through a web UI or a CLI.
 
 | Layer | Technology |
 |---|---|
-| Frontend | Angular 19 standalone, OnPush, signal-based stores |
-| Backend | .NET 8 Minimal API, Clean/Hexagonal architecture |
+| Frontend | Angular 22 standalone, OnPush, signal-based stores |
+| Backend | .NET 10 Minimal API, Clean/Hexagonal architecture |
 | Database | PostgreSQL 16 (full-text search via tsvector) |
 | Vector search (opt-in) | Qdrant — gated behind `--profile semantic` |
 | CLI | Node.js + TypeScript (`claude plugin <subcommand>`) |
