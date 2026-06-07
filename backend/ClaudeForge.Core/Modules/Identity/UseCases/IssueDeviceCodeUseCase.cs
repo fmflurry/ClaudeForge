@@ -18,17 +18,43 @@ public sealed record DeviceAuthState(
 /// <summary>
 /// Global in-memory store for device authorization states.
 /// Singleton — shared across all use case instances.
+///
+/// H4 (PARTIAL): Capped at <see cref="MaxEntries"/> to prevent unbounded growth from
+/// abandoned device codes. Expired entries are swept on each <see cref="Store"/> call.
+/// The full /activate browser approval UI is deferred to the CLI device-flow work item.
 /// </summary>
 public sealed class DeviceCodeStore
 {
+    /// <summary>
+    /// Maximum number of live (unexpired) device code entries before new ones are rejected.
+    /// Prevents unbounded memory growth from abandoned codes.
+    /// </summary>
+    private const int MaxEntries = 10_000;
+
     private readonly ConcurrentDictionary<string, DeviceAuthState> _byDeviceCode =
         new(StringComparer.Ordinal);
 
     private readonly ConcurrentDictionary<string, string> _userCodeToDeviceCode =
         new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Per-device-code last-poll timestamp — used to enforce the advertised poll interval
+    /// and return SlowDown when clients poll faster than the interval.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, DateTimeOffset> _lastPollTime =
+        new(StringComparer.Ordinal);
+
     public void Store(DeviceAuthState state)
     {
+        // Sweep expired entries first to reclaim space before checking the cap.
+        SweepExpired();
+
+        if (_byDeviceCode.Count >= MaxEntries)
+        {
+            throw new InvalidOperationException(
+                "Device code store is at capacity. Please retry later.");
+        }
+
         _byDeviceCode[state.DeviceCode] = state;
         _userCodeToDeviceCode[state.UserCode] = state.DeviceCode;
     }
@@ -48,6 +74,42 @@ public sealed class DeviceCodeStore
         if (_byDeviceCode.TryRemove(deviceCode, out DeviceAuthState? state))
         {
             _userCodeToDeviceCode.TryRemove(state.UserCode, out _);
+        }
+
+        _lastPollTime.TryRemove(deviceCode, out _);
+    }
+
+    /// <summary>
+    /// Records a poll attempt for the given device code and returns whether the poll is
+    /// arriving faster than the advertised <paramref name="intervalSeconds"/>.
+    /// Returns <c>true</c> when the client should slow down.
+    /// </summary>
+    public bool RecordPollAndCheckSlowDown(string deviceCode, int intervalSeconds)
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        if (_lastPollTime.TryGetValue(deviceCode, out DateTimeOffset lastPoll))
+        {
+            if ((now - lastPoll).TotalSeconds < intervalSeconds)
+            {
+                // Do not update lastPoll on a rejected (too-fast) attempt — RFC 8628 §3.5.
+                return true;
+            }
+        }
+
+        _lastPollTime[deviceCode] = now;
+        return false;
+    }
+
+    private void SweepExpired()
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        foreach (KeyValuePair<string, DeviceAuthState> kvp in _byDeviceCode)
+        {
+            if (kvp.Value.ExpiresAt <= now)
+            {
+                Remove(kvp.Key);
+            }
         }
     }
 }

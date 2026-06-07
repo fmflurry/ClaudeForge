@@ -14,7 +14,13 @@ public sealed record VerifiedIdentity(
     string Subject,
     string Email,
     bool EmailVerified,
-    string Name);
+    string Name,
+    /// <summary>
+    /// H6 — The "nonce" claim from the id_token. Empty string when the IdP did not echo
+    /// the nonce (e.g. mock adapters in tests that do not set it).
+    /// Must be verified against <see cref="AuthFlowState.Nonce"/> in CompleteSignInUseCase.
+    /// </summary>
+    string Nonce = "");
 
 /// <summary>
 /// Result of provisioning or linking a user via an OIDC provider.
@@ -45,12 +51,17 @@ public sealed class UnsupportedProviderException : ProblemDetailsException
 /// </summary>
 public interface IIdentityProviderPort
 {
-    /// <summary>Builds the IdP authorization redirect URL.</summary>
+    /// <summary>
+    /// Builds the IdP authorization redirect URL.
+    /// The <paramref name="nonce"/> is included so the IdP echoes it back in the id_token
+    /// "nonce" claim (H6 — OIDC replay protection).
+    /// </summary>
     string BuildAuthorizationUrl(
         string provider,
         string codeChallenge,
         string state,
-        string redirectUri);
+        string redirectUri,
+        string nonce = "");
 
     /// <summary>Exchanges an authorization code for the raw (signed JWT) id_token string.</summary>
     Task<string> ExchangeCodeAsync(
@@ -143,11 +154,25 @@ public sealed record AccessTokenClaims(
     string Provider);
 
 /// <summary>
+/// Core DTO representing a persisted refresh token row — returned by the store port
+/// so use cases in Core never need to reference the Infrastructure RefreshTokenEntity.
+/// </summary>
+public sealed record RefreshTokenInfo(
+    Guid Id,
+    Guid UserId,
+    DateTimeOffset ExpiresAt,
+    DateTimeOffset? RevokedAt,
+    Guid? RotatedTo,
+    Guid RootId,
+    string Provider);
+
+/// <summary>
 /// Command to create a new opaque refresh token for a user.
 /// </summary>
 public sealed record CreateRefreshTokenCommand(
     Guid UserId,
-    int ExpiryDays);
+    int ExpiryDays,
+    string Provider = "");
 
 /// <summary>
 /// Result of a successful refresh-token creation.

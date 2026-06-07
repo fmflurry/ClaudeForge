@@ -22,17 +22,21 @@ public sealed class UserStoreOptions
 /// <summary>
 /// Provisions or links users using EF Core against the <see cref="MarketplaceDbContext"/>.
 /// Implements the four linking rules from the design spec.
+///
+/// SECURITY: cross-provider linking requires email_verified on BOTH sides:
+///   - the incoming identity must have emailVerified = true, AND
+///   - the existing user must have email_normalized non-null (set from a verified email).
+/// Users with unverified email are stored with email_normalized = NULL so they can NEVER
+/// become link targets.
 /// </summary>
 public sealed class UserStoreAdapter : IUserStorePort
 {
-    private readonly IDbContextFactory<MarketplaceDbContext> _dbFactory;
+    private readonly MarketplaceDbContext _db;
     private readonly UserStoreOptions _options;
 
-    public UserStoreAdapter(
-        IDbContextFactory<MarketplaceDbContext> dbFactory,
-        IOptions<UserStoreOptions> options)
+    public UserStoreAdapter(MarketplaceDbContext db, IOptions<UserStoreOptions> options)
     {
-        _dbFactory = dbFactory;
+        _db = db;
         _options = options.Value;
     }
 
@@ -44,31 +48,33 @@ public sealed class UserStoreAdapter : IUserStorePort
         string displayName,
         CancellationToken ct = default)
     {
-        // Normalise email for case-insensitive lookup
-        string emailNormalized = email.ToLowerInvariant();
-
-        await using MarketplaceDbContext ctx = _dbFactory.CreateDbContext();
+        // Normalise email for case-insensitive lookup — only used when email is verified.
+        string? emailNormalized = emailVerified ? email.ToLowerInvariant() : null;
 
         // ── Rule 1/2: Existing (provider, subject) ────────────────────────────────
-        UserIdentityEntity? existingIdentity = await ctx.UserIdentities
+        UserIdentityEntity? existingIdentity = await _db.UserIdentities
             .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Provider == provider && i.Subject == subject, ct)
             .ConfigureAwait(false);
 
         if (existingIdentity is not null)
         {
-            // Update user email + displayName
-            UserEntity? userToUpdate = await ctx.Users
+            UserEntity? userToUpdate = await _db.Users
                 .FirstOrDefaultAsync(u => u.Id == existingIdentity.UserId, ct)
                 .ConfigureAwait(false);
 
             if (userToUpdate is not null)
             {
                 userToUpdate.Email = email;
-                userToUpdate.EmailNormalized = emailNormalized;
+                // Only update email_normalized when email is verified; keep existing value otherwise.
+                if (emailVerified)
+                {
+                    userToUpdate.EmailNormalized = emailNormalized;
+                }
+
                 userToUpdate.DisplayName = displayName;
                 userToUpdate.UpdatedAt = DateTimeOffset.UtcNow;
-                await ctx.SaveChangesAsync(ct).ConfigureAwait(false);
+                await _db.SaveChangesAsync(ct).ConfigureAwait(false);
 
                 return new ProvisionedUser(
                     userToUpdate.Id,
@@ -79,15 +85,17 @@ public sealed class UserStoreAdapter : IUserStorePort
         }
 
         // ── Rule 3: Different provider, verified email, linking enabled ────────────
+        // Cross-provider linking requires:
+        //   1. Incoming email must be verified (emailNormalized is non-null).
+        //   2. Existing user must have a non-null email_normalized (was set from a verified email).
         if (emailVerified && !_options.DisableCrossProviderLinking)
         {
-            UserEntity? existingUser = await ctx.Users
+            UserEntity? existingUser = await _db.Users
                 .FirstOrDefaultAsync(u => u.EmailNormalized == emailNormalized, ct)
                 .ConfigureAwait(false);
 
             if (existingUser is not null)
             {
-                // Add a new user_identity row linking this provider to the existing user
                 UserIdentityEntity newIdentity = new()
                 {
                     Id = Guid.NewGuid(),
@@ -97,11 +105,11 @@ public sealed class UserStoreAdapter : IUserStorePort
                     CreatedAt = DateTimeOffset.UtcNow,
                 };
 
-                ctx.UserIdentities.Add(newIdentity);
+                _db.UserIdentities.Add(newIdentity);
 
                 try
                 {
-                    await ctx.SaveChangesAsync(ct).ConfigureAwait(false);
+                    await _db.SaveChangesAsync(ct).ConfigureAwait(false);
 
                     return new ProvisionedUser(
                         existingUser.Id,
@@ -111,25 +119,23 @@ public sealed class UserStoreAdapter : IUserStorePort
                 }
                 catch (DbUpdateException)
                 {
-                    // Concurrent insert of same (provider, subject) — re-query winner
-                    await ctx.Entry(newIdentity).ReloadAsync(ct).ConfigureAwait(false);
-                    return await ResolveByProviderSubjectAsync(ctx, provider, subject, ct)
+                    _db.ChangeTracker.Clear();
+                    // Concurrent insert of same (provider, subject) — re-query winner.
+                    return await ResolveByProviderSubjectAsync(_db, provider, subject, ct)
                         .ConfigureAwait(false);
                 }
             }
         }
 
         // ── Rule 4 / first sign-in: Create new user + user_identity ───────────────
-        return await CreateNewUserAsync(ctx, provider, subject, email, emailNormalized, displayName, ct)
+        return await CreateNewUserAsync(_db, provider, subject, email, emailNormalized, displayName, ct)
             .ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<UserProfile?> FindByIdAsync(Guid userId, CancellationToken ct = default)
     {
-        await using MarketplaceDbContext ctx = _dbFactory.CreateDbContext();
-
-        var user = await ctx.Users
+        var user = await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == userId)
             .Select(u => new
@@ -166,7 +172,7 @@ public sealed class UserStoreAdapter : IUserStorePort
         string provider,
         string subject,
         string email,
-        string emailNormalized,
+        string? emailNormalized,
         string displayName,
         CancellationToken ct)
     {
@@ -176,6 +182,7 @@ public sealed class UserStoreAdapter : IUserStorePort
         {
             Id = Guid.NewGuid(),
             Email = email,
+            // NULL for unverified — can never be a cross-provider link target.
             EmailNormalized = emailNormalized,
             DisplayName = displayName,
             CreatedAt = now,
@@ -208,14 +215,7 @@ public sealed class UserStoreAdapter : IUserStorePort
         {
             ctx.ChangeTracker.Clear();
 
-            // Determine whether the constraint that fired was on user_identities or users.
-            // If the (provider, subject) identity now exists in the DB, a concurrent first
-            // sign-in race fired on user_identities — resolve the winner.
-            // Otherwise the users.email_normalized unique constraint fired (the email is
-            // already owned by a different user). This happens when a separate user must be
-            // created for an unverified or cross-provider-linking-disabled sign-in, but the
-            // email happens to be taken. Retry with a synthesized unique email_normalized so
-            // the new user record can be stored while preserving the original display email.
+            // Determine whether the identity constraint fired (concurrent first sign-in).
             bool identityConflict = await ctx.UserIdentities
                 .AsNoTracking()
                 .AnyAsync(i => i.Provider == provider && i.Subject == subject, ct)
@@ -223,16 +223,14 @@ public sealed class UserStoreAdapter : IUserStorePort
 
             if (identityConflict)
             {
-                // Concurrent insert of same (provider, subject) — return the winner's data.
                 return await ResolveByProviderSubjectAsync(ctx, provider, subject, ct)
                     .ConfigureAwait(false);
             }
 
-            // Email uniqueness conflict: retry with a synthetic email_normalized that is
-            // guaranteed unique per (provider, subject) so the new user row can be stored.
-            string uniqueEmailNormalized = $"{provider}:{subject}".ToLowerInvariant();
+            // Email uniqueness conflict on email_normalized: create user without email_normalized
+            // so the row can always be stored without colliding with existing verified users.
             return await CreateNewUserAsync(
-                ctx, provider, subject, email, uniqueEmailNormalized, displayName, ct)
+                ctx, provider, subject, email, emailNormalized: null, displayName, ct)
                 .ConfigureAwait(false);
         }
     }

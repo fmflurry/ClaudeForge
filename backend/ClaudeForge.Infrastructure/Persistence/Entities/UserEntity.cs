@@ -12,9 +12,11 @@ public sealed class UserEntity
 
     /// <summary>
     /// Lower-cased email for case-insensitive duplicate detection (UNIQUE constraint).
-    /// Must equal <c>Email.ToLowerInvariant()</c>.
+    /// NULL for users whose email was not verified at sign-in time — a NULL value
+    /// can never be a cross-provider link target and satisfies the UNIQUE index
+    /// because Postgres permits multiple NULLs in a unique index.
     /// </summary>
-    public string EmailNormalized { get; set; } = string.Empty;
+    public string? EmailNormalized { get; set; }
 
     public string DisplayName { get; set; } = string.Empty;
 

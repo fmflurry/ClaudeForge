@@ -99,23 +99,10 @@ public sealed class UserProvisioningTests : IAsyncLifetime
     private IUserStorePort MakeAdapter(bool disableCrossProviderLinking = false)
     {
         UserStoreOptions options = new() { DisableCrossProviderLinking = disableCrossProviderLinking };
-        IDbContextFactory<MarketplaceDbContext> factory = new SingletonDbContextFactory(_fixture);
-        return new UserStoreAdapter(factory, Microsoft.Extensions.Options.Options.Create(options));
-    }
-
-    private static IDbContextFactory<MarketplaceDbContext> MakeFactory(PostgresFixture fixture) =>
-        new SingletonDbContextFactory(fixture);
-
-    private sealed class SingletonDbContextFactory : IDbContextFactory<MarketplaceDbContext>
-    {
-        private readonly PostgresFixture _fixture;
-
-        public SingletonDbContextFactory(PostgresFixture fixture)
-        {
-            _fixture = fixture;
-        }
-
-        public MarketplaceDbContext CreateDbContext() => _fixture.CreateContext();
+        // UserStoreAdapter now takes a scoped MarketplaceDbContext directly.
+        return new UserStoreAdapter(
+            _fixture.CreateContext(),
+            Microsoft.Extensions.Options.Options.Create(options));
     }
 
     // =========================================================================

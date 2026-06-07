@@ -23,6 +23,18 @@ public sealed class RefreshTokenEntity
     /// </summary>
     public Guid? RotatedTo { get; set; }
 
+    /// <summary>
+    /// Root of the token family (set to this row's own Id at creation;
+    /// inherited from parent at rotation). Used for atomic family revocation.
+    /// </summary>
+    public Guid RootId { get; set; }
+
+    /// <summary>
+    /// OIDC provider name used during sign-in (e.g. "google", "microsoft").
+    /// Persisted so that the refresh path can re-issue claims with the correct provider.
+    /// </summary>
+    public string Provider { get; set; } = string.Empty;
+
     public DateTimeOffset CreatedAt { get; set; }
 
     // Navigation properties

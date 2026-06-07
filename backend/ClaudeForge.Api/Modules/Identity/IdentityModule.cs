@@ -8,13 +8,10 @@ using ClaudeForge.Core.Shared.Authorization;
 using ClaudeForge.Infrastructure.Identity;
 using ClaudeForge.Infrastructure.Identity.Validation;
 using ClaudeForge.Infrastructure.Persistence;
-using ClaudeForge.Infrastructure.Persistence.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 
 namespace ClaudeForge.Api.Modules.Identity;
 
@@ -122,13 +119,12 @@ public sealed class IdentityModule : IModule
 
         services.Configure<UserStoreOptions>(configuration.GetSection("OIDC__USERSTORE"));
 
-        // Register UserStoreAdapter using the scoped DbContextFactory which respects
-        // any test overrides. The factory creates fresh contexts (which are then
-        // properly tracked via the factory's own scope management).
+        // Use a single UserStoreAdapter backed by the scoped MarketplaceDbContext.
+        // This correctly picks up the WebApplicationFactory's DbContext override in tests.
         services.AddScoped<IUserStorePort>(sp =>
-            new ScopedUserStoreAdapter(
+            new UserStoreAdapter(
                 sp.GetRequiredService<MarketplaceDbContext>(),
-                sp.GetRequiredService<IOptions<UserStoreOptions>>().Value));
+                sp.GetRequiredService<IOptions<UserStoreOptions>>()));
 
         // ── Group 5 — Auth Flow State ────────────────────────────────────────────
         services.AddSingleton<IAuthFlowStatePort>(_ =>
@@ -136,9 +132,22 @@ public sealed class IdentityModule : IModule
 
         // ── Group 5 — Use Cases ──────────────────────────────────────────────────
         services.AddScoped<InitiateSignInUseCase>(sp =>
-            new InitiateSignInUseCase(
+        {
+            // C4: Pass the server-configured redirect URI and optional loopback URI so that
+            // InitiateSignInUseCase can validate any caller-supplied redirect_uri against
+            // the allow-list rather than accepting it verbatim.
+            IConfiguration cfg = sp.GetRequiredService<IConfiguration>();
+            // The registered redirect URI for the default provider (google when enabled).
+            string configuredRedirect = cfg["OIDC__GOOGLE__REDIRECTURI"]
+                ?? cfg["OIDC__MICROSOFT__REDIRECTURI"]
+                ?? string.Empty;
+            string? loopbackRedirect = cfg["OIDC__ALLOWEDLOOPBACKREDIRECT"];
+            return new InitiateSignInUseCase(
                 sp.GetRequiredService<IIdentityProviderRegistry>(),
-                sp.GetRequiredService<IAuthFlowStatePort>()));
+                sp.GetRequiredService<IAuthFlowStatePort>(),
+                configuredRedirectUri: configuredRedirect,
+                allowedLoopbackRedirect: loopbackRedirect);
+        });
 
         services.AddScoped<CompleteSignInUseCase>(sp =>
         {
@@ -160,6 +169,7 @@ public sealed class IdentityModule : IModule
             return new RefreshTokensUseCase(
                 sp.GetRequiredService<IRefreshTokenStorePort>(),
                 sp.GetRequiredService<ITokenIssuerPort>(),
+                sp.GetRequiredService<IUserStorePort>(),
                 sp.GetRequiredService<IRevokedJtiStorePort>(),
                 rtd);
         });
@@ -468,238 +478,3 @@ public sealed class IdentityModule : IModule
     private sealed record DeviceTokenRequest(string DeviceCode);
 }
 
-/// <summary>
-/// Simplified <see cref="IUserStorePort"/> adapter that uses the scoped
-/// <see cref="MarketplaceDbContext"/> directly (without creating a new scope per call).
-/// This correctly picks up the test WebApplicationFactory's DbContext override.
-/// The scoped context is NOT disposed by this adapter (DI manages its lifetime).
-/// </summary>
-internal sealed class ScopedUserStoreAdapter : IUserStorePort
-{
-    private readonly MarketplaceDbContext _db;
-    private readonly UserStoreOptions _options;
-
-    public ScopedUserStoreAdapter(MarketplaceDbContext db, UserStoreOptions options)
-    {
-        _db = db;
-        _options = options;
-    }
-
-    public async Task<ProvisionedUser> ProvisionOrLinkAsync(
-        string provider, string subject, string email,
-        bool emailVerified, string displayName, CancellationToken ct = default)
-    {
-        string emailNormalized = email.ToLowerInvariant();
-
-        // Rule 1: Existing (provider, subject) → update
-        UserIdentityEntity? existingIdentity = await _db.UserIdentities
-            .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.Provider == provider && i.Subject == subject, ct)
-            .ConfigureAwait(false);
-
-        if (existingIdentity is not null)
-        {
-            UserEntity? user = await _db.Users
-                .FirstOrDefaultAsync(u => u.Id == existingIdentity.UserId, ct)
-                .ConfigureAwait(false);
-
-            if (user is not null)
-            {
-                user.Email = email;
-                user.EmailNormalized = emailNormalized;
-                user.DisplayName = displayName;
-                user.UpdatedAt = DateTimeOffset.UtcNow;
-                await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-                return new ProvisionedUser(user.Id, user.Email, user.DisplayName, false);
-            }
-        }
-
-        // Rule 2: Cross-provider linking via verified email
-        if (emailVerified && !_options.DisableCrossProviderLinking)
-        {
-            UserEntity? existingUser = await _db.Users
-                .FirstOrDefaultAsync(u => u.EmailNormalized == emailNormalized, ct)
-                .ConfigureAwait(false);
-
-            if (existingUser is not null)
-            {
-                UserIdentityEntity newIdentity = new()
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = existingUser.Id,
-                    Provider = provider,
-                    Subject = subject,
-                    CreatedAt = DateTimeOffset.UtcNow,
-                };
-                _db.UserIdentities.Add(newIdentity);
-                try
-                {
-                    await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-                    return new ProvisionedUser(existingUser.Id, existingUser.Email, existingUser.DisplayName, false);
-                }
-                catch (Microsoft.EntityFrameworkCore.DbUpdateException)
-                {
-                    _db.ChangeTracker.Clear();
-                }
-            }
-        }
-
-        // Rule 3: Create new user + identity
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        UserEntity newUser = new()
-        {
-            Id = Guid.NewGuid(),
-            Email = email,
-            EmailNormalized = emailNormalized,
-            DisplayName = displayName,
-            CreatedAt = now,
-            UpdatedAt = now,
-        };
-        UserIdentityEntity identity = new()
-        {
-            Id = Guid.NewGuid(),
-            UserId = newUser.Id,
-            Provider = provider,
-            Subject = subject,
-            CreatedAt = now,
-        };
-        _db.Users.Add(newUser);
-        _db.UserIdentities.Add(identity);
-
-        try
-        {
-            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-            return new ProvisionedUser(newUser.Id, newUser.Email, newUser.DisplayName, true);
-        }
-        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
-        {
-            _db.ChangeTracker.Clear();
-            // Concurrent insert — fetch winner
-            UserIdentityEntity winner = await _db.UserIdentities
-                .AsNoTracking()
-                .Include(i => i.User)
-                .FirstAsync(i => i.Provider == provider && i.Subject == subject, ct)
-                .ConfigureAwait(false);
-            return new ProvisionedUser(winner.UserId, winner.User.Email, winner.User.DisplayName, false);
-        }
-    }
-
-    public async Task<UserProfile?> FindByIdAsync(Guid userId, CancellationToken ct = default)
-    {
-        var user = await _db.Users
-            .AsNoTracking()
-            .Where(u => u.Id == userId)
-            .Select(u => new
-            {
-                u.Id,
-                u.Email,
-                u.DisplayName,
-                Memberships = u.Memberships
-                    .Select(m => new { m.OrgId, OrgName = m.Organization.Name, m.Role })
-                    .ToList(),
-            })
-            .FirstOrDefaultAsync(ct);
-
-        if (user is null)
-        {
-            return null;
-        }
-
-        return new UserProfile(
-            user.Id,
-            user.Email,
-            user.DisplayName,
-            user.Memberships
-                .Select(m => new UserOrgMembership(m.OrgId, m.OrgName, m.Role))
-                .ToList());
-    }
-}
-
-/// <summary>
-/// Post-configures <see cref="JwtBearerOptions"/> to inject the issuer, audience, and
-/// signing key resolver from the DI-registered services at runtime. This allows the test
-/// WebApplicationFactory to override both <see cref="IConfiguration"/> and
-/// <see cref="IJwksProvider"/> and have JwtBearer validate test-issued tokens correctly.
-/// </summary>
-internal sealed class JwksProviderPostConfigureOptions : IPostConfigureOptions<JwtBearerOptions>
-{
-    private readonly IJwksProvider _jwksProvider;
-    private readonly IConfiguration _configuration;
-
-    public JwksProviderPostConfigureOptions(
-        IJwksProvider jwksProvider,
-        IConfiguration configuration)
-    {
-        _jwksProvider = jwksProvider;
-        _configuration = configuration;
-    }
-
-    public void PostConfigure(string? name, JwtBearerOptions options)
-    {
-        if (name != JwtBearerDefaults.AuthenticationScheme)
-        {
-            return;
-        }
-
-        string issuer = _configuration["Jwt:Issuer"] ?? "https://claudeforge.io";
-        string audience = _configuration["Jwt:Audience"] ?? "claudeforge-api";
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = issuer,
-            ValidateAudience = true,
-            ValidAudience = audience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-            ValidAlgorithms = [SecurityAlgorithms.RsaSha256],
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
-            {
-                JwksDocument doc = _jwksProvider.GetCurrentKeys();
-
-                List<SecurityKey> keys = new();
-                foreach (JwksKey key in doc.Keys)
-                {
-                    try
-                    {
-                        System.Security.Cryptography.RSA rsa =
-                            System.Security.Cryptography.RSA.Create();
-
-                        System.Security.Cryptography.RSAParameters rsaParams = new()
-                        {
-                            Modulus = Base64UrlDecodeBytes(key.N),
-                            Exponent = Base64UrlDecodeBytes(key.E),
-                        };
-
-                        rsa.ImportParameters(rsaParams);
-                        keys.Add(new RsaSecurityKey(rsa) { KeyId = key.Kid });
-                    }
-                    catch
-                    {
-                        // Skip malformed keys gracefully.
-                    }
-                }
-
-                return keys;
-            },
-        };
-
-        options.Challenge = string.Empty;
-    }
-
-    private static byte[] Base64UrlDecodeBytes(string base64Url)
-    {
-        string padded = base64Url
-            .Replace('-', '+')
-            .Replace('_', '/');
-
-        switch (padded.Length % 4)
-        {
-            case 2: padded += "=="; break;
-            case 3: padded += "="; break;
-        }
-
-        return Convert.FromBase64String(padded);
-    }
-}

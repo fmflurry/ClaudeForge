@@ -110,8 +110,8 @@ public sealed class IdentityProviderRegistryTests
         public string ProviderName { get; }
 
         public string BuildAuthorizationUrl(
-            string provider, string codeChallenge, string state, string redirectUri) =>
-            _inner.BuildAuthorizationUrl(provider, codeChallenge, state, redirectUri);
+            string provider, string codeChallenge, string state, string redirectUri, string nonce = "") =>
+            _inner.BuildAuthorizationUrl(provider, codeChallenge, state, redirectUri, nonce);
 
         public Task<string> ExchangeCodeAsync(
             string provider, string code, string codeVerifier, string redirectUri,

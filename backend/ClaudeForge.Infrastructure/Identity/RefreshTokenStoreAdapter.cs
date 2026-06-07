@@ -1,3 +1,4 @@
+using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Text;
 using ClaudeForge.Core.Identity.Ports;
@@ -11,6 +12,9 @@ namespace ClaudeForge.Infrastructure.Identity;
 /// Postgres-backed refresh-token store.
 /// Implements <see cref="IRefreshTokenStorePort"/> with opaque random tokens
 /// stored as SHA-256 hex digests (never plaintext).
+/// Rotation is atomic: a conditional UPDATE (rotated_to IS NULL AND revoked_at IS NULL)
+/// ensures only one caller can rotate a given token.
+/// Revocation operates on the whole family via root_id.
 /// </summary>
 public sealed class RefreshTokenStoreAdapter : IRefreshTokenStorePort
 {
@@ -33,14 +37,18 @@ public sealed class RefreshTokenStoreAdapter : IRefreshTokenStorePort
         string plainToken = GeneratePlainToken();
         string tokenHash = HashToken(plainToken);
         DateTimeOffset expiresAt = DateTimeOffset.UtcNow.AddDays(expiryDays);
+        Guid newId = Guid.NewGuid();
 
         RefreshTokenEntity entity = new()
         {
-            Id = Guid.NewGuid(),
+            Id = newId,
             UserId = cmd.UserId,
             TokenHash = tokenHash,
             ExpiresAt = expiresAt,
             CreatedAt = DateTimeOffset.UtcNow,
+            // Family root = the row's own Id for new tokens.
+            RootId = newId,
+            Provider = cmd.Provider,
         };
 
         _db.RefreshTokens.Add(entity);
@@ -54,7 +62,7 @@ public sealed class RefreshTokenStoreAdapter : IRefreshTokenStorePort
     }
 
     /// <inheritdoc />
-    public async Task<RefreshTokenEntity?> FindByHashAsync(
+    public async Task<RefreshTokenInfo?> FindByHashAsync(
         string plainToken,
         CancellationToken ct = default)
     {
@@ -65,25 +73,40 @@ public sealed class RefreshTokenStoreAdapter : IRefreshTokenStorePort
 
         string hash = HashToken(plainToken);
 
-        return await _db.RefreshTokens
+        RefreshTokenEntity? entity = await _db.RefreshTokens
+            .AsNoTracking()
             .FirstOrDefaultAsync(r => r.TokenHash == hash, ct);
+
+        return entity is null ? null : MapToInfo(entity);
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Atomic rotation with race/reuse safety:
+    ///   1. Fetch the old entity to check its provider and ensure it exists.
+    ///   2. Insert the new token row first (so the FK reference from rotated_to is valid).
+    ///   3. Conditionally UPDATE the old row — sets rotated_to only when
+    ///      rotated_to IS NULL AND revoked_at IS NULL.
+    ///   4. If 0 rows are affected → the token was already rotated or revoked (reuse/race) →
+    ///      clean up the newly inserted row and throw.
+    /// </remarks>
     public async Task<RotateRefreshTokenResult> RotateAsync(
         Guid oldId,
         Guid userId,
+        Guid rootId,
         CancellationToken ct = default)
     {
-        RefreshTokenEntity? oldEntity = await _db.RefreshTokens
-            .FirstOrDefaultAsync(r => r.Id == oldId, ct)
-            ?? throw new InvalidOperationException($"Refresh token {oldId} not found.");
-
         string newPlainToken = GeneratePlainToken();
         string newTokenHash = HashToken(newPlainToken);
         Guid newId = Guid.NewGuid();
         DateTimeOffset newExpiresAt = DateTimeOffset.UtcNow.AddDays(_defaultExpiryDays);
 
+        // Fetch the old entity to get its provider and verify it exists.
+        RefreshTokenEntity? oldEntity = await _db.RefreshTokens
+            .FirstOrDefaultAsync(r => r.Id == oldId, ct)
+            ?? throw new InvalidOperationException($"Refresh token {oldId} not found.");
+
+        // Insert the new token row first (FK requires the referent to exist before rotated_to is set).
         RefreshTokenEntity newEntity = new()
         {
             Id = newId,
@@ -91,13 +114,36 @@ public sealed class RefreshTokenStoreAdapter : IRefreshTokenStorePort
             TokenHash = newTokenHash,
             ExpiresAt = newExpiresAt,
             CreatedAt = DateTimeOffset.UtcNow,
+            // Inherit the family root from the parent.
+            RootId = rootId,
+            Provider = oldEntity.Provider,
         };
-
-        // Mark old token as rotated (immutable update: set rotated_to)
-        oldEntity.RotatedTo = newId;
 
         _db.RefreshTokens.Add(newEntity);
         await _db.SaveChangesAsync(ct);
+
+        // Atomic conditional update: only set rotated_to when still unused.
+        int rowsAffected = await _db.Database.ExecuteSqlRawAsync(
+            """
+            UPDATE refresh_tokens
+            SET rotated_to = {0}
+            WHERE id = {1}
+              AND rotated_to IS NULL
+              AND revoked_at IS NULL
+            """,
+            newId,
+            oldId);
+
+        if (rowsAffected == 0)
+        {
+            // Reuse or race condition detected — remove the newly inserted token and reject.
+            // The caller is responsible for revoking the family and returning 401.
+            _db.RefreshTokens.Remove(newEntity);
+            await _db.SaveChangesAsync(ct);
+
+            throw new AuthenticationException(
+                "Refresh token reuse detected. The token family has been revoked.");
+        }
 
         return new RotateRefreshTokenResult(
             NewId: newId,
@@ -108,27 +154,26 @@ public sealed class RefreshTokenStoreAdapter : IRefreshTokenStorePort
     /// <inheritdoc />
     public async Task RevokeChainAsync(Guid rootId, CancellationToken ct = default)
     {
-        // Walk the rotated_to chain, revoking each node
-        Guid? currentId = rootId;
-        DateTimeOffset revokedAt = DateTimeOffset.UtcNow;
-
-        while (currentId.HasValue)
-        {
-            RefreshTokenEntity? entity = await _db.RefreshTokens
-                .FirstOrDefaultAsync(r => r.Id == currentId.Value, ct);
-
-            if (entity is null)
-            {
-                break;
-            }
-
-            entity.RevokedAt = revokedAt;
-            Guid? nextId = entity.RotatedTo;
-            await _db.SaveChangesAsync(ct);
-
-            currentId = nextId;
-        }
+        // Revoke the entire family in a single statement using root_id.
+        await _db.Database.ExecuteSqlRawAsync(
+            """
+            UPDATE refresh_tokens
+            SET revoked_at = NOW()
+            WHERE root_id = {0}
+              AND revoked_at IS NULL
+            """,
+            rootId);
     }
+
+    private static RefreshTokenInfo MapToInfo(RefreshTokenEntity entity) =>
+        new(
+            Id: entity.Id,
+            UserId: entity.UserId,
+            ExpiresAt: entity.ExpiresAt,
+            RevokedAt: entity.RevokedAt,
+            RotatedTo: entity.RotatedTo,
+            RootId: entity.RootId,
+            Provider: entity.Provider);
 
     private static string GeneratePlainToken()
     {

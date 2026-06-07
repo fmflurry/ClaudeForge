@@ -145,6 +145,98 @@ public sealed class AuthEndpointTests : IAsyncLifetime
     }
 
     // =========================================================================
+    // C4 — redirect_uri validation
+    // =========================================================================
+
+    /// <summary>
+    /// Supplying an unregistered redirect_uri → 400 Bad Request.
+    /// (C4: server must reject attacker-controlled redirect URIs.)
+    /// </summary>
+    [Fact]
+    public async Task GetAuthorize_UnregisteredRedirectUri_Returns400()
+    {
+        HttpResponseMessage response = await _client.GetAsync(
+            "/auth/authorize?provider=google&redirect_uri=https://evil.attacker.com/steal-code");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// Omitting redirect_uri (server uses the configured default) → succeeds (302 or 200).
+    /// </summary>
+    [Fact]
+    public async Task GetAuthorize_NoRedirectUri_UsesConfiguredDefault_Succeeds()
+    {
+        HttpResponseMessage response = await _client.GetAsync("/auth/authorize?provider=google");
+
+        bool isRedirect = response.StatusCode == HttpStatusCode.Redirect ||
+                          response.StatusCode == HttpStatusCode.SeeOther;
+        bool isOk = response.StatusCode == HttpStatusCode.OK;
+
+        Assert.True(isRedirect || isOk,
+            $"Expected 302 or 200 when no redirect_uri supplied, got {(int)response.StatusCode}");
+    }
+
+    /// <summary>
+    /// Supplying the exact configured redirect_uri → succeeds (302 or 200).
+    /// </summary>
+    [Fact]
+    public async Task GetAuthorize_ConfiguredRedirectUri_IsAllowed()
+    {
+        // The test factory sets OIDC__GOOGLE__REDIRECTURI = "https://app.test/auth/callback"
+        HttpResponseMessage response = await _client.GetAsync(
+            "/auth/authorize?provider=google&redirect_uri=https://app.test/auth/callback");
+
+        bool isRedirect = response.StatusCode == HttpStatusCode.Redirect ||
+                          response.StatusCode == HttpStatusCode.SeeOther;
+        bool isOk = response.StatusCode == HttpStatusCode.OK;
+
+        Assert.True(isRedirect || isOk,
+            $"Expected 302 or 200 for the configured redirect_uri, got {(int)response.StatusCode}");
+    }
+
+    // =========================================================================
+    // C1 — jti denylist enforced on access-token validation
+    // =========================================================================
+
+    /// <summary>
+    /// After signout, the access token's jti is added to the denylist.
+    /// A subsequent request to a protected endpoint with the same access token must be
+    /// rejected with 401 — proving the JwtBearer OnTokenValidated handler checks the denylist.
+    /// </summary>
+    [Fact]
+    public async Task PostSignout_AccessTokenJti_IsRejectedOnProtectedEndpoint()
+    {
+        // Provision a user and get tokens via full sign-in.
+        (string accessToken, string refreshToken) = await PerformFullSignIn();
+
+        // Confirm the access token works before signout.
+        using HttpClient preClient = _factory.CreateClient();
+        AuthEndpointFixture.SetBearerToken(preClient, accessToken);
+        HttpResponseMessage preMeResp = await preClient.GetAsync("/auth/me");
+        Assert.Equal(HttpStatusCode.OK, preMeResp.StatusCode);
+
+        // Sign out — this adds the jti to the denylist.
+        using HttpClient signoutClient = _factory.CreateClient();
+        AuthEndpointFixture.SetBearerToken(signoutClient, accessToken);
+        StringContent signoutContent = new(
+            System.Text.Json.JsonSerializer.Serialize(new { refreshToken }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+        HttpResponseMessage signoutResp = await signoutClient.PostAsync("/auth/signout", signoutContent);
+        Assert.True(
+            signoutResp.StatusCode == HttpStatusCode.OK ||
+            signoutResp.StatusCode == HttpStatusCode.NoContent,
+            $"Signout expected 200/204, got {(int)signoutResp.StatusCode}");
+
+        // The same access token must now be rejected on /auth/me (C1: jti denylist enforced).
+        using HttpClient postClient = _factory.CreateClient();
+        AuthEndpointFixture.SetBearerToken(postClient, accessToken);
+        HttpResponseMessage postMeResp = await postClient.GetAsync("/auth/me");
+        Assert.Equal(HttpStatusCode.Unauthorized, postMeResp.StatusCode);
+    }
+
+    // =========================================================================
     // Task 5.5 — POST /auth/token (code + state exchange)
     // =========================================================================
 

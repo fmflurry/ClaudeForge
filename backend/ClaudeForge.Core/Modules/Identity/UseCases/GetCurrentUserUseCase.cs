@@ -1,4 +1,5 @@
 using ClaudeForge.Core.Identity.Ports;
+using ClaudeForge.Core.Shared.Exceptions;
 
 namespace ClaudeForge.Core.Modules.Identity.UseCases;
 
@@ -16,7 +17,7 @@ public sealed class GetCurrentUserUseCase
 
     /// <summary>
     /// Fetches the user by ID and returns their profile plus org memberships.
-    /// Throws <see cref="InvalidOperationException"/> when the user is not found (→ 401/404).
+    /// Throws <see cref="AuthenticationException"/> when the user is not found (→ HTTP 401).
     /// </summary>
     public async Task<CurrentUserResponse> ExecuteAsync(
         Guid userId,
@@ -26,7 +27,7 @@ public sealed class GetCurrentUserUseCase
 
         if (profile is null)
         {
-            throw new InvalidOperationException($"User {userId} not found.");
+            throw new AuthenticationException($"User {userId} not found.");
         }
 
         IReadOnlyList<OrgMembershipSummary> memberships = profile.OrgMemberships

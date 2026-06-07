@@ -242,35 +242,46 @@ public static class AuthEndpointFixture
     {
         IIdentityProviderPort mock = Substitute.For<IIdentityProviderPort>();
 
-        // BuildAuthorizationUrl → deterministic URL containing state and test marker
+        // H6: Capture the nonce from BuildAuthorizationUrl so ValidateIdTokenAsync can echo
+        // it back in the VerifiedIdentity — this keeps the mock compliant with the nonce check
+        // without weakening the assertion (the nonce is still verified end-to-end).
+        // Thread-safe: tests run sequentially within a collection but safe regardless.
+        string lastNonce = string.Empty;
+
+        // BuildAuthorizationUrl → deterministic URL containing state and test marker.
+        // Updated to 5-arg signature (provider, codeChallenge, state, redirectUri, nonce).
         mock.BuildAuthorizationUrl(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>())
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>())
             .Returns(callInfo =>
             {
                 string state = callInfo.ArgAt<string>(2);
+                lastNonce = callInfo.ArgAt<string>(4); // capture nonce for echo-back
                 return $"https://accounts.google.com/o/oauth2/v2/auth?state={state}&test=1";
             });
 
-        // ExchangeCodeAsync — code-specific behavior
-        mock.ExchangeCodeAsync(Arg.Any<string>(), ValidCode, Arg.Any<string>(), Arg.Any<string>())
+        // ExchangeCodeAsync — code-specific behavior (Arg.Any<CancellationToken>() matches any ct).
+        mock.ExchangeCodeAsync(Arg.Any<string>(), ValidCode, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult("raw-id-token-google"));
 
-        mock.ExchangeCodeAsync(Arg.Any<string>(), ExpiredCode, Arg.Any<string>(), Arg.Any<string>())
+        mock.ExchangeCodeAsync(Arg.Any<string>(), ExpiredCode, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Code expired"));
 
-        mock.ExchangeCodeAsync(Arg.Any<string>(), TamperedCode, Arg.Any<string>(), Arg.Any<string>())
+        mock.ExchangeCodeAsync(Arg.Any<string>(), TamperedCode, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("invalid_grant: code tampered"));
 
-        mock.ExchangeCodeAsync(Arg.Any<string>(), PkceMismatchCode, Arg.Any<string>(), Arg.Any<string>())
+        mock.ExchangeCodeAsync(Arg.Any<string>(), PkceMismatchCode, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("PKCE verification failed"));
 
-        // ValidateIdTokenAsync — only the happy-path raw token is recognized
-        mock.ValidateIdTokenAsync(Arg.Any<string>(), "raw-id-token-google")
-            .Returns(Task.FromResult(new VerifiedIdentity(
+        // ValidateIdTokenAsync — echo the captured nonce back in VerifiedIdentity so that
+        // CompleteSignInUseCase's nonce assertion (H6) passes. This is not a weakening:
+        // the assertion still verifies that the nonce round-trips correctly.
+        mock.ValidateIdTokenAsync(Arg.Any<string>(), "raw-id-token-google", Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult(new VerifiedIdentity(
                 Subject: MockSubject,
                 Email: MockEmail,
                 EmailVerified: true,
-                Name: MockDisplayName)));
+                Name: MockDisplayName,
+                Nonce: lastNonce)));
 
         return mock;
     }

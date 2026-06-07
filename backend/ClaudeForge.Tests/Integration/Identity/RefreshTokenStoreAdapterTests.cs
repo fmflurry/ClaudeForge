@@ -40,13 +40,13 @@ namespace ClaudeForge.Tests.Integration.Identity;
 ///         CreateRefreshTokenCommand cmd, CancellationToken ct = default);
 ///
 ///     /// Looks up a token by SHA-256(plainToken). Returns null when not found.
-///     Task&lt;RefreshTokenEntity?&gt; FindByHashAsync(string plainToken, CancellationToken ct = default);
+///     Task&lt;RefreshTokenInfo?&gt; FindByHashAsync(string plainToken, CancellationToken ct = default);
 ///
-///     /// One-time-use rotation: marks oldId as rotated_to=newId, creates new token row.
-///     /// Caller must present the token that was previously issued (not yet rotated).
-///     Task&lt;RotateRefreshTokenResult&gt; RotateAsync(Guid oldId, Guid userId, CancellationToken ct = default);
+///     /// Atomic one-time-use rotation: marks oldId as rotated_to=newId, creates new token row.
+///     /// Caller passes rootId so the new row inherits the family root.
+///     Task&lt;RotateRefreshTokenResult&gt; RotateAsync(Guid oldId, Guid userId, Guid rootId, CancellationToken ct = default);
 ///
-///     /// Revoke the full chain rooted at rootId: walk rotated_to links, set revoked_at on every node.
+///     /// Revoke the entire family (root_id = rootId) in one statement.
 ///     Task RevokeChainAsync(Guid rootId, CancellationToken ct = default);
 ///
 ///   NAMESPACE: ClaudeForge.Infrastructure.Identity
@@ -258,7 +258,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenResult created = await store.CreateAsync(
             new CreateRefreshTokenCommand(UserId: userId, ExpiryDays: 30));
 
-        RefreshTokenEntity? found = await store.FindByHashAsync(created.PlainToken);
+        RefreshTokenInfo? found = await store.FindByHashAsync(created.PlainToken);
 
         Assert.NotNull(found);
         Assert.Equal(created.Id, found.Id);
@@ -270,7 +270,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
     {
         IRefreshTokenStorePort store = MakeAdapter();
 
-        RefreshTokenEntity? found = await store.FindByHashAsync("totally-unknown-token-value");
+        RefreshTokenInfo? found = await store.FindByHashAsync("totally-unknown-token-value");
 
         Assert.Null(found);
     }
@@ -280,7 +280,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
     {
         IRefreshTokenStorePort store = MakeAdapter();
 
-        RefreshTokenEntity? found = await store.FindByHashAsync(string.Empty);
+        RefreshTokenInfo? found = await store.FindByHashAsync(string.Empty);
 
         Assert.Null(found);
     }
@@ -297,7 +297,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenResult original = await store.CreateAsync(
             new CreateRefreshTokenCommand(UserId: userId, ExpiryDays: 30));
 
-        RotateRefreshTokenResult rotated = await store.RotateAsync(original.Id, userId);
+        RotateRefreshTokenResult rotated = await store.RotateAsync(original.Id, userId, rootId: original.Id);
 
         // Old row must have rotated_to set to the new row's Id
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
@@ -315,7 +315,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenResult original = await store.CreateAsync(
             new CreateRefreshTokenCommand(UserId: userId, ExpiryDays: 30));
 
-        RotateRefreshTokenResult rotated = await store.RotateAsync(original.Id, userId);
+        RotateRefreshTokenResult rotated = await store.RotateAsync(original.Id, userId, rootId: original.Id);
 
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
         RefreshTokenEntity? newEntity = await ctx.RefreshTokens
@@ -334,7 +334,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenResult original = await store.CreateAsync(
             new CreateRefreshTokenCommand(UserId: userId, ExpiryDays: 30));
 
-        RotateRefreshTokenResult rotated = await store.RotateAsync(original.Id, userId);
+        RotateRefreshTokenResult rotated = await store.RotateAsync(original.Id, userId, rootId: original.Id);
 
         Assert.NotEqual(original.PlainToken, rotated.NewPlainToken);
     }
@@ -347,7 +347,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenResult original = await store.CreateAsync(
             new CreateRefreshTokenCommand(UserId: userId, ExpiryDays: 30));
 
-        RotateRefreshTokenResult rotated = await store.RotateAsync(original.Id, userId);
+        RotateRefreshTokenResult rotated = await store.RotateAsync(original.Id, userId, rootId: original.Id);
 
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
         RefreshTokenEntity? newEntity = await ctx.RefreshTokens
@@ -369,8 +369,8 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
 
         RefreshTokenResult root = await store.CreateAsync(
             new CreateRefreshTokenCommand(UserId: userId, ExpiryDays: 30));
-        RotateRefreshTokenResult step1 = await store.RotateAsync(root.Id, userId);
-        RotateRefreshTokenResult step2 = await store.RotateAsync(step1.NewId, userId);
+        RotateRefreshTokenResult step1 = await store.RotateAsync(root.Id, userId, rootId: root.Id);
+        RotateRefreshTokenResult step2 = await store.RotateAsync(step1.NewId, userId, rootId: root.Id);
 
         // Simulate reuse detection: caller revokeChain from the root
         await store.RevokeChainAsync(root.Id);
@@ -417,7 +417,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
 
         await store.RevokeChainAsync(token.Id);
 
-        RefreshTokenEntity? found = await store.FindByHashAsync(token.PlainToken);
+        RefreshTokenInfo? found = await store.FindByHashAsync(token.PlainToken);
         Assert.NotNull(found);
         Assert.NotNull(found.RevokedAt);
     }
@@ -434,7 +434,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenResult root = await store.CreateAsync(
             new CreateRefreshTokenCommand(UserId: userId, ExpiryDays: 30));
         // Rotate once (legitimate)
-        RotateRefreshTokenResult rotated = await store.RotateAsync(root.Id, userId);
+        RotateRefreshTokenResult rotated = await store.RotateAsync(root.Id, userId, rootId: root.Id);
 
         // Now "attacker" re-presents the OLD (already-rotated) token.
         // Caller detects rotation (root.RotatedTo != null) and calls RevokeChainAsync(root.Id)
@@ -480,7 +480,7 @@ public sealed class RefreshTokenStoreAdapterTests : IAsyncLifetime
         RefreshTokenResult expired = await store.CreateAsync(
             new CreateRefreshTokenCommand(UserId: userId, ExpiryDays: -1));
 
-        RefreshTokenEntity? found = await store.FindByHashAsync(expired.PlainToken);
+        RefreshTokenInfo? found = await store.FindByHashAsync(expired.PlainToken);
         Assert.NotNull(found);
         Assert.True(found.ExpiresAt < DateTimeOffset.UtcNow, "ExpiresAt must reflect past expiry");
     }

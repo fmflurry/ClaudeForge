@@ -1,5 +1,4 @@
 using ClaudeForge.Core.Identity.Ports;
-using ClaudeForge.Infrastructure.Persistence.Entities;
 
 namespace ClaudeForge.Core.Modules.Identity.UseCases;
 
@@ -30,11 +29,11 @@ public sealed class SignOutUseCase
         DateTimeOffset? accessExpiresAt,
         CancellationToken ct = default)
     {
-        // Revoke the refresh token chain.
-        RefreshTokenEntity? entity = await _refreshStore.FindByHashAsync(plainRefreshToken, ct);
-        if (entity is not null)
+        // Revoke the refresh token chain using the family RootId.
+        RefreshTokenInfo? tokenInfo = await _refreshStore.FindByHashAsync(plainRefreshToken, ct);
+        if (tokenInfo is not null)
         {
-            await _refreshStore.RevokeChainAsync(entity.Id, ct);
+            await _refreshStore.RevokeChainAsync(tokenInfo.RootId, ct);
         }
 
         // Optionally denylist the access token jti.

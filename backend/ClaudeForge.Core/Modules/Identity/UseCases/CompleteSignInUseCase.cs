@@ -33,9 +33,10 @@ public sealed class CompleteSignInUseCase
     }
 
     /// <summary>
-    /// Consumes the state, exchanges the code, validates the id_token, provisions
-    /// or links the user, and issues a fresh token pair.
-    /// Throws <see cref="InvalidOperationException"/> for any auth failure (→ HTTP 401).
+    /// Consumes the state, exchanges the code, validates the id_token, verifies the nonce,
+    /// provisions or links the user, and issues a fresh token pair.
+    /// Throws <see cref="AuthenticationException"/> for any auth failure (→ HTTP 401).
+    /// Lets <see cref="OperationCanceledException"/> propagate (does not swallow into 401).
     /// </summary>
     public async Task<SignInTokens> ExecuteAsync(
         string code,
@@ -53,9 +54,8 @@ public sealed class CompleteSignInUseCase
         // Resolve the provider that initiated this flow.
         IIdentityProviderPort providerPort = _registry.Resolve(flowState.Provider);
 
-        // Exchange code for raw id_token — any exchange failure → 401.
-        // Note: CancellationToken is omitted for the OIDC adapter calls to ensure the
-        // NSubstitute mock setup (which sets up with default ct) matches.
+        // Exchange code for raw id_token.
+        // H2: Use a generic message — specific upstream details are logged by the adapter.
         string rawIdToken;
         try
         {
@@ -63,23 +63,43 @@ public sealed class CompleteSignInUseCase
                 flowState.Provider,
                 code,
                 flowState.CodeVerifier,
-                flowState.RedirectUri);
+                flowState.RedirectUri,
+                ct);
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
         {
-            throw new AuthenticationException(
-                $"Code exchange failed: {ex.Message}", ex);
+            throw;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            throw new AuthenticationException("Code exchange failed.", ex);
         }
 
         // Validate the id_token and extract claims.
-        VerifiedIdentity? identity = await providerPort.ValidateIdTokenAsync(
-            flowState.Provider, rawIdToken);
-
-        if (identity is null)
+        // H1: Do NOT include the raw id_token or exception details in the message.
+        VerifiedIdentity identity;
+        try
         {
-            throw new AuthenticationException(
-                $"Identity validation returned null for provider '{flowState.Provider}' " +
-                $"with rawIdToken='{rawIdToken}'. Mock may not have matched.");
+            identity = await providerPort.ValidateIdTokenAsync(
+                flowState.Provider, rawIdToken, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            throw new AuthenticationException("Identity token validation failed.", ex);
+        }
+
+        // H6: Verify the nonce to prevent id_token replay attacks.
+        // Only enforce when the flow stored a nonce (non-empty).
+        if (!string.IsNullOrEmpty(flowState.Nonce))
+        {
+            if (!string.Equals(identity.Nonce, flowState.Nonce, StringComparison.Ordinal))
+            {
+                throw new AuthenticationException("Identity token validation failed.");
+            }
         }
 
         // Provision or link the user account.
@@ -91,16 +111,16 @@ public sealed class CompleteSignInUseCase
             identity.Name,
             ct);
 
-        // Issue access JWT.
+        // Issue access JWT with real user claims.
         string accessToken = _tokenIssuer.IssueAccessToken(new AccessTokenClaims(
             UserId: user.UserId,
             Email: user.Email,
             Name: user.DisplayName,
             Provider: flowState.Provider));
 
-        // Create refresh token.
+        // Create refresh token — persist the provider for use during refresh.
         RefreshTokenResult refreshResult = await _refreshStore.CreateAsync(
-            new CreateRefreshTokenCommand(user.UserId, _refreshTokenDays), ct);
+            new CreateRefreshTokenCommand(user.UserId, _refreshTokenDays, flowState.Provider), ct);
 
         return new SignInTokens(
             AccessToken: accessToken,

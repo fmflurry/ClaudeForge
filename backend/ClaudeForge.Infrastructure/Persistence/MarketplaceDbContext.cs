@@ -430,7 +430,7 @@ public sealed class MarketplaceDbContext : DbContext
 
             entity.Property(u => u.EmailNormalized)
                   .HasColumnName("email_normalized")
-                  .IsRequired();
+                  .IsRequired(false);
 
             entity.Property(u => u.DisplayName)
                   .HasColumnName("display_name")
@@ -694,6 +694,14 @@ public sealed class MarketplaceDbContext : DbContext
                   .HasColumnName("rotated_to")
                   .IsRequired(false);
 
+            entity.Property(r => r.RootId)
+                  .HasColumnName("root_id")
+                  .IsRequired();
+
+            entity.Property(r => r.Provider)
+                  .HasColumnName("provider")
+                  .IsRequired();
+
             entity.Property(r => r.CreatedAt)
                   .HasColumnName("created_at")
                   .HasDefaultValueSql("NOW()");
@@ -715,6 +723,10 @@ public sealed class MarketplaceDbContext : DbContext
             entity.HasIndex(r => r.TokenHash)
                   .IsUnique()
                   .HasDatabaseName("ix_refresh_tokens_token_hash");
+
+            // Index on root_id for efficient family-wide revocation.
+            entity.HasIndex(r => r.RootId)
+                  .HasDatabaseName("ix_refresh_tokens_root_id");
 
             // Enforce exactly 64 non-space characters.
             // PostgreSQL char(n) pads shorter values with spaces rather than rejecting them,

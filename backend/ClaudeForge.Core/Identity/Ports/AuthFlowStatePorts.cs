@@ -18,7 +18,14 @@ public sealed record AuthFlowState(
     string RedirectUri,
 
     /// <summary>UTC expiry for this flow state (typically now + 5 min).</summary>
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt,
+
+    /// <summary>
+    /// H6 — Per-flow random nonce sent in the OIDC authorize request and echoed back
+    /// in the id_token "nonce" claim. Verified in CompleteSignInUseCase to prevent
+    /// id_token replay attacks (OIDC Core §3.1.2.1).
+    /// </summary>
+    string Nonce = "");
 
 /// <summary>
 /// Port for storing and consuming PKCE/state entries during the OAuth authorize flow.

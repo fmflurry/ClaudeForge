@@ -98,11 +98,12 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// MEDIUM-5: Rate limiting must run after auth (so authenticated identity is available
+// for per-user policies) and before endpoint mapping so all routes are gated.
+app.UseRateLimiter();
+
 // Serve OpenAPI document at GET /openapi/v1.json (available in all environments)
 app.MapOpenApi();
-
-// Rate limiting must be applied before endpoints
-app.UseRateLimiter();
 
 // Map all module endpoints
 app.MapModuleEndpoints();

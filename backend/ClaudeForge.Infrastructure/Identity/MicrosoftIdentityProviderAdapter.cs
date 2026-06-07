@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using System.Web;
 using ClaudeForge.Core.Identity.Ports;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ClaudeForge.Infrastructure.Identity;
@@ -21,13 +22,15 @@ public sealed class MicrosoftIdentityProviderAdapter : IIdentityProviderPort, IN
     private readonly string _tenant;
     private readonly HttpClient _httpClient;
     private readonly IOpenIdConfigurationProvider _openIdConfigProvider;
+    private readonly ILogger<MicrosoftIdentityProviderAdapter>? _logger;
 
     string INamedIdentityProviderPort.ProviderName => ProviderName;
 
     public MicrosoftIdentityProviderAdapter(
         IConfiguration configuration,
         HttpClient httpClient,
-        IOpenIdConfigurationProvider openIdConfigProvider)
+        IOpenIdConfigurationProvider openIdConfigProvider,
+        ILogger<MicrosoftIdentityProviderAdapter>? logger = null)
     {
         _clientId = configuration["OIDC__MICROSOFT__CLIENTID"]
             ?? throw new InvalidOperationException("OIDC__MICROSOFT__CLIENTID is not configured.");
@@ -36,26 +39,36 @@ public sealed class MicrosoftIdentityProviderAdapter : IIdentityProviderPort, IN
         _tenant = configuration["OIDC__MICROSOFT__TENANT"] ?? "common";
         _httpClient = httpClient;
         _openIdConfigProvider = openIdConfigProvider;
+        _logger = logger;
     }
 
     public string BuildAuthorizationUrl(
         string provider,
         string codeChallenge,
         string state,
-        string redirectUri)
+        string redirectUri,
+        string nonce = "")
     {
         string authorizeBase = $"https://login.microsoftonline.com/{_tenant}/oauth2/v2.0/authorize";
 
-        string query = string.Join("&",
-            $"response_type=code",
+        List<string> parts = new()
+        {
+            "response_type=code",
             $"client_id={HttpUtility.UrlEncode(_clientId)}",
             $"scope={HttpUtility.UrlEncode("openid email profile")}",
             $"redirect_uri={HttpUtility.UrlEncode(redirectUri)}",
             $"code_challenge={HttpUtility.UrlEncode(codeChallenge)}",
-            $"code_challenge_method=S256",
-            $"state={HttpUtility.UrlEncode(state)}");
+            "code_challenge_method=S256",
+            $"state={HttpUtility.UrlEncode(state)}",
+        };
 
-        return $"{authorizeBase}?{query}";
+        // H6: Include nonce when provided so the IdP echoes it back in the id_token.
+        if (!string.IsNullOrWhiteSpace(nonce))
+        {
+            parts.Add($"nonce={HttpUtility.UrlEncode(nonce)}");
+        }
+
+        return $"{authorizeBase}?{string.Join("&", parts)}";
     }
 
     public async Task<string> ExchangeCodeAsync(
@@ -83,9 +96,13 @@ public sealed class MicrosoftIdentityProviderAdapter : IIdentityProviderPort, IN
 
         if (!response.IsSuccessStatusCode)
         {
+            // H2: Log the upstream error detail server-side; never expose it to the client.
             string body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-            throw new InvalidOperationException(
-                $"Microsoft token exchange failed: {(int)response.StatusCode} — {body}");
+            _logger?.LogWarning(
+                "Microsoft token exchange failed with status {StatusCode}. Response: {Body}",
+                (int)response.StatusCode,
+                body);
+            throw new InvalidOperationException("Code exchange failed.");
         }
 
         TokenResponse? tokenResponse = await response.Content
@@ -149,8 +166,10 @@ public sealed class MicrosoftIdentityProviderAdapter : IIdentityProviderPort, IN
         string emailVerifiedRaw = principal.FindFirst("email_verified")?.Value ?? "false";
         bool emailVerified = string.Equals(emailVerifiedRaw, "true", StringComparison.OrdinalIgnoreCase);
         string name = principal.FindFirst("name")?.Value ?? string.Empty;
+        // H6: Extract the nonce claim for replay-protection verification by the caller.
+        string nonce = principal.FindFirst("nonce")?.Value ?? string.Empty;
 
-        return new VerifiedIdentity(subject, email, emailVerified, name);
+        return new VerifiedIdentity(subject, email, emailVerified, name, nonce);
     }
 
     // ── Internal DTO ─────────────────────────────────────────────────────────────
