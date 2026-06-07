@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import type { SearchFilterQuery } from '../../domain/rules/search-filter.rules';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 export type SearchFilterOutput = Partial<Pick<SearchFilterQuery, 'types' | 'languages' | 'useCases'>>;
 
@@ -7,6 +9,7 @@ export type SearchFilterOutput = Partial<Pick<SearchFilterQuery, 'types' | 'lang
   selector: 'cf-search-bar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('search')],
   template: `
     <div class="cf-search-bar">
       <input
@@ -14,7 +17,7 @@ export type SearchFilterOutput = Partial<Pick<SearchFilterQuery, 'types' | 'lang
         class="cf-search-bar__input"
         [value]="initialKeyword()"
         [attr.aria-busy]="isLoading() || null"
-        placeholder="Search plugins…"
+        [placeholder]="i18n.t('search.search-input-placeholder')"
         #searchInput
       />
       <button
@@ -23,7 +26,7 @@ export type SearchFilterOutput = Partial<Pick<SearchFilterQuery, 'types' | 'lang
         data-testid="search-button"
         (click)="onSearch(searchInput.value)"
       >
-        Search
+        {{ i18n.t('search.search-button') }}
       </button>
     </div>
   `,
@@ -34,6 +37,8 @@ export class SearchBarComponent {
 
   readonly searchSubmitted = output<string>();
   readonly filtersChanged = output<SearchFilterOutput>();
+
+  protected readonly i18n = inject(I18nFacade);
 
   onSearch(keyword: string): void {
     this.searchSubmitted.emit(keyword.trim());

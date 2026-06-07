@@ -1,26 +1,29 @@
 import { ChangeDetectionStrategy, Component, computed, inject, Signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { SearchFacade } from '../../application/facades/search.facade';
 import type { DiscoveryCriteria, DiscoveryResult, SearchResult } from '../../domain/models/search.models';
 import type { SearchFilterQuery } from '../../domain/rules/search-filter.rules';
 import { EmptyStateComponent } from '../../../../shared/design-system/empty-state.component';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-search-results',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [EmptyStateComponent],
+  providers: [provideTranslocoScope('search')],
   template: `
     @if (isLoading()) {
-      <div aria-busy="true" data-testid="loading" class="loading">Loading results…</div>
+      <div aria-busy="true" data-testid="loading" class="loading">{{ i18n.t('search.loading-results') }}</div>
     }
 
     @if (!isLoading() && hasError()) {
-      <div role="alert" class="error" data-testid="error-message">Failed to load search results. Please try again.</div>
+      <div role="alert" class="error" data-testid="error-message">{{ i18n.t('search.error-message') }}</div>
     }
 
     @if (!isLoading() && !hasError() && isEmpty() && categorySuggestions().length > 0) {
       <div data-testid="no-results" role="status">
-        <cf-empty-state message="No results found. Try one of these categories:" />
+        <cf-empty-state [message]="i18n.t('search.no-results-with-suggestions')" />
         <ul class="cf-search-results__suggestions" data-testid="category-suggestions">
           @for (suggestion of categorySuggestions(); track suggestion) {
             <li>{{ suggestion }}</li>
@@ -31,7 +34,7 @@ import { EmptyStateComponent } from '../../../../shared/design-system/empty-stat
 
     @if (!isLoading() && !hasError() && isEmpty() && categorySuggestions().length === 0) {
       <div data-testid="no-results" role="status">
-        <cf-empty-state message="No results found. Try a different search term." />
+        <cf-empty-state [message]="i18n.t('search.no-results')" />
       </div>
     }
 
@@ -67,6 +70,7 @@ import { EmptyStateComponent } from '../../../../shared/design-system/empty-stat
 })
 export class SearchResultsComponent {
   private readonly facade = inject(SearchFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly results: Signal<SearchResult[]> = this.facade.results;
   readonly isLoading: Signal<boolean> = this.facade.isLoadingSearch;

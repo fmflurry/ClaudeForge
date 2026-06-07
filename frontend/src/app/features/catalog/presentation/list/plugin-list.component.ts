@@ -1,37 +1,40 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { CatalogFacade } from '../../application/facades/catalog.facade';
 import type { PaginationMeta, PluginSummary } from '../../domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../../domain/rules/catalog-filter.rules';
 import { EmptyStateComponent } from '../../../../shared/design-system/empty-state.component';
 import { PaginationComponent } from '../../../../shared/design-system/pagination.component';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-plugin-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [EmptyStateComponent, PaginationComponent],
+  providers: [provideTranslocoScope('catalog')],
   template: `
     @if (isLoading()) {
-      <div aria-busy="true" data-testid="loading" class="loading">Loading plugins…</div>
+      <div aria-busy="true" data-testid="loading" class="loading">{{ i18n.t('catalog.loading-plugins') }}</div>
     }
 
     @if (!isLoading() && hasError()) {
-      <div role="alert" class="error" data-testid="error-message">Failed to load plugins. Please try again.</div>
+      <div role="alert" class="error" data-testid="error-message">{{ i18n.t('catalog.error-plugins') }}</div>
     }
 
     @if (!isLoading() && !hasError() && plugins().length === 0) {
-      <cf-empty-state message="No plugins found. Try adjusting your filters." />
+      <cf-empty-state [message]="i18n.t('catalog.empty-plugins')" />
     }
 
     @if (!isLoading() && !hasError() && plugins().length > 0) {
       <table data-testid="plugin-table" class="cf-plugin-table">
         <thead>
           <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Author</th>
-            <th scope="col">Version</th>
-            <th scope="col">Downloads</th>
-            <th scope="col">Types</th>
+            <th scope="col">{{ i18n.t('catalog.col-name') }}</th>
+            <th scope="col">{{ i18n.t('catalog.col-author') }}</th>
+            <th scope="col">{{ i18n.t('catalog.col-version') }}</th>
+            <th scope="col">{{ i18n.t('catalog.col-downloads') }}</th>
+            <th scope="col">{{ i18n.t('catalog.col-types') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -55,6 +58,7 @@ import { PaginationComponent } from '../../../../shared/design-system/pagination
 })
 export class PluginListComponent {
   private readonly facade = inject(CatalogFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly plugins: Signal<PluginSummary[]> = this.facade.plugins;
   readonly isLoading: Signal<boolean> = this.facade.isLoadingPlugins;

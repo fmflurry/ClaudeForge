@@ -4,9 +4,38 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
+import { TranslocoTestingModule } from '@jsverse/transloco';
 import { DocsPageComponent } from './docs-page.component';
 import { DocsFacade } from '../application/facades/docs.facade';
 import type { DocCategoryNode, DocPage, DocSearchResult } from '../domain/models/docs.models';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test harness (Wave 1 pattern — docs scope)
+// The child components (search, viewer) inject I18nFacade and resolve
+// docs.* keys. Providing the testing module here prevents DI errors.
+// ---------------------------------------------------------------------------
+
+const EN_DOCS_LANGS: Record<string, string> = {
+  'docs.search-placeholder': 'Search documentation…',
+  'docs.search-aria': 'Search documentation',
+  'docs.searching': 'Searching…',
+  'docs.loading-doc': 'Loading documentation…',
+  'docs.loading-plugin-doc': 'Loading plugin documentation…',
+  'docs.no-documentation': 'No documentation available',
+  'docs.plugin-doc-error': 'Failed to load plugin documentation.',
+};
+
+const FR_DOCS_LANGS: Record<string, string> = {
+  'docs.search-placeholder': 'Rechercher dans la documentation…',
+  'docs.search-aria': 'Rechercher dans la documentation',
+  'docs.searching': 'Recherche en cours…',
+  'docs.loading-doc': 'Chargement de la documentation…',
+  'docs.loading-plugin-doc': 'Chargement de la documentation du plugin…',
+  'docs.no-documentation': 'Aucune documentation disponible',
+  'docs.plugin-doc-error': 'Impossible de charger la documentation du plugin.',
+};
 
 // ---------------------------------------------------------------------------
 // Stub facade
@@ -65,8 +94,19 @@ function setup(): { fixture: ComponentFixture<DocsPageComponent>; stub: StubDocs
   const stub = new StubDocsFacade();
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    imports: [DocsPageComponent],
-    providers: [{ provide: DocsFacade, useValue: stub }],
+    imports: [
+      DocsPageComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_DOCS_LANGS, fr: FR_DOCS_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: DocsFacade, useValue: stub },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(DocsPageComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });

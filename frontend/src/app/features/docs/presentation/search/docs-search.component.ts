@@ -4,25 +4,28 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { DocsFacade } from '../../application/facades/docs.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 import type { DocSearchResult } from '../../domain/models/docs.models';
 
 @Component({
   selector: 'cf-docs-search',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('docs')],
   template: `
     <div>
       <input
         type="search"
         data-testid="search-input"
-        placeholder="Search documentation…"
+        [placeholder]="i18n.t('docs.search-placeholder')"
         (input)="onSearchInput($event)"
-        aria-label="Search documentation"
+        [attr.aria-label]="i18n.t('docs.search-aria')"
       />
 
       @if (facade.isLoadingSearch()) {
-        <div aria-busy="true" data-testid="loading" class="loading">Searching…</div>
+        <div aria-busy="true" data-testid="loading" class="loading">{{ i18n.t('docs.searching') }}</div>
       }
 
       @if (facade.searchError(); as errors) {
@@ -48,6 +51,7 @@ import type { DocSearchResult } from '../../domain/models/docs.models';
 })
 export class DocsSearchComponent {
   protected readonly facade = inject(DocsFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly docSelected = output<string>();
 

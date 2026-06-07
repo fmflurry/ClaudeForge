@@ -4,10 +4,44 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
+import { TranslocoTestingModule } from '@jsverse/transloco';
 import { CatalogPageComponent } from './catalog-page.component';
 import { CatalogFacade } from '../application/facades/catalog.facade';
 import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '../domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../domain/rules/catalog-filter.rules';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Minimal catalog langs needed for child components (PluginListComponent,
+// PluginDetailComponent) which inject I18nFacade.
+// ---------------------------------------------------------------------------
+
+const EN_CATALOG_LANGS: Record<string, string> = {
+  'catalog.back-button': 'Back',
+  'catalog.back-button-aria': 'Back to list',
+  'catalog.loading-plugin': 'Loading plugin…',
+  'catalog.error-plugin': 'Failed to load plugin details. Please try again.',
+  'catalog.meta-author': 'Author',
+  'catalog.meta-latest-version': 'Latest Version',
+  'catalog.meta-downloads': 'Downloads',
+  'catalog.types-heading': 'Types',
+  'catalog.languages-heading': 'Languages',
+  'catalog.version-history-heading': 'Version History',
+  'catalog.version-col': 'Version',
+  'catalog.status-col': 'Status',
+  'catalog.downloads-col': 'Downloads',
+  'catalog.release-notes-col': 'Release Notes',
+  'catalog.version-latest': 'latest',
+  'catalog.loading-plugins': 'Loading plugins…',
+  'catalog.error-plugins': 'Failed to load plugins. Please try again.',
+  'catalog.empty-plugins': 'No plugins found. Try adjusting your filters.',
+  'catalog.col-name': 'Name',
+  'catalog.col-author': 'Author',
+  'catalog.col-version': 'Version',
+  'catalog.col-downloads': 'Downloads',
+  'catalog.col-types': 'Types',
+};
 
 // ---------------------------------------------------------------------------
 // Stub facade
@@ -84,8 +118,21 @@ function setup(): { fixture: ComponentFixture<CatalogPageComponent>; stub: StubC
   const stub = new StubCatalogFacade();
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    imports: [CatalogPageComponent],
-    providers: [{ provide: CatalogFacade, useValue: stub }],
+    imports: [
+      CatalogPageComponent,
+      // Transloco test harness required because child components (PluginListComponent,
+      // PluginDetailComponent) inject I18nFacade which depends on TranslocoService.
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_CATALOG_LANGS },
+        translocoConfig: { availableLangs: ['en'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: CatalogFacade, useValue: stub },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(CatalogPageComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });

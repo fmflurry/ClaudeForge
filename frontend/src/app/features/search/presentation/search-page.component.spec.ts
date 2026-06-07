@@ -4,11 +4,38 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { SearchPageComponent } from './search-page.component';
 import { SearchFacade } from '../application/facades/search.facade';
 import type { DiscoveryResult, SearchResult } from '../domain/models/search.models';
 import type { SearchPaginationMeta } from '../application/facades/search.facade';
 import type { SearchFilterQuery } from '../domain/rules/search-filter.rules';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for search scope (Wave 1 i18n)
+// En map returns EXACT current literals so all existing assertions stay green.
+// Fr map returns French — fr assertions confirm reactive translation.
+// ---------------------------------------------------------------------------
+
+const EN_SEARCH_LANGS: Record<string, string> = {
+  'search.search-input-placeholder': 'Search plugins…',
+  'search.search-button': 'Search',
+  'search.loading-results': 'Loading results…',
+  'search.error-message': 'Failed to load search results. Please try again.',
+  'search.no-results-with-suggestions': 'No results found. Try one of these categories:',
+  'search.no-results': 'No results found. Try a different search term.',
+};
+
+const FR_SEARCH_LANGS: Record<string, string> = {
+  'search.search-input-placeholder': 'Rechercher des plugins…',
+  'search.search-button': 'Rechercher',
+  'search.loading-results': 'Chargement des résultats…',
+  'search.error-message': 'Impossible de charger les résultats. Veuillez réessayer.',
+  'search.no-results-with-suggestions': "Aucun résultat. Essayez l'une de ces catégories :",
+  'search.no-results': 'Aucun résultat. Essayez un autre terme de recherche.',
+};
 
 // ---------------------------------------------------------------------------
 // Stub facade
@@ -64,17 +91,33 @@ class StubSearchFacade {
 // Setup
 // ---------------------------------------------------------------------------
 
-function setup(): { fixture: ComponentFixture<SearchPageComponent>; stub: StubSearchFacade } {
+function setup(): {
+  fixture: ComponentFixture<SearchPageComponent>;
+  stub: StubSearchFacade;
+  translocoService: TranslocoService;
+} {
   const stub = new StubSearchFacade();
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    imports: [SearchPageComponent],
-    providers: [{ provide: SearchFacade, useValue: stub }],
+    imports: [
+      SearchPageComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_SEARCH_LANGS, fr: FR_SEARCH_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: SearchFacade, useValue: stub },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(SearchPageComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(SearchPageComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -151,5 +194,21 @@ describe('SearchPageComponent — onFiltersChanged', () => {
     const { fixture } = setup();
     fixture.detectChanges();
     expect(() => fixture.componentInstance.onFiltersChanged({ types: [], languages: [], useCases: [] })).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// i18n — FR language rendering
+// ---------------------------------------------------------------------------
+
+describe('SearchPageComponent — i18n FR language rendering', () => {
+  it('[FR] search button inside cf-search-bar renders "Rechercher" when lang is fr', () => {
+    const { fixture, translocoService } = setup();
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const btn = el.querySelector('button[data-testid="search-button"]') as HTMLButtonElement | null;
+    expect(btn?.textContent?.trim()).toBe('Rechercher');
   });
 });

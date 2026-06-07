@@ -1,0 +1,9 @@
+{
+  "search-placeholder": "Rechercher dans la documentation…",
+  "search-aria": "Rechercher dans la documentation",
+  "searching": "Recherche en cours…",
+  "loading-doc": "Chargement de la documentation…",
+  "loading-plugin-doc": "Chargement de la documentation du plugin…",
+  "no-documentation": "Aucune documentation disponible",
+  "plugin-doc-error": "Impossible de charger la documentation du plugin."
+}

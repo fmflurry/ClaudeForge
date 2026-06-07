@@ -22,7 +22,7 @@
  * All components:
  *   - standalone: true
  *   - ChangeDetectionStrategy.OnPush
- *   - inject DocsFacade only (no store, no use-case injection)
+ *   - inject DocsFacade only (no store, no use-case access)
  *   - use inject() (no constructor params)
  *
  * Component inputs/outputs (coder MUST match):
@@ -55,12 +55,61 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { DocsTreeComponent } from './tree/docs-tree.component';
 import { DocViewerComponent } from './viewer/doc-viewer.component';
 import { DocsSearchComponent } from './search/docs-search.component';
 import { PluginDocsTabComponent } from './plugin-docs-tab/plugin-docs-tab.component';
 import { DocsFacade } from '../application/facades/docs.facade';
 import type { DocSearchResult, DocPage, DocCategoryNode } from '../domain/models/docs.models';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for docs scope (Wave 1 i18n)
+//
+// En map returns EXACT current literals so all existing rendered-text
+// assertions keep passing unchanged after migration.
+// Fr map returns French — fr assertions are added per component below.
+//
+// Key namespace: 'docs' scope; keys are prefixed with 'docs.' in tests.
+//
+// Canonical key list:
+//   docs.search-placeholder   → "Search documentation…"
+//                             / "Rechercher dans la documentation…"
+//   docs.search-aria          → "Search documentation"
+//                             / "Rechercher dans la documentation"
+//   docs.searching            → "Searching…"
+//                             / "Recherche en cours…"
+//   docs.loading-doc          → "Loading documentation…"
+//                             / "Chargement de la documentation…"
+//   docs.loading-plugin-doc   → "Loading plugin documentation…"
+//                             / "Chargement de la documentation du plugin…"
+//   docs.no-documentation     → "No documentation available"
+//                             / "Aucune documentation disponible"
+//   docs.plugin-doc-error     → "Failed to load plugin documentation."
+//                             / "Impossible de charger la documentation du plugin."
+// ---------------------------------------------------------------------------
+
+const EN_DOCS_LANGS: Record<string, string> = {
+  'docs.search-placeholder': 'Search documentation…',
+  'docs.search-aria': 'Search documentation',
+  'docs.searching': 'Searching…',
+  'docs.loading-doc': 'Loading documentation…',
+  'docs.loading-plugin-doc': 'Loading plugin documentation…',
+  'docs.no-documentation': 'No documentation available',
+  'docs.plugin-doc-error': 'Failed to load plugin documentation.',
+};
+
+const FR_DOCS_LANGS: Record<string, string> = {
+  'docs.search-placeholder': 'Rechercher dans la documentation…',
+  'docs.search-aria': 'Rechercher dans la documentation',
+  'docs.searching': 'Recherche en cours…',
+  'docs.loading-doc': 'Chargement de la documentation…',
+  'docs.loading-plugin-doc': 'Chargement de la documentation du plugin…',
+  'docs.no-documentation': 'Aucune documentation disponible',
+  'docs.plugin-doc-error': 'Impossible de charger la documentation du plugin.',
+};
 
 // ---------------------------------------------------------------------------
 // Stub DocsFacade
@@ -201,55 +250,88 @@ const PLUGIN_DOC_PAGE: DocPage = {
 // Setup helpers
 // ---------------------------------------------------------------------------
 
-function setupDocsTree(): { fixture: ComponentFixture<DocsTreeComponent>; stub: StubDocsFacade } {
+/** Common Transloco providers shared by every setup function. */
+function translocoProviders() {
+  return [
+    TranslocoTestingModule.forRoot({
+      langs: { en: EN_DOCS_LANGS, fr: FR_DOCS_LANGS },
+      translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+      preloadLangs: true,
+    }),
+  ];
+}
+
+/** Common i18n service providers shared by every setup function. */
+function i18nProviders() {
+  return [I18nFacade, { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } }];
+}
+
+function setupDocsTree(): {
+  fixture: ComponentFixture<DocsTreeComponent>;
+  stub: StubDocsFacade;
+  translocoService: TranslocoService;
+} {
   const stub = new StubDocsFacade();
   TestBed.configureTestingModule({
-    imports: [DocsTreeComponent],
-    providers: [{ provide: DocsFacade, useValue: stub }],
+    imports: [DocsTreeComponent, ...translocoProviders()],
+    providers: [{ provide: DocsFacade, useValue: stub }, ...i18nProviders()],
   }).overrideComponent(DocsTreeComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(DocsTreeComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
-function setupDocViewer(): { fixture: ComponentFixture<DocViewerComponent>; stub: StubDocsFacade } {
+function setupDocViewer(): {
+  fixture: ComponentFixture<DocViewerComponent>;
+  stub: StubDocsFacade;
+  translocoService: TranslocoService;
+} {
   const stub = new StubDocsFacade();
   TestBed.configureTestingModule({
-    imports: [DocViewerComponent],
-    providers: [{ provide: DocsFacade, useValue: stub }],
+    imports: [DocViewerComponent, ...translocoProviders()],
+    providers: [{ provide: DocsFacade, useValue: stub }, ...i18nProviders()],
   }).overrideComponent(DocViewerComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(DocViewerComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
-function setupDocsSearch(): { fixture: ComponentFixture<DocsSearchComponent>; stub: StubDocsFacade } {
+function setupDocsSearch(): {
+  fixture: ComponentFixture<DocsSearchComponent>;
+  stub: StubDocsFacade;
+  translocoService: TranslocoService;
+} {
   const stub = new StubDocsFacade();
   TestBed.configureTestingModule({
-    imports: [DocsSearchComponent],
-    providers: [{ provide: DocsFacade, useValue: stub }],
+    imports: [DocsSearchComponent, ...translocoProviders()],
+    providers: [{ provide: DocsFacade, useValue: stub }, ...i18nProviders()],
   }).overrideComponent(DocsSearchComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(DocsSearchComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
 function setupPluginDocsTab(): {
   fixture: ComponentFixture<PluginDocsTabComponent>;
   stub: StubDocsFacade;
+  translocoService: TranslocoService;
 } {
   const stub = new StubDocsFacade();
   TestBed.configureTestingModule({
-    imports: [PluginDocsTabComponent],
-    providers: [{ provide: DocsFacade, useValue: stub }],
+    imports: [PluginDocsTabComponent, ...translocoProviders()],
+    providers: [{ provide: DocsFacade, useValue: stub }, ...i18nProviders()],
   }).overrideComponent(PluginDocsTabComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(PluginDocsTabComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
 // ===========================================================================
@@ -340,6 +422,8 @@ describe('DocsTreeComponent — architecture boundary', () => {
     expect(fixture.componentInstance).toBeDefined();
   });
 });
+
+// DocsTreeComponent has no i18n strings (renders data values only) — no FR tests needed.
 
 // ===========================================================================
 // DocViewerComponent (cf-doc-viewer)
@@ -456,6 +540,33 @@ describe('DocViewerComponent — architecture boundary', () => {
   it('should compile with only DocsFacade provided', () => {
     const { fixture } = setupDocViewer();
     expect(fixture.componentInstance).toBeDefined();
+  });
+});
+
+// =========================================================================
+// DocViewerComponent — i18n Wave 1 FR assertions
+// =========================================================================
+
+describe('DocViewerComponent — i18n FR', () => {
+  it('[FR] loading indicator renders "Chargement de la documentation…" when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupDocViewer();
+    stub.setDocLoading(true);
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const loadingEl = fixture.nativeElement.querySelector('[aria-busy="true"]') as HTMLElement | null;
+    expect(loadingEl?.textContent?.trim()).toContain('Chargement de la documentation…');
+  });
+
+  it('[FR] missing-doc placeholder renders "Aucune documentation disponible" when lang is fr', () => {
+    const { fixture, translocoService } = setupDocViewer();
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Aucune documentation disponible');
   });
 });
 
@@ -582,6 +693,33 @@ describe('DocsSearchComponent — architecture boundary', () => {
   });
 });
 
+// =========================================================================
+// DocsSearchComponent — i18n Wave 1 FR assertions
+// =========================================================================
+
+describe('DocsSearchComponent — i18n FR', () => {
+  it('[FR] search input placeholder renders "Rechercher dans la documentation…" when lang is fr', () => {
+    const { fixture, translocoService } = setupDocsSearch();
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const inputEl = fixture.nativeElement.querySelector('[data-testid="search-input"]') as HTMLInputElement | null;
+    expect(inputEl?.placeholder).toContain('Rechercher dans la documentation…');
+  });
+
+  it('[FR] loading indicator renders "Recherche en cours…" when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupDocsSearch();
+    stub.setSearchLoading(true);
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const loadingEl = fixture.nativeElement.querySelector('[aria-busy="true"]') as HTMLElement | null;
+    expect(loadingEl?.textContent?.trim()).toContain('Recherche en cours…');
+  });
+});
+
 // ===========================================================================
 // PluginDocsTabComponent (cf-plugin-docs-tab)
 // ===========================================================================
@@ -688,5 +826,32 @@ describe('PluginDocsTabComponent — architecture boundary', () => {
   it('should compile with only DocsFacade provided (no store/use-case injection)', () => {
     const { fixture } = setupPluginDocsTab();
     expect(fixture.componentInstance).toBeDefined();
+  });
+});
+
+// =========================================================================
+// PluginDocsTabComponent — i18n Wave 1 FR assertions
+// =========================================================================
+
+describe('PluginDocsTabComponent — i18n FR', () => {
+  it('[FR] loading indicator renders "Chargement de la documentation du plugin…" when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupPluginDocsTab();
+    stub.setDocLoading(true);
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const loadingEl = fixture.nativeElement.querySelector('[aria-busy="true"]') as HTMLElement | null;
+    expect(loadingEl?.textContent?.trim()).toContain('Chargement de la documentation du plugin…');
+  });
+
+  it('[FR] missing-doc placeholder renders "Aucune documentation disponible" when lang is fr', () => {
+    const { fixture, translocoService } = setupPluginDocsTab();
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Aucune documentation disponible');
   });
 });

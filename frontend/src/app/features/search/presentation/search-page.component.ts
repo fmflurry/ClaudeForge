@@ -1,15 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, Signal, signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { SearchFacade } from '../application/facades/search.facade';
 import { SearchBarComponent } from './search-bar/search-bar.component';
 import { FilterChipsComponent, FilterChipsOutput } from './filter-chips/filter-chips.component';
 import { SearchResultsComponent } from './search-results/search-results.component';
 import type { SearchFilterQuery } from '../domain/rules/search-filter.rules';
+import { I18nFacade } from '../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-search-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SearchBarComponent, FilterChipsComponent, SearchResultsComponent],
+  providers: [provideTranslocoScope('search')],
   template: `
     <div class="cf-search-page" data-testid="search-page">
       <cf-search-bar [isLoading]="isLoading()" (searchSubmitted)="onSearch($event)" />
@@ -27,6 +30,7 @@ import type { SearchFilterQuery } from '../domain/rules/search-filter.rules';
 })
 export class SearchPageComponent {
   private readonly facade = inject(SearchFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly isLoading: Signal<boolean> = this.facade.isLoadingSearch;
 

@@ -37,10 +37,72 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { PluginListComponent } from './plugin-list.component';
 import { CatalogFacade } from '../../application/facades/catalog.facade';
 import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '../../domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../../domain/rules/catalog-filter.rules';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for catalog scope (Wave 1 i18n pattern)
+//
+// En map returns EXACT current literals so all existing assertions stay green.
+// Fr map returns French — fr assertions verify the migration works.
+// ---------------------------------------------------------------------------
+
+const EN_CATALOG_LANGS: Record<string, string> = {
+  'catalog.back-button': 'Back',
+  'catalog.back-button-aria': 'Back to list',
+  'catalog.loading-plugin': 'Loading plugin…',
+  'catalog.error-plugin': 'Failed to load plugin details. Please try again.',
+  'catalog.meta-author': 'Author',
+  'catalog.meta-latest-version': 'Latest Version',
+  'catalog.meta-downloads': 'Downloads',
+  'catalog.types-heading': 'Types',
+  'catalog.languages-heading': 'Languages',
+  'catalog.version-history-heading': 'Version History',
+  'catalog.version-col': 'Version',
+  'catalog.status-col': 'Status',
+  'catalog.downloads-col': 'Downloads',
+  'catalog.release-notes-col': 'Release Notes',
+  'catalog.version-latest': 'latest',
+  'catalog.loading-plugins': 'Loading plugins…',
+  'catalog.error-plugins': 'Failed to load plugins. Please try again.',
+  'catalog.empty-plugins': 'No plugins found. Try adjusting your filters.',
+  'catalog.col-name': 'Name',
+  'catalog.col-author': 'Author',
+  'catalog.col-version': 'Version',
+  'catalog.col-downloads': 'Downloads',
+  'catalog.col-types': 'Types',
+};
+
+const FR_CATALOG_LANGS: Record<string, string> = {
+  'catalog.back-button': 'Retour',
+  'catalog.back-button-aria': 'Retour à la liste',
+  'catalog.loading-plugin': 'Chargement du plugin…',
+  'catalog.error-plugin': 'Impossible de charger les détails du plugin. Veuillez réessayer.',
+  'catalog.meta-author': 'Auteur',
+  'catalog.meta-latest-version': 'Dernière version',
+  'catalog.meta-downloads': 'Téléchargements',
+  'catalog.types-heading': 'Types',
+  'catalog.languages-heading': 'Langages',
+  'catalog.version-history-heading': 'Historique des versions',
+  'catalog.version-col': 'Version',
+  'catalog.status-col': 'Statut',
+  'catalog.downloads-col': 'Téléchargements',
+  'catalog.release-notes-col': 'Notes de version',
+  'catalog.version-latest': 'dernière',
+  'catalog.loading-plugins': 'Chargement des plugins…',
+  'catalog.error-plugins': 'Impossible de charger les plugins. Veuillez réessayer.',
+  'catalog.empty-plugins': "Aucun plugin trouvé. Essayez d'ajuster vos filtres.",
+  'catalog.col-name': 'Nom',
+  'catalog.col-author': 'Auteur',
+  'catalog.col-version': 'Version',
+  'catalog.col-downloads': 'Téléchargements',
+  'catalog.col-types': 'Types',
+};
 
 // ---------------------------------------------------------------------------
 // Stub facade — provides controllable signals
@@ -172,16 +234,35 @@ const PAGINATION_META: PaginationMeta = {
 // Test setup helpers
 // ---------------------------------------------------------------------------
 
-function setupComponent(): { fixture: ComponentFixture<PluginListComponent>; stub: StubCatalogFacade } {
+function setupComponent(): {
+  fixture: ComponentFixture<PluginListComponent>;
+  stub: StubCatalogFacade;
+  translocoService: TranslocoService;
+} {
   const stub = new StubCatalogFacade();
   TestBed.configureTestingModule({
-    imports: [PluginListComponent],
-    providers: [{ provide: CatalogFacade, useValue: stub }],
+    imports: [
+      PluginListComponent,
+      // Transloco test harness (Wave 1 pattern):
+      // flat dot-delimited keys; en=current literals, fr=French translations.
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_CATALOG_LANGS, fr: FR_CATALOG_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: CatalogFacade, useValue: stub },
+      // Real I18nFacade — injects TranslocoService from the testing module above.
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(PluginListComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(PluginListComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -381,5 +462,51 @@ describe('PluginListComponent — architecture boundary', () => {
     // does not throw an injection error, the boundary is maintained.
     const { fixture } = setupComponent();
     expect(fixture.componentInstance).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// i18n Wave 1 — fr assertions
+// ---------------------------------------------------------------------------
+
+describe('PluginListComponent — i18n', () => {
+  it('[FR] loading indicator renders French text when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setLoading(true);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const loading = fixture.nativeElement.querySelector('[aria-busy="true"]') as HTMLElement | null;
+    expect(loading?.textContent?.trim()).toContain('Chargement des plugins…');
+  });
+
+  it('[FR] error message renders French text when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setError([{ code: 'HTTP_500', message: 'Server error' }]);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const errorEl = fixture.nativeElement.querySelector('[role="alert"]') as HTMLElement | null;
+    expect(errorEl?.textContent?.trim()).toContain('Impossible de charger les plugins');
+  });
+
+  it('[FR] empty state renders French message when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setPluginsState([], undefined);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Aucun plugin trouvé');
+  });
+
+  it('[FR] table column headers render French when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setPluginsState([PLUGIN_A], PAGINATION_META);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Nom');
   });
 });

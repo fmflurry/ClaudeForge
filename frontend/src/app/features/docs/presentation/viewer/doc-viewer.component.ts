@@ -6,16 +6,19 @@
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { DocsFacade } from '../../application/facades/docs.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-doc-viewer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe],
+  providers: [provideTranslocoScope('docs')],
   template: `
     @if (facade.isLoadingDoc()) {
-      <div aria-busy="true" data-testid="loading" class="loading">Loading documentation…</div>
+      <div aria-busy="true" data-testid="loading" class="loading">{{ i18n.t('docs.loading-doc') }}</div>
     } @else if (facade.docError(); as errors) {
       <div role="alert" data-testid="error-message" class="error">
         {{ errorMessage(errors) }}
@@ -31,18 +34,19 @@ import { DocsFacade } from '../../application/facades/docs.facade';
         </article>
       } @else {
         <div data-testid="missing-doc">
-          <p>No documentation available</p>
+          <p>{{ i18n.t('docs.no-documentation') }}</p>
         </div>
       }
     } @else {
       <div data-testid="missing-doc">
-        <p>No documentation available</p>
+        <p>{{ i18n.t('docs.no-documentation') }}</p>
       </div>
     }
   `,
 })
 export class DocViewerComponent {
   protected readonly facade = inject(DocsFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   protected errorMessage(errors: { code: string; message: string }[]): string {
     return errors[0]?.message ?? 'An error occurred loading the documentation.';

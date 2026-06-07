@@ -1,0 +1,8 @@
+{
+  "search-input-placeholder": "Search plugins…",
+  "search-button": "Search",
+  "loading-results": "Loading results…",
+  "error-message": "Failed to load search results. Please try again.",
+  "no-results-with-suggestions": "No results found. Try one of these categories:",
+  "no-results": "No results found. Try a different search term."
+}

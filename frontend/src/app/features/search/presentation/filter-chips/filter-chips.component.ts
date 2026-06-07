@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 export interface FilterChipsOutput {
   readonly types: readonly string[];
@@ -10,6 +12,7 @@ export interface FilterChipsOutput {
   selector: 'cf-filter-chips',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('search')],
   template: `
     <div class="cf-filter-chips">
       @for (type of activeTypes(); track type) {
@@ -30,4 +33,6 @@ export class FilterChipsComponent {
   readonly activeUseCases = input<readonly string[]>([]);
 
   readonly filtersChanged = output<FilterChipsOutput>();
+
+  protected readonly i18n = inject(I18nFacade);
 }

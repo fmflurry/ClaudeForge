@@ -66,12 +66,39 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { SearchResultsComponent } from './search-results.component';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { FilterChipsComponent } from '../filter-chips/filter-chips.component';
 import { SearchFacade } from '../../application/facades/search.facade';
 import type { DiscoveryCriteria, DiscoveryResult, SearchResult } from '../../domain/models/search.models';
 import type { SearchFilterQuery } from '../../domain/rules/search-filter.rules';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for search scope (Wave 1 i18n)
+// En map returns EXACT current literals so all existing assertions stay green.
+// Fr map returns French — fr assertions confirm reactive translation.
+// ---------------------------------------------------------------------------
+
+const EN_SEARCH_LANGS: Record<string, string> = {
+  'search.search-input-placeholder': 'Search plugins…',
+  'search.search-button': 'Search',
+  'search.loading-results': 'Loading results…',
+  'search.error-message': 'Failed to load search results. Please try again.',
+  'search.no-results-with-suggestions': 'No results found. Try one of these categories:',
+  'search.no-results': 'No results found. Try a different search term.',
+};
+
+const FR_SEARCH_LANGS: Record<string, string> = {
+  'search.search-input-placeholder': 'Rechercher des plugins…',
+  'search.search-button': 'Rechercher',
+  'search.loading-results': 'Chargement des résultats…',
+  'search.error-message': 'Impossible de charger les résultats. Veuillez réessayer.',
+  'search.no-results-with-suggestions': "Aucun résultat. Essayez l'une de ces catégories :",
+  'search.no-results': 'Aucun résultat. Essayez un autre terme de recherche.',
+};
 
 // ---------------------------------------------------------------------------
 // Shared types for stub facade
@@ -225,36 +252,70 @@ const SEARCH_META: SearchPaginationMeta = {
 // Setup helpers
 // ---------------------------------------------------------------------------
 
-function setupSearchResults(): { fixture: ComponentFixture<SearchResultsComponent>; stub: StubSearchFacade } {
+function setupSearchResults(): {
+  fixture: ComponentFixture<SearchResultsComponent>;
+  stub: StubSearchFacade;
+  translocoService: TranslocoService;
+} {
   const stub = new StubSearchFacade();
   TestBed.configureTestingModule({
-    imports: [SearchResultsComponent],
-    providers: [{ provide: SearchFacade, useValue: stub }],
+    imports: [
+      SearchResultsComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_SEARCH_LANGS, fr: FR_SEARCH_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: SearchFacade, useValue: stub },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(SearchResultsComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(SearchResultsComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
-function setupSearchBar(): { fixture: ComponentFixture<SearchBarComponent> } {
+function setupSearchBar(): { fixture: ComponentFixture<SearchBarComponent>; translocoService: TranslocoService } {
   TestBed.configureTestingModule({
-    imports: [SearchBarComponent],
+    imports: [
+      SearchBarComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_SEARCH_LANGS, fr: FR_SEARCH_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [I18nFacade, { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } }],
   }).overrideComponent(SearchBarComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(SearchBarComponent);
-  return { fixture };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, translocoService };
 }
 
-function setupFilterChips(): { fixture: ComponentFixture<FilterChipsComponent> } {
+function setupFilterChips(): { fixture: ComponentFixture<FilterChipsComponent>; translocoService: TranslocoService } {
   TestBed.configureTestingModule({
-    imports: [FilterChipsComponent],
+    imports: [
+      FilterChipsComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_SEARCH_LANGS, fr: FR_SEARCH_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [I18nFacade, { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } }],
   }).overrideComponent(FilterChipsComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(FilterChipsComponent);
-  return { fixture };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, translocoService };
 }
 
 // ===========================================================================
@@ -473,6 +534,42 @@ describe('SearchResultsComponent — architecture boundary', () => {
 });
 
 // ===========================================================================
+// SearchResultsComponent — i18n FR language rendering
+// ===========================================================================
+
+describe('SearchResultsComponent — i18n FR language rendering', () => {
+  it('[FR] loading text is "Chargement des résultats…" when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupSearchResults();
+    stub.setLoadingSearch(true);
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const loadingEl = fixture.debugElement.query(By.css('[data-testid="loading"]'));
+    expect(loadingEl?.nativeElement.textContent?.trim()).toContain('Chargement des résultats…');
+  });
+
+  it('[FR] error message is French when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupSearchResults();
+    stub.setSearchError([{ code: 'HTTP_500', message: 'Server error' }]);
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const errorEl = fixture.debugElement.query(By.css('[data-testid="error-message"]'));
+    expect(errorEl?.nativeElement.textContent?.trim()).toContain('Impossible de charger les résultats');
+  });
+
+  it('[FR] no-results message is French when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupSearchResults();
+    stub.setResultsState([], undefined, []);
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Aucun résultat');
+  });
+});
+
+// ===========================================================================
 // SearchBarComponent
 // ===========================================================================
 
@@ -537,6 +634,21 @@ describe('SearchBarComponent — inputs', () => {
     const { fixture } = setupSearchBar();
     fixture.componentRef.setInput('isLoading', true);
     expect(() => fixture.detectChanges()).not.toThrow();
+  });
+});
+
+// ===========================================================================
+// SearchBarComponent — i18n FR language rendering
+// ===========================================================================
+
+describe('SearchBarComponent — i18n FR language rendering', () => {
+  it('[FR] search button label is "Rechercher" when lang is fr', () => {
+    const { fixture, translocoService } = setupSearchBar();
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const btn = fixture.debugElement.query(By.css('button[data-testid="search-button"]'));
+    expect((btn.nativeElement as HTMLButtonElement).textContent?.trim()).toBe('Rechercher');
   });
 });
 
@@ -617,5 +729,22 @@ describe('FilterChipsComponent — inputs', () => {
     const { fixture } = setupFilterChips();
     fixture.componentRef.setInput('activeUseCases', ['testing']);
     expect(() => fixture.detectChanges()).not.toThrow();
+  });
+});
+
+// ===========================================================================
+// FilterChipsComponent — i18n FR language rendering
+// ===========================================================================
+
+describe('FilterChipsComponent — i18n FR language rendering', () => {
+  it('[FR] chip data values are still rendered correctly when lang is fr', () => {
+    const { fixture, translocoService } = setupFilterChips();
+    fixture.componentRef.setInput('activeTypes', ['formatter']);
+    fixture.detectChanges();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    // Data values (plugin categories) are not translated — they are brand values
+    expect(text).toContain('formatter');
   });
 });
