@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { I18nFacade } from '../../application/i18n/i18n.facade';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
@@ -11,7 +12,13 @@ export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
   template: `
     <div class="cf-toast" [ngClass]="'cf-toast--' + variant()" role="alert" aria-live="polite">
       <span class="cf-toast__message">{{ message() }}</span>
-      <button class="cf-toast__dismiss" aria-label="Dismiss" (click)="dismiss.emit()">&times;</button>
+      <button
+        class="cf-toast__dismiss"
+        [attr.aria-label]="i18n.t('shared.toast.dismiss-aria')"
+        (click)="dismiss.emit()"
+      >
+        &times;
+      </button>
     </div>
   `,
   styles: [
@@ -70,6 +77,8 @@ export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
   ],
 })
 export class ToastComponent {
+  protected readonly i18n = inject(I18nFacade);
+
   readonly message = input.required<string>();
   readonly variant = input<ToastVariant>('info');
   readonly dismiss = output<void>();

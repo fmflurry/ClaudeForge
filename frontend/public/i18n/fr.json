@@ -8,5 +8,11 @@
   "shell.nav.dashboard": "Tableau de bord",
   "shell.nav.docs": "Documentation",
   "shell.auth.sign-in": "Se connecter",
-  "shell.auth.sign-out": "Se déconnecter"
+  "shell.auth.sign-out": "Se déconnecter",
+  "shared.modal.close-aria": "Fermer la fenêtre",
+  "shared.pagination.aria": "Pagination",
+  "shared.pagination.prev-aria": "Page précédente",
+  "shared.pagination.next-aria": "Page suivante",
+  "shared.table.aria": "Tableau de données",
+  "shared.toast.dismiss-aria": "Ignorer"
 }

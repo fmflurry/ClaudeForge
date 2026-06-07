@@ -1,0 +1,4 @@
+{
+  "toggle-label": "Enable anonymous telemetry",
+  "privacy-text": "We collect anonymous usage data to improve ClaudeForge. No personally identifiable information is ever sent — only an anonymous identifier and the event type (e.g. plugin install). You can opt out at any time. Your privacy matters."
+}

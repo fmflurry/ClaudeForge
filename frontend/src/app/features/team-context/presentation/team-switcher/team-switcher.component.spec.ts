@@ -39,9 +39,54 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { TeamSwitcherComponent } from './team-switcher.component';
 import { TeamContextFacade } from '../../application/facades/team-context.facade';
 import { PRESET_TEAMS } from '../../domain/rules/team-id-validation.rules';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for team-context scope
+//
+// En map returns EXACT current literals so all existing rendered-text
+// assertions keep passing unchanged after migration.
+// Fr map returns French — at least one FR assertion is exercised below.
+//
+// Key namespace: 'team-context' scope — keys are prefixed with 'team-context.'
+// ---------------------------------------------------------------------------
+
+const EN_TEAM_CONTEXT_LANGS: Record<string, string> = {
+  'team-context.current-team-label': 'Current team',
+  'team-context.no-team-label': 'No team selected',
+  'team-context.change-btn': 'Change',
+  'team-context.clear-btn': 'Clear',
+  'team-context.set-team-btn': 'Set Team',
+  'team-context.confirm-btn': 'Confirm',
+  'team-context.cancel-btn': 'Cancel',
+  'team-context.edit-input-placeholder': 'Enter team name',
+  'team-context.welcome-title': 'Welcome to ClaudeForge',
+  'team-context.welcome-subtitle': 'Select your team or enter a custom name to get started.',
+  'team-context.custom-input-placeholder': 'Enter custom team name',
+  'team-context.use-custom-team-btn': 'Use Custom Team',
+  'team-context.skip-btn': 'Skip for now',
+};
+
+const FR_TEAM_CONTEXT_LANGS: Record<string, string> = {
+  'team-context.current-team-label': 'Équipe actuelle',
+  'team-context.no-team-label': 'Aucune équipe sélectionnée',
+  'team-context.change-btn': 'Modifier',
+  'team-context.clear-btn': 'Effacer',
+  'team-context.set-team-btn': "Définir l'équipe",
+  'team-context.confirm-btn': 'Confirmer',
+  'team-context.cancel-btn': 'Annuler',
+  'team-context.edit-input-placeholder': "Saisir le nom de l'équipe",
+  'team-context.welcome-title': 'Bienvenue sur ClaudeForge',
+  'team-context.welcome-subtitle': 'Sélectionnez votre équipe ou saisissez un nom personnalisé pour commencer.',
+  'team-context.custom-input-placeholder': "Saisir un nom d'équipe personnalisé",
+  'team-context.use-custom-team-btn': "Utiliser l'équipe personnalisée",
+  'team-context.skip-btn': "Passer pour l'instant",
+};
 
 // ---------------------------------------------------------------------------
 // Stub facade
@@ -112,17 +157,30 @@ class StubTeamContextFacade {
 function setupComponent(): {
   fixture: ComponentFixture<TeamSwitcherComponent>;
   stub: StubTeamContextFacade;
+  translocoService: TranslocoService;
 } {
   TestBed.resetTestingModule();
   const stub = new StubTeamContextFacade();
   TestBed.configureTestingModule({
-    imports: [TeamSwitcherComponent],
-    providers: [{ provide: TeamContextFacade, useValue: stub }],
+    imports: [
+      TeamSwitcherComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_TEAM_CONTEXT_LANGS, fr: FR_TEAM_CONTEXT_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: TeamContextFacade, useValue: stub },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(TeamSwitcherComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(TeamSwitcherComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -449,5 +507,40 @@ describe('TeamSwitcherComponent — public API surface', () => {
   it('should expose onInput as a function', () => {
     const { fixture } = setupComponent();
     expect(typeof fixture.componentInstance.onInput).toBe('function');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// i18n — FR assertions
+// ---------------------------------------------------------------------------
+
+describe('TeamSwitcherComponent — i18n FR', () => {
+  it('[FR] renders "Aucune équipe sélectionnée" when no team set and lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setCurrentTeam(undefined);
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Aucune équipe sélectionnée');
+  });
+
+  it('[FR] renders "Modifier" change button when team is set and lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setCurrentTeam('Engineering');
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Modifier');
+  });
+
+  it('[FR] renders "Confirmer" confirm button in edit mode when lang is fr', () => {
+    const { fixture, stub, translocoService } = setupComponent();
+    stub.setCurrentTeam('Engineering');
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    fixture.componentInstance.openEdit();
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Confirmer');
   });
 });

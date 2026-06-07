@@ -1,0 +1,15 @@
+{
+  "current-team-label": "Current team",
+  "no-team-label": "No team selected",
+  "change-btn": "Change",
+  "clear-btn": "Clear",
+  "set-team-btn": "Set Team",
+  "confirm-btn": "Confirm",
+  "cancel-btn": "Cancel",
+  "edit-input-placeholder": "Enter team name",
+  "welcome-title": "Welcome to ClaudeForge",
+  "welcome-subtitle": "Select your team or enter a custom name to get started.",
+  "custom-input-placeholder": "Enter custom team name",
+  "use-custom-team-btn": "Use Custom Team",
+  "skip-btn": "Skip for now"
+}

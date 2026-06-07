@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { I18nFacade } from '../../application/i18n/i18n.facade';
 
 export interface TableColumn<T> {
   key: keyof T;
@@ -11,7 +12,7 @@ export interface TableColumn<T> {
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="cf-table-wrapper" role="region" [attr.aria-label]="ariaLabel()">
+    <div class="cf-table-wrapper" role="region" [attr.aria-label]="ariaLabel() ?? i18n.t('shared.table.aria')">
       <table class="cf-table">
         <thead class="cf-table__head">
           <tr>
@@ -67,7 +68,9 @@ export interface TableColumn<T> {
   ],
 })
 export class TableComponent<T extends Record<string, unknown>> {
+  protected readonly i18n = inject(I18nFacade);
+
   readonly columns = input.required<TableColumn<T>[]>();
   readonly rows = input.required<T[]>();
-  readonly ariaLabel = input<string>('Data table');
+  readonly ariaLabel = input<string | undefined>(undefined);
 }

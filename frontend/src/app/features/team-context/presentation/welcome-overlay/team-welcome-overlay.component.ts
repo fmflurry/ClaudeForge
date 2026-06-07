@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, Signal, inject, signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { TeamContextFacade } from '../../application/facades/team-context.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 /**
  * First-visit welcome overlay that prompts the user to select or enter
@@ -12,10 +14,11 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
   standalone: true,
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('team-context')],
   template: `
     <div data-testid="team-welcome-overlay" class="team-welcome-overlay">
-      <h2 class="team-welcome-overlay__title">Welcome to ClaudeForge</h2>
-      <p class="team-welcome-overlay__subtitle">Select your team or enter a custom name to get started.</p>
+      <h2 class="team-welcome-overlay__title">{{ i18n.t('team-context.welcome-title') }}</h2>
+      <p class="team-welcome-overlay__subtitle">{{ i18n.t('team-context.welcome-subtitle') }}</p>
 
       <!-- Preset buttons -->
       <div class="team-welcome-overlay__presets">
@@ -37,12 +40,12 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
         <input
           type="text"
           data-testid="custom-team-input"
-          placeholder="Enter custom team name"
+          [placeholder]="i18n.t('team-context.custom-input-placeholder')"
           [value]="customInput()"
           (input)="onInput($event)"
         />
         <button type="button" data-testid="submit-button" class="team-welcome-overlay__submit" (click)="submitCustom()">
-          Use Custom Team
+          {{ i18n.t('team-context.use-custom-team-btn') }}
         </button>
       </div>
 
@@ -55,7 +58,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
 
       <!-- Skip button -->
       <button type="button" data-testid="skip-button" class="team-welcome-overlay__skip skip-btn" (click)="skip()">
-        Skip for now
+        {{ i18n.t('team-context.skip-btn') }}
       </button>
     </div>
   `,
@@ -107,6 +110,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
 })
 export class TeamWelcomeOverlayComponent {
   private readonly facade = inject(TeamContextFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly customInput = signal<string>('');
 

@@ -37,8 +37,31 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { TelemetrySettingsComponent } from './telemetry-settings.component';
 import { TelemetryFacade } from '../../application/facades/telemetry.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for telemetry scope
+//
+// En map returns EXACT current literals so all existing rendered-text
+// assertions keep passing unchanged after migration.
+// Fr map returns French — at least one FR assertion is exercised below.
+// ---------------------------------------------------------------------------
+
+const EN_TELEMETRY_LANGS: Record<string, string> = {
+  'telemetry.toggle-label': 'Enable anonymous telemetry',
+  'telemetry.privacy-text':
+    'We collect anonymous usage data to improve ClaudeForge. No personally identifiable information is ever sent — only an anonymous identifier and the event type (e.g. plugin install). You can opt out at any time. Your privacy matters.',
+};
+
+const FR_TELEMETRY_LANGS: Record<string, string> = {
+  'telemetry.toggle-label': 'Activer la télémétrie anonyme',
+  'telemetry.privacy-text':
+    "Nous collectons des données d'utilisation anonymes pour améliorer ClaudeForge. Aucune information personnellement identifiable n'est jamais envoyée — seulement un identifiant anonyme et le type d'événement (p.ex. installation de plugin). Vous pouvez vous désinscrire à tout moment. Votre confidentialité nous importe.",
+};
 
 // ---------------------------------------------------------------------------
 // Stub TelemetryFacade
@@ -96,19 +119,32 @@ class StubTelemetryFacade {
 interface ComponentHarness {
   fixture: ComponentFixture<TelemetrySettingsComponent>;
   stub: StubTelemetryFacade;
+  translocoService: TranslocoService;
 }
 
 function setupComponent(): ComponentHarness {
   TestBed.resetTestingModule();
   const stub = new StubTelemetryFacade();
   TestBed.configureTestingModule({
-    imports: [TelemetrySettingsComponent],
-    providers: [{ provide: TelemetryFacade, useValue: stub }],
+    imports: [
+      TelemetrySettingsComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_TELEMETRY_LANGS, fr: FR_TELEMETRY_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: TelemetryFacade, useValue: stub },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(TelemetrySettingsComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(TelemetrySettingsComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -294,5 +330,29 @@ describe('TelemetrySettingsComponent — architecture boundary', () => {
   it('should NOT require TelemetryPreferencePort directly (only facade)', () => {
     const { fixture } = setupComponent();
     expect(fixture.componentInstance).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// i18n — FR assertions
+// ---------------------------------------------------------------------------
+
+describe('TelemetrySettingsComponent — i18n FR', () => {
+  it('[FR] toggle label renders "Activer la télémétrie anonyme" when lang is fr', () => {
+    const { fixture, translocoService } = setupComponent();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const label = fixture.nativeElement.querySelector('label') as HTMLElement | null;
+    expect(label?.textContent?.trim()).toContain('Activer la télémétrie anonyme');
+  });
+
+  it('[FR] privacy text renders French content when lang is fr', () => {
+    const { fixture, translocoService } = setupComponent();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const privacyEl = fixture.debugElement.query(By.css('[data-testid="privacy-text"]'));
+    expect(privacyEl).not.toBeNull();
+    const text = (privacyEl.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('anonymes');
   });
 });

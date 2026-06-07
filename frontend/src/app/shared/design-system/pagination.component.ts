@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { I18nFacade } from '../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-pagination',
@@ -6,12 +7,12 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <nav class="cf-pagination" aria-label="Pagination">
+    <nav class="cf-pagination" [attr.aria-label]="i18n.t('shared.pagination.aria')">
       <button
         class="cf-pagination__btn"
         [disabled]="currentPage() <= 1"
         (click)="onPageChange(currentPage() - 1)"
-        aria-label="Previous page"
+        [attr.aria-label]="i18n.t('shared.pagination.prev-aria')"
       >
         &laquo;
       </button>
@@ -31,7 +32,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
         class="cf-pagination__btn"
         [disabled]="currentPage() >= totalPages()"
         (click)="onPageChange(currentPage() + 1)"
-        aria-label="Next page"
+        [attr.aria-label]="i18n.t('shared.pagination.next-aria')"
       >
         &raquo;
       </button>
@@ -77,6 +78,8 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
   ],
 })
 export class PaginationComponent {
+  protected readonly i18n = inject(I18nFacade);
+
   readonly currentPage = input.required<number>();
   readonly totalPages = input.required<number>();
   readonly pageChange = output<number>();

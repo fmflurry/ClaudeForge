@@ -41,9 +41,52 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { TeamWelcomeOverlayComponent } from './team-welcome-overlay.component';
 import { TeamContextFacade } from '../../application/facades/team-context.facade';
 import { PRESET_TEAMS } from '../../domain/rules/team-id-validation.rules';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
+import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
+
+// ---------------------------------------------------------------------------
+// Transloco test langs for team-context scope
+//
+// En map returns EXACT current literals so all existing rendered-text
+// assertions keep passing unchanged after migration.
+// Fr map returns French — at least one FR assertion is exercised below.
+// ---------------------------------------------------------------------------
+
+const EN_TEAM_CONTEXT_LANGS: Record<string, string> = {
+  'team-context.current-team-label': 'Current team',
+  'team-context.no-team-label': 'No team selected',
+  'team-context.change-btn': 'Change',
+  'team-context.clear-btn': 'Clear',
+  'team-context.set-team-btn': 'Set Team',
+  'team-context.confirm-btn': 'Confirm',
+  'team-context.cancel-btn': 'Cancel',
+  'team-context.edit-input-placeholder': 'Enter team name',
+  'team-context.welcome-title': 'Welcome to ClaudeForge',
+  'team-context.welcome-subtitle': 'Select your team or enter a custom name to get started.',
+  'team-context.custom-input-placeholder': 'Enter custom team name',
+  'team-context.use-custom-team-btn': 'Use Custom Team',
+  'team-context.skip-btn': 'Skip for now',
+};
+
+const FR_TEAM_CONTEXT_LANGS: Record<string, string> = {
+  'team-context.current-team-label': 'Équipe actuelle',
+  'team-context.no-team-label': 'Aucune équipe sélectionnée',
+  'team-context.change-btn': 'Modifier',
+  'team-context.clear-btn': 'Effacer',
+  'team-context.set-team-btn': "Définir l'équipe",
+  'team-context.confirm-btn': 'Confirmer',
+  'team-context.cancel-btn': 'Annuler',
+  'team-context.edit-input-placeholder': "Saisir le nom de l'équipe",
+  'team-context.welcome-title': 'Bienvenue sur ClaudeForge',
+  'team-context.welcome-subtitle': 'Sélectionnez votre équipe ou saisissez un nom personnalisé pour commencer.',
+  'team-context.custom-input-placeholder': "Saisir un nom d'équipe personnalisé",
+  'team-context.use-custom-team-btn': "Utiliser l'équipe personnalisée",
+  'team-context.skip-btn': "Passer pour l'instant",
+};
 
 // ---------------------------------------------------------------------------
 // Stub facade
@@ -115,16 +158,29 @@ class StubTeamContextFacade {
 function setupComponent(): {
   fixture: ComponentFixture<TeamWelcomeOverlayComponent>;
   stub: StubTeamContextFacade;
+  translocoService: TranslocoService;
 } {
   const stub = new StubTeamContextFacade();
   TestBed.configureTestingModule({
-    imports: [TeamWelcomeOverlayComponent],
-    providers: [{ provide: TeamContextFacade, useValue: stub }],
+    imports: [
+      TeamWelcomeOverlayComponent,
+      TranslocoTestingModule.forRoot({
+        langs: { en: EN_TEAM_CONTEXT_LANGS, fr: FR_TEAM_CONTEXT_LANGS },
+        translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
+        preloadLangs: true,
+      }),
+    ],
+    providers: [
+      { provide: TeamContextFacade, useValue: stub },
+      I18nFacade,
+      { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
+    ],
   }).overrideComponent(TeamWelcomeOverlayComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
   const fixture = TestBed.createComponent(TeamWelcomeOverlayComponent);
-  return { fixture, stub };
+  const translocoService = TestBed.inject(TranslocoService);
+  return { fixture, stub, translocoService };
 }
 
 // ---------------------------------------------------------------------------
@@ -385,5 +441,35 @@ describe('TeamWelcomeOverlayComponent — architecture boundary', () => {
   it('should NOT require TeamContextStoragePort directly (only facade)', () => {
     const { fixture } = setupComponent();
     expect(fixture.componentInstance).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// i18n — FR assertions
+// ---------------------------------------------------------------------------
+
+describe('TeamWelcomeOverlayComponent — i18n FR', () => {
+  it('[FR] renders "Bienvenue sur ClaudeForge" title when lang is fr', () => {
+    const { fixture, translocoService } = setupComponent();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const h2 = fixture.nativeElement.querySelector('h2') as HTMLElement | null;
+    expect(h2?.textContent?.trim()).toContain('Bienvenue sur ClaudeForge');
+  });
+
+  it('[FR] renders "Passer pour l\'instant" skip button when lang is fr', () => {
+    const { fixture, translocoService } = setupComponent();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const skipBtn = fixture.nativeElement.querySelector('[data-testid="skip-button"]') as HTMLButtonElement | null;
+    expect(skipBtn?.textContent?.trim()).toContain("Passer pour l'instant");
+  });
+
+  it('[FR] renders "Utiliser l\'équipe personnalisée" submit button when lang is fr', () => {
+    const { fixture, translocoService } = setupComponent();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+    const submitBtn = fixture.nativeElement.querySelector('[data-testid="submit-button"]') as HTMLButtonElement | null;
+    expect(submitBtn?.textContent?.trim()).toContain("Utiliser l'équipe personnalisée");
   });
 });

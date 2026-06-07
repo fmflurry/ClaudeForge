@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, Signal, inject, signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { TeamContextFacade } from '../../application/facades/team-context.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 /**
  * Header-mounted team switcher. Shows the current team and provides inline
@@ -12,6 +14,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
   standalone: true,
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('team-context')],
   template: `
     <div class="team-switcher" data-testid="team-switcher">
       @if (!isEditing()) {
@@ -22,15 +25,17 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
               {{ currentTeam() }}
             </span>
             <button type="button" data-testid="edit-button" class="team-switcher__edit-btn" (click)="openEdit()">
-              Change
+              {{ i18n.t('team-context.change-btn') }}
             </button>
             <button type="button" data-testid="clear-button" class="team-switcher__clear-btn" (click)="clearTeam()">
-              Clear
+              {{ i18n.t('team-context.clear-btn') }}
             </button>
           } @else {
-            <span class="team-switcher__no-team" data-testid="no-team-label"> No team selected </span>
+            <span class="team-switcher__no-team" data-testid="no-team-label">
+              {{ i18n.t('team-context.no-team-label') }}
+            </span>
             <button type="button" data-testid="set-team-button" class="team-switcher__set-btn" (click)="openEdit()">
-              Set Team
+              {{ i18n.t('team-context.set-team-btn') }}
             </button>
           }
         </div>
@@ -41,14 +46,14 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
             type="text"
             data-testid="edit-input"
             [value]="editInput()"
-            placeholder="Enter team name"
+            [placeholder]="i18n.t('team-context.edit-input-placeholder')"
             (input)="onInput($event)"
           />
           <button type="button" data-testid="confirm-button" class="team-switcher__confirm-btn" (click)="confirmEdit()">
-            Confirm
+            {{ i18n.t('team-context.confirm-btn') }}
           </button>
           <button type="button" data-testid="cancel-button" class="team-switcher__cancel-btn" (click)="cancelEdit()">
-            Cancel
+            {{ i18n.t('team-context.cancel-btn') }}
           </button>
 
           <!-- Preset shortcuts in edit mode -->
@@ -119,6 +124,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
 })
 export class TeamSwitcherComponent {
   private readonly facade = inject(TeamContextFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly isEditing = signal<boolean>(false);
   readonly editInput = signal<string>('');

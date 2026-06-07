@@ -8,5 +8,11 @@
   "shell.nav.dashboard": "Dashboard",
   "shell.nav.docs": "Docs",
   "shell.auth.sign-in": "Sign in",
-  "shell.auth.sign-out": "Sign out"
+  "shell.auth.sign-out": "Sign out",
+  "shared.modal.close-aria": "Close modal",
+  "shared.pagination.aria": "Pagination",
+  "shared.pagination.prev-aria": "Previous page",
+  "shared.pagination.next-aria": "Next page",
+  "shared.table.aria": "Data table",
+  "shared.toast.dismiss-aria": "Dismiss"
 }

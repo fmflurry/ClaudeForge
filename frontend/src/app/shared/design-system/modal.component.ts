@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, input, output, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  input,
+  output,
+  viewChild,
+} from '@angular/core';
+import { I18nFacade } from '../../application/i18n/i18n.facade';
 
 @Component({
   selector: 'cf-modal',
@@ -16,7 +26,13 @@ import { ChangeDetectionStrategy, Component, ElementRef, HostListener, input, ou
       <div class="cf-modal__panel" #panel>
         <header class="cf-modal__header">
           <h2 class="cf-modal__title">{{ title() }}</h2>
-          <button class="cf-modal__close" aria-label="Close modal" (click)="modalClose.emit()">&times;</button>
+          <button
+            class="cf-modal__close"
+            [attr.aria-label]="i18n.t('shared.modal.close-aria')"
+            (click)="modalClose.emit()"
+          >
+            &times;
+          </button>
         </header>
         <div class="cf-modal__body">
           <ng-content />
@@ -82,6 +98,8 @@ import { ChangeDetectionStrategy, Component, ElementRef, HostListener, input, ou
   ],
 })
 export class ModalComponent {
+  protected readonly i18n = inject(I18nFacade);
+
   readonly title = input.required<string>();
   /** Emitted when the user requests to close the modal (Escape, backdrop click, close button). */
   readonly modalClose = output<void>();

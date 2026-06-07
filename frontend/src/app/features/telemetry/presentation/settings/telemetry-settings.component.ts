@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, Signal } from '@angular/core';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { TelemetryFacade } from '../../application/facades/telemetry.facade';
+import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 /**
  * Settings component for telemetry opt-in/opt-out.
@@ -9,6 +11,7 @@ import { TelemetryFacade } from '../../application/facades/telemetry.facade';
   selector: 'cf-telemetry-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideTranslocoScope('telemetry')],
   template: `
     <div class="cf-telemetry-settings">
       <label class="cf-telemetry-settings__label">
@@ -20,18 +23,17 @@ import { TelemetryFacade } from '../../application/facades/telemetry.facade';
           [attr.data-enabled]="isEnabled()"
           (change)="isEnabled() ? onToggleDisable() : onToggleEnable()"
         />
-        Enable anonymous telemetry
+        {{ i18n.t('telemetry.toggle-label') }}
       </label>
       <p class="cf-telemetry-settings__privacy" data-testid="privacy-text">
-        We collect anonymous usage data to improve ClaudeForge. No personally identifiable information is ever sent —
-        only an anonymous identifier and the event type (e.g. plugin install). You can opt out at any time. Your privacy
-        matters.
+        {{ i18n.t('telemetry.privacy-text') }}
       </p>
     </div>
   `,
 })
 export class TelemetrySettingsComponent {
   private readonly facade = inject(TelemetryFacade);
+  protected readonly i18n = inject(I18nFacade);
 
   readonly isEnabled: Signal<boolean> = this.facade.isEnabled;
   readonly isDisabled: Signal<boolean> = this.facade.isDisabled;
