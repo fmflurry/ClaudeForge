@@ -57,9 +57,18 @@ public sealed class JwtOptions
 
     /// <summary>
     /// RSA private key in PEM format (PKCS#8 "BEGIN PRIVATE KEY" or traditional "BEGIN RSA PRIVATE KEY").
-    /// Required for token issuance.
+    /// Required for token issuance when <see cref="SigningKeyPrivatePemFile"/> is not set.
+    /// Env var: JWT__SIGNINGKEYP RIVATEPEM (flat) or set via JWT__SIGNINGKEY__PRIVATEPEM for nested binding.
     /// </summary>
     public string? SigningKeyPrivatePem { get; init; }
+
+    /// <summary>
+    /// Path to a file whose content is the RSA private key PEM.
+    /// Used as a fallback when <see cref="SigningKeyPrivatePem"/> is absent (e.g. Docker secret mount).
+    /// The file is read at startup; its trimmed content is treated as the PEM value.
+    /// Env var: JWT__SIGNINGKEYP RIVATEPEMFILE
+    /// </summary>
+    public string? SigningKeyPrivatePemFile { get; init; }
 
     /// <summary>Access token lifetime in minutes. Default: 15.</summary>
     public int AccessTokenMinutes { get; init; } = 15;

@@ -40,20 +40,28 @@ public sealed class IdentityModule : IModule
     {
         // ── ITokenIssuerPort ─────────────────────────────────────────────────────
         // Lazy: reads config at first resolution, AFTER test factory config overrides.
+        // Resolution order for the private PEM:
+        //   1. Jwt:PrivatePem           — inline value (tests / local dev)
+        //   2. Jwt:PrivatePemFile       — path to a PEM file
+        //   3. JWT:SigningKey:PrivatePem_File — Docker secret mount path
+        //      (env: JWT__SIGNINGKEY__PRIVATEPEM_FILE)
         services.AddSingleton<ITokenIssuerPort>(sp =>
         {
             IConfiguration cfg = sp.GetRequiredService<IConfiguration>();
-            string? pem = cfg["Jwt:PrivatePem"];
-            string iss = cfg["Jwt:Issuer"] ?? "https://claudeforge.io";
-            string aud = cfg["Jwt:Audience"] ?? "claudeforge-api";
+            string? pem = JwtPemResolver.ResolvePrivatePem(cfg);
+            string iss = cfg["Jwt:Issuer"] ?? cfg["JWT:Issuer"] ?? "https://claudeforge.io";
+            string aud = cfg["Jwt:Audience"] ?? cfg["JWT:Audience"] ?? "claudeforge-api";
             string k = cfg["Jwt:Kid"] ?? "primary";
-            int atm = int.TryParse(cfg["Jwt:AccessTokenMinutes"], out int a) ? a : 15;
+            int atm = int.TryParse(cfg["Jwt:AccessTokenMinutes"] ?? cfg["JWT:AccessTokenMinutes"], out int a) ? a : 15;
 
             if (string.IsNullOrWhiteSpace(pem))
             {
                 throw new InvalidOperationException(
-                    "ITokenIssuerPort cannot be created: Jwt:PrivatePem is not configured. " +
-                    "Set the JWT__SIGNINGKEY__PRIVATEPEM or Jwt:PrivatePem configuration value.");
+                    "ITokenIssuerPort cannot be created: no JWT private key PEM is configured. " +
+                    "Set one of the following: " +
+                    "(1) Jwt:PrivatePem — inline PEM value, " +
+                    "(2) Jwt:PrivatePemFile — path to a PEM file, or " +
+                    "(3) JWT__SIGNINGKEY__PRIVATEPEM_FILE (env) — Docker secret file path.");
             }
 
             return new RsaTokenIssuerAdapter(
@@ -66,10 +74,15 @@ public sealed class IdentityModule : IModule
 
         // ── IJwksProvider ────────────────────────────────────────────────────────
         // Lazy: picks up test factory's public key override if present.
+        // Resolution order for the public PEM:
+        //   1. Jwt:PublicPem            — inline value (tests / local dev)
+        //   2. Jwt:PublicPemFile        — path to a PEM file
+        //   3. JWT:SigningKey:PublicPem_File — Docker secret mount path
+        //      (env: JWT__SIGNINGKEY__PUBLICPEM_FILE)
         services.AddSingleton<IJwksProvider>(sp =>
         {
             IConfiguration cfg = sp.GetRequiredService<IConfiguration>();
-            string? pubPem = cfg["Jwt:PublicPem"];
+            string? pubPem = JwtPemResolver.ResolvePublicPem(cfg);
             string k = cfg["Jwt:Kid"] ?? "primary";
             if (!string.IsNullOrWhiteSpace(pubPem))
             {
