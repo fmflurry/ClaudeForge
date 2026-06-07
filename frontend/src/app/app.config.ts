@@ -40,6 +40,9 @@ import { OrgPort } from './features/organizations/domain/ports/org.port';
 import { OrgHttpAdapter } from './features/organizations/infrastructure/adapter/org-http.adapter';
 import { OrganizationsFacade } from './features/organizations/application/facades/organizations.facade';
 import { OrgContextFacade } from './features/organizations/application/facades/org-context.facade';
+import { DeviceActivationPort } from './features/device-activation/domain/ports/device-activation.port';
+import { DeviceActivationHttpAdapter } from './features/device-activation/infrastructure/adapter/device-activation-http.adapter';
+import { DeviceActivationFacade } from './features/device-activation/application/facades/device-activation.facade';
 
 /**
  * Reads the runtime API base URL from:
@@ -135,6 +138,14 @@ export const appConfig: ApplicationConfig = {
     },
     OrganizationsFacade,
     OrgContextFacade,
+    // ---------------------------------------------------------------------------
+    // Device Activation
+    // ---------------------------------------------------------------------------
+    {
+      provide: DeviceActivationPort,
+      useClass: DeviceActivationHttpAdapter,
+    },
+    DeviceActivationFacade,
   ],
 };
 

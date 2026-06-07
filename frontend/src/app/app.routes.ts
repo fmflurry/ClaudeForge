@@ -20,6 +20,14 @@ export const routes: Routes = [
         (m) => m.AuthCallbackComponent,
       ),
   },
+  {
+    path: 'activate',
+    canActivate: [FunctionalAuthGuard],
+    loadComponent: () =>
+      import(
+        './features/device-activation/presentation/activate-page.component'
+      ).then((m) => m.ActivatePageComponent),
+  },
   // ---------------------------------------------------------------------------
   // Shell routes (with navigation header)
   // ---------------------------------------------------------------------------
