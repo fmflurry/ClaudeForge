@@ -148,17 +148,17 @@ public sealed class OrgAuditLogIntegrationTests : IAsyncLifetime
 
     private static OrganizationInvitationEntity MakeInvitation(
         Guid orgId, Guid invitedBy, string emailNormalized, string token, string status = "pending") => new()
-    {
-        Id = Guid.NewGuid(),
-        OrgId = orgId,
-        EmailNormalized = emailNormalized,
-        InvitedBy = invitedBy,
-        Role = "member",
-        Status = status,
-        Token = token,
-        CreatedAt = DateTimeOffset.UtcNow,
-        ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
-    };
+        {
+            Id = Guid.NewGuid(),
+            OrgId = orgId,
+            EmailNormalized = emailNormalized,
+            InvitedBy = invitedBy,
+            Role = "member",
+            Status = status,
+            Token = token,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
+        };
 
     private void SetAuthUser(HttpClient client, Guid userId, string email)
     {
@@ -520,8 +520,8 @@ public sealed class OrgAuditLogIntegrationTests : IAsyncLifetime
     [Theory]
     [InlineData("DELETE", "/api/v1/orgs/{orgId}/audit-log")]
     [InlineData("DELETE", "/api/v1/orgs/{orgId}/audit-log/{entryId}")]
-    [InlineData("PUT",    "/api/v1/orgs/{orgId}/audit-log/{entryId}")]
-    [InlineData("PATCH",  "/api/v1/orgs/{orgId}/audit-log/{entryId}")]
+    [InlineData("PUT", "/api/v1/orgs/{orgId}/audit-log/{entryId}")]
+    [InlineData("PATCH", "/api/v1/orgs/{orgId}/audit-log/{entryId}")]
     public async Task AuditLog_NoDestructiveRoutes_Returns404(string httpMethod, string routeTemplate)
     {
         // Any DELETE / PUT / PATCH on an audit-log route must 404 — the route must not exist.

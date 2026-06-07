@@ -155,20 +155,20 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
         string version,
         long versionSort,
         bool isLatest = false) => new()
-    {
-        Id = Guid.NewGuid(),
-        PluginId = pluginId,
-        Version = version,
-        VersionSort = versionSort,
-        ReleaseNotes = "",
-        IsLatest = isLatest,
-        PackageKey = $"plugins/{pluginId}/{version}/package.tar.gz",
-        PackageFormat = "tar.gz",
-        SizeBytes = 1024,
-        Sha256 = new string('a', 64),
-        DownloadCount = 0,
-        ReleasedAt = DateTimeOffset.UtcNow,
-    };
+        {
+            Id = Guid.NewGuid(),
+            PluginId = pluginId,
+            Version = version,
+            VersionSort = versionSort,
+            ReleaseNotes = "",
+            IsLatest = isLatest,
+            PackageKey = $"plugins/{pluginId}/{version}/package.tar.gz",
+            PackageFormat = "tar.gz",
+            SizeBytes = 1024,
+            Sha256 = new string('a', 64),
+            DownloadCount = 0,
+            ReleasedAt = DateTimeOffset.UtcNow,
+        };
 
     // -------------------------------------------------------------------------
     // Test 1 — names differing only by case → name_normalized UNIQUE violation

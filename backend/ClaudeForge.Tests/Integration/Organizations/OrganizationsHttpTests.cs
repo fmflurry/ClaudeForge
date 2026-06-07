@@ -190,17 +190,17 @@ public sealed class OrganizationsHttpTests : IAsyncLifetime
 
     private static OrganizationInvitationEntity MakeInvitation(
         Guid orgId, Guid invitedBy, string emailNormalized, string token, string status = "pending") => new()
-    {
-        Id = Guid.NewGuid(),
-        OrgId = orgId,
-        EmailNormalized = emailNormalized,
-        InvitedBy = invitedBy,
-        Role = "member",
-        Status = status,
-        Token = token,
-        CreatedAt = DateTimeOffset.UtcNow,
-        ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
-    };
+        {
+            Id = Guid.NewGuid(),
+            OrgId = orgId,
+            EmailNormalized = emailNormalized,
+            InvitedBy = invitedBy,
+            Role = "member",
+            Status = status,
+            Token = token,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
+        };
 
     /// <summary>
     /// Sets headers that the HeaderBasedTestCurrentUser reads to simulate an authenticated user.

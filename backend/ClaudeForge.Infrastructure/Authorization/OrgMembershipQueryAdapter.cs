@@ -101,8 +101,8 @@ public sealed class OrgMembershipQueryAdapter : IOrgMembershipQueryPort
     private static int RoleLevel(string role) => role switch
     {
         "member" => 0,
-        "admin"  => 1,
-        "owner"  => 2,
-        _        => -1,
+        "admin" => 1,
+        "owner" => 2,
+        _ => -1,
     };
 }

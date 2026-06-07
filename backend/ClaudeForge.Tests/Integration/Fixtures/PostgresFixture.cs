@@ -1,8 +1,8 @@
+using ClaudeForge.Infrastructure.Persistence;
 using DotNet.Testcontainers.Builders;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Testcontainers.PostgreSql;
-using ClaudeForge.Infrastructure.Persistence;
 
 namespace ClaudeForge.Tests.Integration.Fixtures;
 

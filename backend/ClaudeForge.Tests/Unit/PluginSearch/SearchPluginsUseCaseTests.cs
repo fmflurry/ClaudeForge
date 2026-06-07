@@ -54,19 +54,19 @@ public sealed class SearchPluginsUseCaseTests
         string name,
         float relevanceScore = 0.8f,
         long downloadCount = 0) => new()
-    {
-        Id = Guid.NewGuid(),
-        Name = name,
-        Slug = name.ToLowerInvariant(),
-        Description = $"Description of {name}",
-        RelevanceScore = relevanceScore,
-        DownloadCount = downloadCount,
-        LatestVersion = "1.0.0",
-        CreatedAt = DateTimeOffset.UtcNow,
-        Types = [],
-        Languages = [],
-        UseCases = [],
-    };
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            Slug = name.ToLowerInvariant(),
+            Description = $"Description of {name}",
+            RelevanceScore = relevanceScore,
+            DownloadCount = downloadCount,
+            LatestVersion = "1.0.0",
+            CreatedAt = DateTimeOffset.UtcNow,
+            Types = [],
+            Languages = [],
+            UseCases = [],
+        };
 
     // -------------------------------------------------------------------------
     // 7.3 — Query passthrough to port

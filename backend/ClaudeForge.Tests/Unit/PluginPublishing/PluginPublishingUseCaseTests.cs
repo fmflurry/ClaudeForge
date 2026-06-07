@@ -1,3 +1,5 @@
+using System.Formats.Tar;
+using System.IO.Compression;
 using ClaudeForge.Application.Modules.PluginPublishing.Ports;
 using ClaudeForge.Application.Modules.PluginPublishing.UseCases;
 using ClaudeForge.Core.Domain.Packaging;
@@ -6,8 +8,6 @@ using ClaudeForge.Core.Ports;
 using ClaudeForge.Infrastructure.Packaging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using System.Formats.Tar;
-using System.IO.Compression;
 
 namespace ClaudeForge.Tests.Unit.PluginPublishing;
 

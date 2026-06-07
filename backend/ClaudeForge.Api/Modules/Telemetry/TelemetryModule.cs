@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using ClaudeForge.Api.Module;
 using ClaudeForge.Application.Modules.Telemetry.Ports;
 using ClaudeForge.Application.Modules.Telemetry.UseCases;
@@ -6,7 +7,6 @@ using ClaudeForge.Infrastructure.Telemetry;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
-using System.Threading.RateLimiting;
 
 namespace ClaudeForge.Api.Modules.Telemetry;
 

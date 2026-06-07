@@ -1,8 +1,8 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using ClaudeForge.Core.Identity.Ports;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace ClaudeForge.Tests.Unit.Identity;
 

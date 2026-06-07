@@ -100,17 +100,17 @@ public sealed class PluginCatalogHttpTests : IAsyncLifetime
         string slug,
         long downloadCount = 0,
         DateTimeOffset? createdAt = null) => new()
-    {
-        Id = Guid.NewGuid(),
-        Name = name,
-        NameNormalized = name.ToLowerInvariant(),
-        Slug = slug,
-        Description = $"Description for {name}",
-        Author = "test-author",
-        DownloadCount = downloadCount,
-        CreatedAt = createdAt ?? DateTimeOffset.UtcNow,
-        UpdatedAt = DateTimeOffset.UtcNow,
-    };
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            NameNormalized = name.ToLowerInvariant(),
+            Slug = slug,
+            Description = $"Description for {name}",
+            Author = "test-author",
+            DownloadCount = downloadCount,
+            CreatedAt = createdAt ?? DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
 
     private static PluginVersionEntity MakeVersion(
         Guid pluginId,
@@ -118,20 +118,20 @@ public sealed class PluginCatalogHttpTests : IAsyncLifetime
         long versionSort,
         bool isLatest = false,
         long downloadCount = 0) => new()
-    {
-        Id = Guid.NewGuid(),
-        PluginId = pluginId,
-        Version = version,
-        VersionSort = versionSort,
-        ReleaseNotes = $"Release notes for {version}",
-        IsLatest = isLatest,
-        PackageKey = $"plugins/{pluginId}/{version}/package.tar.gz",
-        PackageFormat = "tar.gz",
-        SizeBytes = 1024,
-        Sha256 = new string('a', 64),
-        DownloadCount = downloadCount,
-        ReleasedAt = DateTimeOffset.UtcNow,
-    };
+        {
+            Id = Guid.NewGuid(),
+            PluginId = pluginId,
+            Version = version,
+            VersionSort = versionSort,
+            ReleaseNotes = $"Release notes for {version}",
+            IsLatest = isLatest,
+            PackageKey = $"plugins/{pluginId}/{version}/package.tar.gz",
+            PackageFormat = "tar.gz",
+            SizeBytes = 1024,
+            Sha256 = new string('a', 64),
+            DownloadCount = downloadCount,
+            ReleasedAt = DateTimeOffset.UtcNow,
+        };
 
     private static CategoryEntity MakeCategory(string dimension, string value, string? displayName = null) => new()
     {

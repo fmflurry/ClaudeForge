@@ -1,8 +1,8 @@
+using System.Formats.Tar;
+using System.IO.Compression;
 using ClaudeForge.Core.Domain.Packaging;
 using ClaudeForge.Core.Ports;
 using ClaudeForge.Infrastructure.Packaging;
-using System.Formats.Tar;
-using System.IO.Compression;
 
 namespace ClaudeForge.Tests.Unit.Packaging;
 

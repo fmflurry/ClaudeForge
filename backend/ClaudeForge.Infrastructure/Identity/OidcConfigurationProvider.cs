@@ -3,10 +3,10 @@
 // SecurityKey (Microsoft.IdentityModel.Tokens), a package that lives in Infrastructure.
 // Placing it here avoids adding a NuGet dependency to the otherwise lean Core assembly.
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Configuration;
 
 namespace ClaudeForge.Core.Identity.Ports
 {

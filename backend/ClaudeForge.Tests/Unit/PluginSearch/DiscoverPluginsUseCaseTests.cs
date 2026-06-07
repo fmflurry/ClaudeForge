@@ -50,20 +50,20 @@ public sealed class DiscoverPluginsUseCaseTests
         string name,
         float relevanceScore = 0.75f,
         string maturityIndicator = "stable") => new()
-    {
-        Id = Guid.NewGuid(),
-        Name = name,
-        Description = $"Discovery result for {name}",
-        LatestVersion = "1.0.0",
-        Types = ["skill"],
-        Languages = ["typescript"],
-        UseCases = ["dev-team"],
-        RelevanceScore = relevanceScore,
-        DownloadCount = 100,
-        LastUpdated = DateTimeOffset.UtcNow,
-        Author = "test-author",
-        MaturityIndicator = maturityIndicator,
-    };
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            Description = $"Discovery result for {name}",
+            LatestVersion = "1.0.0",
+            Types = ["skill"],
+            Languages = ["typescript"],
+            UseCases = ["dev-team"],
+            RelevanceScore = relevanceScore,
+            DownloadCount = 100,
+            LastUpdated = DateTimeOffset.UtcNow,
+            Author = "test-author",
+            MaturityIndicator = maturityIndicator,
+        };
 
     // -------------------------------------------------------------------------
     // 7.4 — Blank keyword → 400 "Keyword cannot be empty"

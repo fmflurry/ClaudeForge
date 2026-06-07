@@ -229,7 +229,8 @@ public sealed class ApproveDeviceCodeUseCaseTests
         DeviceCodeStore store = new();
         SignInTokens existingTokens = new("at", "rt", DateTimeOffset.UtcNow.AddHours(1));
         DeviceAuthState state = MakePendingState(deviceCode: "dc-already", userCode: "ALREDY01")
-            with { Tokens = existingTokens };
+            with
+        { Tokens = existingTokens };
         store.Store(state);
 
         ApproveDeviceCodeUseCase useCase = MakeUseCase(store);

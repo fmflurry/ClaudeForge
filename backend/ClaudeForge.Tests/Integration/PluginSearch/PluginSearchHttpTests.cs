@@ -106,17 +106,17 @@ public sealed class PluginSearchHttpTests : IAsyncLifetime
         string description,
         long downloadCount = 0,
         DateTimeOffset? createdAt = null) => new()
-    {
-        Id = Guid.NewGuid(),
-        Name = name,
-        NameNormalized = name.ToLowerInvariant(),
-        Slug = slug,
-        Description = description,
-        Author = "test-author",
-        DownloadCount = downloadCount,
-        CreatedAt = createdAt ?? DateTimeOffset.UtcNow,
-        UpdatedAt = DateTimeOffset.UtcNow,
-    };
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            NameNormalized = name.ToLowerInvariant(),
+            Slug = slug,
+            Description = description,
+            Author = "test-author",
+            DownloadCount = downloadCount,
+            CreatedAt = createdAt ?? DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
 
     private static PluginVersionEntity MakeVersion(Guid pluginId, string version, long versionSort) => new()
     {

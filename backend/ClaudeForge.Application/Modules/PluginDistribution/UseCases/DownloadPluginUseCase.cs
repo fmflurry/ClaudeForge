@@ -1,5 +1,5 @@
-using ClaudeForge.Application.Modules.PluginDistribution.Ports;
 using ClaudeForge.Application.Modules.PluginCatalog.UseCases;
+using ClaudeForge.Application.Modules.PluginDistribution.Ports;
 using ClaudeForge.Core.Domain.Plugins;
 using ClaudeForge.Core.Ports;
 using ClaudeForge.Core.Shared.Authorization;

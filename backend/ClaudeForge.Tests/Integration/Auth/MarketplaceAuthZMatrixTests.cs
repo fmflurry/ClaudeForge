@@ -1,3 +1,5 @@
+using System.Formats.Tar;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -10,8 +12,6 @@ using ClaudeForge.Tests.Integration.Organizations;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System.Formats.Tar;
-using System.IO.Compression;
 
 namespace ClaudeForge.Tests.Integration.Auth;
 
@@ -621,13 +621,13 @@ public sealed class MarketplaceAuthZMatrixTests : IAsyncLifetime
         // identical: same HTTP status, same "title", same "detail" text.
         // A difference here would leak the existence of the private plugin.
         string nonMemberBody = await nonMemberResp.Content.ReadAsStringAsync();
-        string missingBody   = await missingResp.Content.ReadAsStringAsync();
+        string missingBody = await missingResp.Content.ReadAsStringAsync();
 
         using JsonDocument nonMemberDoc = JsonDocument.Parse(nonMemberBody);
-        using JsonDocument missingDoc   = JsonDocument.Parse(missingBody);
+        using JsonDocument missingDoc = JsonDocument.Parse(missingBody);
 
         JsonElement nonMemberRoot = nonMemberDoc.RootElement;
-        JsonElement missingRoot   = missingDoc.RootElement;
+        JsonElement missingRoot = missingDoc.RootElement;
 
         // Both bodies must carry the RFC 7807 "detail" field.
         Assert.True(nonMemberRoot.TryGetProperty("detail", out JsonElement nmDetail),
@@ -639,7 +639,7 @@ public sealed class MarketplaceAuthZMatrixTests : IAsyncLifetime
         Assert.Equal(missDetail.GetString(), nmDetail.GetString());
 
         // If a "title" field is present it must also match.
-        bool nmHasTitle   = nonMemberRoot.TryGetProperty("title", out JsonElement nmTitle);
+        bool nmHasTitle = nonMemberRoot.TryGetProperty("title", out JsonElement nmTitle);
         bool missHasTitle = missingRoot.TryGetProperty("title", out JsonElement missTitle);
         Assert.Equal(missHasTitle, nmHasTitle);
         if (nmHasTitle && missHasTitle)
@@ -648,7 +648,7 @@ public sealed class MarketplaceAuthZMatrixTests : IAsyncLifetime
         }
 
         // Status codes inside the ProblemDetails envelope (if present) must match.
-        bool nmHasStatus   = nonMemberRoot.TryGetProperty("status", out JsonElement nmStatus);
+        bool nmHasStatus = nonMemberRoot.TryGetProperty("status", out JsonElement nmStatus);
         bool missHasStatus = missingRoot.TryGetProperty("status", out JsonElement missStatus);
         Assert.Equal(missHasStatus, nmHasStatus);
         if (nmHasStatus && missHasStatus)

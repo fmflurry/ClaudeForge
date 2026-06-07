@@ -182,17 +182,17 @@ public sealed class AuthSchemaTests : IAsyncLifetime
 
     private static OrganizationInvitationEntity MakeInvitation(
         Guid orgId, Guid invitedBy, string emailNormalized, string token) => new()
-    {
-        Id = Guid.NewGuid(),
-        OrgId = orgId,
-        EmailNormalized = emailNormalized,
-        InvitedBy = invitedBy,
-        Role = "member",
-        Status = "pending",
-        Token = token,
-        CreatedAt = DateTimeOffset.UtcNow,
-        ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
-    };
+        {
+            Id = Guid.NewGuid(),
+            OrgId = orgId,
+            EmailNormalized = emailNormalized,
+            InvitedBy = invitedBy,
+            Role = "member",
+            Status = "pending",
+            Token = token,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
+        };
 
     private static RefreshTokenEntity MakeRefreshToken(Guid userId) => new()
     {

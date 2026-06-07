@@ -1,12 +1,12 @@
+using ClaudeForge.Api.Module;
 using ClaudeForge.Application.Modules.PluginCatalog.Ports;
 using ClaudeForge.Application.Modules.PluginCatalog.UseCases;
-using ClaudeForge.Api.Module;
 using ClaudeForge.Core.Shared.Authorization;
 using ClaudeForge.Core.Shared.Exceptions;
 using ClaudeForge.Core.Shared.Model;
 using ClaudeForge.Infrastructure.Authorization;
-using ClaudeForge.Infrastructure.PluginCatalog;
 using ClaudeForge.Infrastructure.Persistence;
+using ClaudeForge.Infrastructure.PluginCatalog;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
