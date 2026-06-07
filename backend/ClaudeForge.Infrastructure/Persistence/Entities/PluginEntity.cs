@@ -34,6 +34,25 @@ public sealed class PluginEntity
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 
+    /// <summary>
+    /// Plugin visibility: "public" (default) or "private".
+    /// Private plugins require a non-NULL <see cref="OwnerOrgId"/>
+    /// (enforced by CHECK constraint chk_visibility_owner).
+    /// </summary>
+    public string Visibility { get; set; } = "public";
+
+    /// <summary>
+    /// FK → organizations. Owning organization for private (and optionally public) plugins.
+    /// Must be non-NULL when Visibility is "private".
+    /// </summary>
+    public Guid? OwnerOrgId { get; set; }
+
+    /// <summary>
+    /// FK → users. The user within the org who owns / published this plugin.
+    /// Nullable.
+    /// </summary>
+    public Guid? OwnerUserId { get; set; }
+
     // Navigation properties
     public ICollection<PluginVersionEntity> Versions { get; set; } = [];
     public ICollection<PluginCategoryEntity> PluginCategories { get; set; } = [];
