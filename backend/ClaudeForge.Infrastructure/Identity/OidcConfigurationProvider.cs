@@ -35,6 +35,7 @@ namespace ClaudeForge.Infrastructure.Identity
     /// Production implementation: uses <see cref="ConfigurationManager{OpenIdConnectConfiguration}"/>
     /// for per-provider discovery doc fetching with a 24-hour automatic refresh.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public sealed class OidcConfigurationProvider : IOpenIdConfigurationProvider
     {
         // Keyed by lowercase provider name

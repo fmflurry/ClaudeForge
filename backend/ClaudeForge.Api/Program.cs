@@ -115,4 +115,5 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
 app.Run();
 
 // Make Program accessible for WebApplicationFactory in integration tests
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public partial class Program { }

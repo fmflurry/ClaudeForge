@@ -55,7 +55,10 @@
               "sourceMap": true
             },
             "test": {
-              "polyfills": ["src/jest-zone-shim.ts", "zone.js"],
+              "polyfills": [
+                "src/jest-zone-shim.ts",
+                "zone.js"
+              ],
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
@@ -80,7 +83,35 @@
           "options": {
             "buildTarget": "frontend:build:test",
             "providersFile": "src/test-providers.ts",
-            "setupFiles": ["src/test-setup.ts"]
+            "setupFiles": [
+              "src/test-setup.ts"
+            ],
+            "coverageInclude": [
+              "src/app/**/*.ts"
+            ],
+            "coverageReporters": [
+              "json-summary",
+              "text",
+              "lcov"
+            ],
+            "exclude": [
+              "src/app/features/telemetry/domain/ports/anon-id.spec.ts"
+            ],
+            "coverageExclude": [
+              "src/**/*.spec.ts",
+              "src/main.ts",
+              "src/app/app.config.ts",
+              "src/app/app.routes.ts",
+              "src/app/**/*.routes.ts",
+              "src/app/shell/shell-layout.component.ts",
+              "src/app/**/domain/models/**",
+              "src/app/**/domain/ports/**",
+              "src/test-setup.ts",
+              "src/test-providers.ts",
+              "src/jest-zone-shim.ts",
+              "src/app/**/design-system/**"
+            ],
+            "coverage": true
           }
         }
       }
