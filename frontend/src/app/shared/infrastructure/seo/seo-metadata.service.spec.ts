@@ -113,7 +113,7 @@ class FakeMeta {
 // ---------------------------------------------------------------------------
 
 function createFakeDocument(): Document {
-  const linkElements: Map<string, HTMLLinkElement> = new Map();
+  const linkElements = new Map<string, HTMLLinkElement>();
 
   const fakeDocument = {
     head: {

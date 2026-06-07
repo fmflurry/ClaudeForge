@@ -13,12 +13,16 @@
  * routing to a broken page (button is aria-disabled and tabIndex=-1).
  */
 
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, Signal, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, Signal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CatalogFacade } from '../../catalog/application/facades/catalog.facade';
 import type { PluginSummary } from '../../catalog/domain/models/catalog.models';
 import { EmptyStateComponent } from '../../../shared/design-system/empty-state.component';
 import { BadgeComponent } from '../../../shared/design-system/badge.component';
+import { formatMetricCount } from '../../../shared/utils/format-metric-count';
+import { StatsBandComponent } from './stats-band/stats-band.component';
+import { SeoMetadataService } from '../../../shared/infrastructure/seo/seo-metadata.service';
+import { StructuredDataService } from '../../../shared/infrastructure/seo/structured-data.service';
 
 /** Number of plugins shown in the featured section. */
 const FEATURED_LIMIT = 6;
@@ -27,7 +31,7 @@ const FEATURED_LIMIT = 6;
   selector: 'cf-landing-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, EmptyStateComponent, BadgeComponent],
+  imports: [RouterLink, EmptyStateComponent, BadgeComponent, StatsBandComponent],
   template: `
     <!-- ================================================================= -->
     <!-- HERO                                                                -->
@@ -82,6 +86,11 @@ const FEATURED_LIMIT = 6;
         <button type="submit" class="lp-btn lp-btn--primary lp-search-entry__btn" aria-label="Search">Search</button>
       </form>
     </section>
+
+    <!-- ================================================================= -->
+    <!-- STATS BAND                                                          -->
+    <!-- ================================================================= -->
+    <cf-stats-band />
 
     <!-- ================================================================= -->
     <!-- FEATURED PLUGINS                                                    -->
@@ -494,6 +503,8 @@ const FEATURED_LIMIT = 6;
 export class LandingPageComponent implements OnInit {
   private readonly catalogFacade = inject(CatalogFacade);
   private readonly router = inject(Router);
+  private readonly seoMetadata = inject(SeoMetadataService);
+  private readonly structuredData = inject(StructuredDataService);
 
   readonly isLoadingPlugins: Signal<boolean> = this.catalogFacade.isLoadingPlugins;
   readonly hasError: Signal<boolean> = computed(() => this.catalogFacade.pluginsError() !== undefined);
@@ -506,6 +517,15 @@ export class LandingPageComponent implements OnInit {
   readonly searchQuery = signal('');
 
   readonly currentYear: number = new Date().getFullYear();
+
+  constructor() {
+    effect(() => {
+      const plugins = this.featuredPlugins();
+      if (plugins.length > 0) {
+        this.structuredData.injectPluginItemList(plugins);
+      }
+    });
+  }
 
   readonly howItWorksSteps: readonly {
     readonly icon: string;
@@ -536,6 +556,19 @@ export class LandingPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.catalogFacade.loadPlugins({ sort: 'downloadCount', order: 'desc' });
+
+    this.seoMetadata.setMetadata({
+      title: 'ClaudeForge — The Plugin Marketplace for Claude Code',
+      description:
+        'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+    });
+
+    this.structuredData.injectOrganizationAndWebSite({
+      organizationName: 'ClaudeForge',
+      siteUrl: 'https://claudeforge.dev',
+      logoUrl: 'https://claudeforge.dev/assets/logo.png',
+      searchActionTemplate: 'https://claudeforge.dev/search?q={search_term_string}',
+    });
   }
 
   onSearchInput(event: Event): void {
@@ -558,12 +591,6 @@ export class LandingPageComponent implements OnInit {
   }
 
   formatDownloads(count: number): string {
-    if (count >= 1_000_000) {
-      return `${(count / 1_000_000).toFixed(1)}M`;
-    }
-    if (count >= 1_000) {
-      return `${(count / 1_000).toFixed(1)}k`;
-    }
-    return count.toString();
+    return formatMetricCount(count);
   }
 }

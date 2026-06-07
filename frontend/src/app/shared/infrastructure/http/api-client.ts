@@ -10,6 +10,7 @@ import {
   GetVersionHistoryParams,
   IngestTelemetryRequestDto,
   ListPluginsParams,
+  MarketplaceStatsDto,
   PaginatedEnvelope,
   PluginDto,
   PluginVersionDto,
@@ -137,6 +138,14 @@ export class ApiClient {
 
   getDocBySlug(slug: string): Observable<DocPageDto> {
     return this.http.get<DocPageDto>(`${this.baseUrl}/api/v1/docs/${slug}`);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Marketplace Stats
+  // ---------------------------------------------------------------------------
+
+  getMarketplaceStats(): Observable<MarketplaceStatsDto> {
+    return this.http.get<MarketplaceStatsDto>(`${this.baseUrl}/api/v1/stats`);
   }
 
   // ---------------------------------------------------------------------------

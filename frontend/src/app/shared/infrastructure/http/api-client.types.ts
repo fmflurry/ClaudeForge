@@ -189,3 +189,14 @@ export interface GetVersionHistoryParams {
   page?: number;
   limit?: number;
 }
+
+// ---------------------------------------------------------------------------
+// Marketplace Stats
+// ---------------------------------------------------------------------------
+
+export interface MarketplaceStatsDto {
+  totalPlugins: number;
+  totalDownloads: number;
+  publisherCount: number;
+  categoryCount: number;
+}

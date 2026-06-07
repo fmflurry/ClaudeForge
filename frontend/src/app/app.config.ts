@@ -38,6 +38,9 @@ import { OrgContextFacade } from './features/organizations/application/facades/o
 import { DeviceActivationPort } from './features/device-activation/domain/ports/device-activation.port';
 import { DeviceActivationHttpAdapter } from './features/device-activation/infrastructure/adapter/device-activation-http.adapter';
 import { DeviceActivationFacade } from './features/device-activation/application/facades/device-activation.facade';
+import { MarketplaceStatsPort } from './features/home/domain/ports/marketplace-stats.port';
+import { MarketplaceStatsHttpAdapter } from './features/home/infrastructure/adapter/marketplace-stats-http.adapter';
+import { HomeMetricsFacade } from './features/home/application/facades/home-metrics.facade';
 
 /**
  * Reads the runtime API base URL from:
@@ -141,6 +144,14 @@ export const appConfig: ApplicationConfig = {
       useClass: DeviceActivationHttpAdapter,
     },
     DeviceActivationFacade,
+    // ---------------------------------------------------------------------------
+    // Home Metrics
+    // ---------------------------------------------------------------------------
+    {
+      provide: MarketplaceStatsPort,
+      useClass: MarketplaceStatsHttpAdapter,
+    },
+    HomeMetricsFacade,
   ],
 };
 
