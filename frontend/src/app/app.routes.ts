@@ -1,6 +1,26 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
+  // ---------------------------------------------------------------------------
+  // Auth routes (outside shell — full-page, no navigation chrome)
+  // ---------------------------------------------------------------------------
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/presentation/login/login-page.component').then(
+        (m) => m.LoginPageComponent,
+      ),
+  },
+  {
+    path: 'auth/callback',
+    loadComponent: () =>
+      import('./features/auth/presentation/callback/auth-callback.component').then(
+        (m) => m.AuthCallbackComponent,
+      ),
+  },
+  // ---------------------------------------------------------------------------
+  // Shell routes (with navigation header)
+  // ---------------------------------------------------------------------------
   {
     path: '',
     loadComponent: () =>

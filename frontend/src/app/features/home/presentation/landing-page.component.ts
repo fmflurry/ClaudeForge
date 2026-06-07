@@ -66,15 +66,16 @@ const FEATURED_LIMIT = 6;
             Publish a plugin
           </a>
 
-          <!-- Sign-in placeholder: auth is in progress — disabled to avoid dead routes -->
+          <!-- Sign-in CTA — routes to the login page -->
           <button
             type="button"
             class="lp-btn lp-btn--ghost"
             aria-disabled="true"
             tabindex="-1"
-            title="Sign in — coming soon"
+            title="Sign in"
+            (click)="onSignIn()"
           >
-            Sign in (coming soon)
+            Sign in
           </button>
         </div>
       </div>
@@ -247,7 +248,8 @@ const FEATURED_LIMIT = 6;
       .lp-btn--primary:focus-visible,.lp-btn--secondary:focus-visible { outline: 3px solid #60a5fa; outline-offset: 2px; }
       .lp-btn--secondary { background: transparent; color: #1a1a2e; border-color: #1a1a2e; }
       .lp-btn--secondary:hover { background: rgba(26,26,46,.06); }
-      .lp-btn--ghost { background: transparent; color: rgba(26,26,46,.45); border-color: transparent; cursor: not-allowed; }
+      .lp-btn--ghost { background: transparent; color: rgba(255,255,255,.75); border-color: rgba(255,255,255,.45); cursor: pointer; }
+      .lp-btn--ghost:hover { background: rgba(255,255,255,.1); }
 
       .lp-section-inner { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem; }
       .lp-section-title { font-size: 1.625rem; font-weight: 700; color: #111827; margin: 0 0 2rem; letter-spacing: -0.02em; }
@@ -371,6 +373,10 @@ export class LandingPageComponent implements OnInit {
     } else {
       void this.router.navigate(['/search']);
     }
+  }
+
+  onSignIn(): void {
+    void this.router.navigate(['/login']);
   }
 
   formatDownloads(count: number): string {

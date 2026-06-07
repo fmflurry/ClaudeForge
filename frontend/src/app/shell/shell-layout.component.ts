@@ -1,19 +1,30 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, Signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TeamContextFacade } from '../features/team-context/application/facades/team-context.facade';
 import { TeamWelcomeOverlayComponent } from '../features/team-context/presentation/welcome-overlay/team-welcome-overlay.component';
 import { TeamSwitcherComponent } from '../features/team-context/presentation/team-switcher/team-switcher.component';
 import { TelemetrySettingsComponent } from '../features/telemetry/presentation/settings/telemetry-settings.component';
+import { AuthFacade } from '../features/auth/application/facades/auth.facade';
+import type { CurrentUser } from '../features/auth/domain/models/auth.models';
 
 /**
  * Main application shell — header, primary navigation, and router outlet.
  * Used as the top-level layout wrapper for all feature routes.
+ * Includes current-user indicator: shows email + sign-out when authenticated,
+ * sign-in link otherwise.
  */
 @Component({
   selector: 'cf-shell-layout',
   standalone: true,
-  providers: [TeamContextFacade],
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TeamWelcomeOverlayComponent, TeamSwitcherComponent, TelemetrySettingsComponent],
+  providers: [TeamContextFacade, AuthFacade],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    TeamWelcomeOverlayComponent,
+    TeamSwitcherComponent,
+    TelemetrySettingsComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="cf-shell">
@@ -40,6 +51,23 @@ import { TelemetrySettingsComponent } from '../features/telemetry/presentation/s
         </div>
         <div class="cf-shell__settings">
           <cf-telemetry-settings />
+        </div>
+        <div class="cf-shell__auth" aria-label="User account">
+          @if (currentUser()) {
+            <span class="cf-shell__user-email">{{ currentUser()!.email }}</span>
+            <button
+              type="button"
+              class="cf-shell__sign-out"
+              (click)="onSignOut()"
+              aria-label="Sign out"
+            >
+              Sign out
+            </button>
+          } @else {
+            <a routerLink="/login" class="cf-shell__sign-in" aria-label="Sign in">
+              Sign in
+            </a>
+          }
         </div>
       </header>
       <main class="cf-shell__content">
@@ -96,13 +124,65 @@ import { TelemetrySettingsComponent } from '../features/telemetry/presentation/s
         flex: 1;
         padding: 1.5rem;
       }
+
+      .cf-shell__auth {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .cf-shell__user-email {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.85);
+        max-width: 14rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .cf-shell__sign-out {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        color: rgba(255, 255, 255, 0.85);
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      .cf-shell__sign-out:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .cf-shell__sign-in {
+        color: rgba(255, 255, 255, 0.85);
+        text-decoration: none;
+        padding: 0.25rem 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        transition: background-color 0.2s ease;
+      }
+
+      .cf-shell__sign-in:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
     `,
   ],
 })
 export class ShellLayoutComponent implements OnInit {
   protected readonly facade = inject(TeamContextFacade);
+  private readonly authFacade = inject(AuthFacade);
+
+  readonly currentUser: Signal<CurrentUser | undefined> = this.authFacade.currentUser;
 
   ngOnInit(): void {
     this.facade.init();
+  }
+
+  onSignOut(): void {
+    this.authFacade.logout();
   }
 }

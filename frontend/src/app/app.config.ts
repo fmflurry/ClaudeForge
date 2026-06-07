@@ -1,6 +1,11 @@
-import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  APP_INITIALIZER,
+  ApplicationConfig,
+  inject,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { API_BASE_URL } from './core/config/api-config';
@@ -27,6 +32,10 @@ import { TelemetryFacade } from './features/telemetry/application/facades/teleme
 import { DocsPort } from './features/docs/domain/ports/docs.port';
 import { DocsHttpAdapter } from './features/docs/infrastructure/adapter/docs-http.adapter';
 import { DocsFacade } from './features/docs/application/facades/docs.facade';
+import { AuthPort } from './features/auth/domain/ports/auth.port';
+import { AuthHttpAdapter } from './features/auth/infrastructure/adapter/auth-http.adapter';
+import { AuthFacade } from './features/auth/application/facades/auth.facade';
+import { authInterceptor } from './features/auth/infrastructure/interceptors/auth.interceptor';
 
 /**
  * Reads the runtime API base URL from:
@@ -41,11 +50,19 @@ function resolveApiBaseUrl(): string {
   return '';
 }
 
+/**
+ * Factory for APP_INITIALIZER: attempts a silent token refresh on app boot.
+ * A failure here is non-fatal — the user is simply unauthenticated.
+ */
+function silentRefreshInitializer(facade: AuthFacade): () => void {
+  return () => facade.silentRefresh();
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     {
       provide: API_BASE_URL,
       useFactory: resolveApiBaseUrl,
@@ -91,6 +108,20 @@ export const appConfig: ApplicationConfig = {
       useClass: DocsHttpAdapter,
     },
     DocsFacade,
+    // ---------------------------------------------------------------------------
+    // Auth
+    // ---------------------------------------------------------------------------
+    {
+      provide: AuthPort,
+      useClass: AuthHttpAdapter,
+    },
+    AuthFacade,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (facade: AuthFacade) => silentRefreshInitializer(facade),
+      deps: [AuthFacade],
+      multi: true,
+    },
   ],
 };
 
