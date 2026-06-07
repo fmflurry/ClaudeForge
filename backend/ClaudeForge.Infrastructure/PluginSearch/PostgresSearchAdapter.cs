@@ -12,6 +12,7 @@ namespace ClaudeForge.Infrastructure.PluginSearch;
 /// Category filters: OR within a dimension, AND across dimensions.
 /// RelevanceScore is normalized to [0, 1].
 /// MaturityIndicator: "new" (created within 90 days), "deprecated" (flagged by name), "stable" otherwise.
+/// Visibility filter: visibility='public' OR owner_org_id = ANY(@viewerOrgIds).
 /// </summary>
 public sealed class PostgresSearchAdapter : ISearchIndexPort
 {
@@ -22,21 +23,24 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
         _context = context;
     }
 
+    /// <summary>Backward-compatible overload without viewerOrgIds (public-only).</summary>
+    public Task<(IReadOnlyList<SearchResultDto> Items, int TotalCount)> SearchAsync(
+        SearchCriteria criteria,
+        PaginationRequest pagination,
+        CancellationToken ct = default)
+        => SearchAsync(criteria, pagination, new HashSet<Guid>(), ct);
+
     public async Task<(IReadOnlyList<SearchResultDto> Items, int TotalCount)> SearchAsync(
         SearchCriteria criteria,
         PaginationRequest pagination,
+        IReadOnlySet<Guid> viewerOrgIds,
         CancellationToken ct = default)
     {
         string? query = criteria.Query?.Trim();
         bool hasQuery = !string.IsNullOrEmpty(query);
 
-        // Build base SQL with FTS ranking
-        // We use plainto_tsquery for robust tokenisation (handles case, stop words, stemming).
-        // Ranking formula: ts_rank(search_vector, tsquery) * 2 + log(1 + download_count) / 10 + epoch_age_score
-        // This ensures: FTS score is primary, downloads are tiebreaker, recency is secondary tiebreaker.
-        // Execute via EF raw SQL
         (List<SearchRow> rows, int total) = await ExecuteSearchSqlAsync(
-            criteria, pagination, hasQuery, ct);
+            criteria, pagination, hasQuery, viewerOrgIds, ct);
 
         float maxScore = rows.Count > 0 ? rows.Max(r => r.RawScore) : 1f;
         if (maxScore <= 0f) maxScore = 1f;
@@ -48,15 +52,22 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
         return (items, total);
     }
 
+    /// <summary>Backward-compatible overload without viewerOrgIds (public-only).</summary>
+    public Task<(IReadOnlyList<DiscoveryResultDto> Items, int TotalCount)> DiscoverAsync(
+        SearchCriteria criteria,
+        CancellationToken ct = default)
+        => DiscoverAsync(criteria, new HashSet<Guid>(), ct);
+
     public async Task<(IReadOnlyList<DiscoveryResultDto> Items, int TotalCount)> DiscoverAsync(
         SearchCriteria criteria,
+        IReadOnlySet<Guid> viewerOrgIds,
         CancellationToken ct = default)
     {
         string? query = criteria.Query?.Trim();
         bool hasQuery = !string.IsNullOrEmpty(query);
 
         (List<SearchRow> rows, int total) = await ExecuteSearchSqlAsync(
-            criteria, PaginationRequest.Default, hasQuery, ct);
+            criteria, PaginationRequest.Default, hasQuery, viewerOrgIds, ct);
 
         float maxScore = rows.Count > 0 ? rows.Max(r => r.RawScore) : 1f;
         if (maxScore <= 0f) maxScore = 1f;
@@ -76,14 +87,15 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
         SearchCriteria criteria,
         PaginationRequest pagination,
         bool hasQuery,
+        IReadOnlySet<Guid> viewerOrgIds,
         CancellationToken ct)
     {
         int skip = (pagination.Page - 1) * pagination.Limit;
         int take = pagination.Limit;
         string? queryTerm = hasQuery ? criteria.Query!.Trim() : null;
 
-        int total = await CountSearchAsync(criteria, queryTerm, ct);
-        List<SearchRow> rows = await FetchSearchRowsAsync(criteria, queryTerm, skip, take, ct);
+        int total = await CountSearchAsync(criteria, queryTerm, viewerOrgIds, ct);
+        List<SearchRow> rows = await FetchSearchRowsAsync(criteria, queryTerm, skip, take, viewerOrgIds, ct);
 
         return (rows, total);
     }
@@ -91,6 +103,7 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
     private async Task<int> CountSearchAsync(
         SearchCriteria criteria,
         string? query,
+        IReadOnlySet<Guid> viewerOrgIds,
         CancellationToken ct)
     {
         // Build category filter CTE
@@ -107,6 +120,8 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
               """
             : string.Empty;
 
+        (string visibilityWhere, Npgsql.NpgsqlParameter? visParam) = BuildVisibilityClause(viewerOrgIds);
+
         string countSql = $"""
             SELECT COUNT(DISTINCT p.id)::int
             FROM plugins p
@@ -114,14 +129,15 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
             {langJoin}
             {ucJoin}
             WHERE 1=1
+            {visibilityWhere}
             {countFtsWhere}
             """;
 
         List<Npgsql.NpgsqlParameter> countParams = [.. filterParams];
+        if (visParam is not null)
+            countParams.Add(visParam);
         if (query != null)
-        {
             countParams.Add(new Npgsql.NpgsqlParameter("@query", query));
-        }
 
         List<int> countResult = await _context.Database
             .SqlQueryRaw<int>(countSql, [.. countParams])
@@ -135,18 +151,12 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
         string? query,
         int skip,
         int take,
+        IReadOnlySet<Guid> viewerOrgIds,
         CancellationToken ct)
     {
         (string typeJoin, string langJoin, string ucJoin, List<Npgsql.NpgsqlParameter> filterParams) =
             BuildFilterJoinClauses(criteria);
 
-        // Ranking: FTS rank (primary) + download popularity (secondary) + recency (tertiary)
-        // ts_rank returns 0..1 range, so multiply by 2 to ensure FTS dominates.
-        // log10(1 + download_count) normalises download popularity.
-        // epoch / 1e11 gives a small recency bonus (newer = higher epoch).
-        // Ranking: hybrid FTS (primary) + download popularity (secondary) + recency (tertiary).
-        // ts_rank is wrapped in COALESCE to handle NULL search_vector gracefully.
-        // The ILIKE fallback ensures prefix/substring queries also score (e.g. 'auth' → AuthHelper).
         string rankExpr = query != null
             ? """
               (CASE WHEN p.search_vector IS NOT NULL AND p.search_vector @@ plainto_tsquery('english', @query)
@@ -169,6 +179,8 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
               )
               """
             : string.Empty;
+
+        (string visibilityWhere, Npgsql.NpgsqlParameter? visParam) = BuildVisibilityClause(viewerOrgIds);
 
         string dataSql = $"""
             SELECT
@@ -203,6 +215,7 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
             {ucJoin}
             LEFT JOIN plugin_versions v ON v.plugin_id = p.id AND v.is_latest = TRUE
             WHERE 1=1
+            {visibilityWhere}
             {ftsWhere}
             GROUP BY p.id, p.name, p.slug, p.description, p.author, p.download_count,
                      p.created_at, p.updated_at, v.version
@@ -217,14 +230,43 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
             .. filterParams,
         ];
 
+        if (visParam is not null)
+            parameters.Add(visParam);
+
         if (query != null)
-        {
             parameters.Add(new Npgsql.NpgsqlParameter("@query", query));
-        }
 
         return await _context.Database
             .SqlQueryRaw<SearchRow>(dataSql, [.. parameters])
             .ToListAsync(ct);
+    }
+
+    // -------------------------------------------------------------------------
+    // Visibility clause builder
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns an AND WHERE clause for the visibility predicate plus any parameter needed.
+    /// When viewerOrgIds is empty: AND p.visibility = 'public'
+    /// When viewerOrgIds is non-empty: AND (p.visibility = 'public' OR p.owner_org_id = ANY(@viewerOrgIds))
+    /// </summary>
+    private static (string Clause, Npgsql.NpgsqlParameter? Param) BuildVisibilityClause(
+        IReadOnlySet<Guid> viewerOrgIds)
+    {
+        if (viewerOrgIds.Count == 0)
+        {
+            return ("AND p.visibility = 'public'", null);
+        }
+
+        Guid[] idsArray = viewerOrgIds.ToArray();
+        Npgsql.NpgsqlParameter param = new Npgsql.NpgsqlParameter("@viewerOrgIds", idsArray)
+        {
+            NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Uuid,
+        };
+
+        return (
+            "AND (p.visibility = 'public' OR p.owner_org_id = ANY(@viewerOrgIds))",
+            param);
     }
 
     // -------------------------------------------------------------------------
@@ -354,5 +396,4 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
             .Where(s => s.Length > 0)
             .ToList();
     }
-
 }

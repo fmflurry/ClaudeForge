@@ -388,6 +388,30 @@
         }
       }
     },
+    "/api/v1/plugins/{pluginId}/visibility": {
+      "patch": {
+        "tags": [
+          "PluginPublishing"
+        ],
+        "operationId": "ChangePluginVisibility",
+        "parameters": [
+          {
+            "name": "pluginId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/plugins/{pluginId}/download": {
       "get": {
         "tags": [

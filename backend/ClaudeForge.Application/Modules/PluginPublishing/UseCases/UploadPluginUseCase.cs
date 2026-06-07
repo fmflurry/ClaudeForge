@@ -5,6 +5,8 @@ using ClaudeForge.Application.Modules.PluginPublishing.Ports;
 using ClaudeForge.Core.Domain.Packaging;
 using ClaudeForge.Core.Domain.Plugins;
 using ClaudeForge.Core.Ports;
+using ClaudeForge.Core.Shared.Authorization;
+using ClaudeForge.Core.Shared.Exceptions;
 
 namespace ClaudeForge.Application.Modules.PluginPublishing.UseCases;
 
@@ -16,8 +18,9 @@ namespace ClaudeForge.Application.Modules.PluginPublishing.UseCases;
 /// 4. Validates the manifest fields.
 /// 5. Validates the initial version is a valid semver.
 /// 6. Checks for duplicate plugin name (case-insensitive).
-/// 7. Stores the package artifact via IPackageStoragePort.
-/// 8. Persists the plugin and initial version.
+/// 7. Enforces visibility + org membership access control.
+/// 8. Stores the package artifact via IPackageStoragePort.
+/// 9. Persists the plugin and initial version.
 ///    If persistence fails, best-effort deletes the stored artifact (HIGH-3).
 /// </summary>
 public sealed class UploadPluginUseCase
@@ -25,7 +28,30 @@ public sealed class UploadPluginUseCase
     private readonly IPluginPublishingRepositoryPort _repository;
     private readonly IPackageStoragePort _storage;
     private readonly IPackageReader _packageReader;
+    private readonly ICurrentUser _currentUser;
+    private readonly IOrgMembershipQueryPort _membershipQuery;
+    private readonly IPluginAccessPolicy _accessPolicy;
 
+    public UploadPluginUseCase(
+        IPluginPublishingRepositoryPort repository,
+        IPackageStoragePort storage,
+        IPackageReader packageReader,
+        ICurrentUser currentUser,
+        IOrgMembershipQueryPort membershipQuery,
+        IPluginAccessPolicy accessPolicy)
+    {
+        _repository = repository;
+        _storage = storage;
+        _packageReader = packageReader;
+        _currentUser = currentUser;
+        _membershipQuery = membershipQuery;
+        _accessPolicy = accessPolicy;
+    }
+
+    /// <summary>
+    /// Backward-compatible constructor for unit tests without identity context.
+    /// Behaves as anonymous caller (no auth checks performed).
+    /// </summary>
     public UploadPluginUseCase(
         IPluginPublishingRepositoryPort repository,
         IPackageStoragePort storage,
@@ -34,6 +60,9 @@ public sealed class UploadPluginUseCase
         _repository = repository;
         _storage = storage;
         _packageReader = packageReader;
+        _currentUser = new UploadAnonymousCurrentUser();
+        _membershipQuery = new UploadNoOpMembershipQueryPort();
+        _accessPolicy = new PluginAccessPolicy();
     }
 
     public async Task<PluginPublishResult> ExecuteAsync(
@@ -71,13 +100,41 @@ public sealed class UploadPluginUseCase
         if (nameExists)
             throw new DuplicatePluginNameException(command.Name);
 
-        // Step 7: store package — key convention: plugins/{pluginId}/{version}/package.{ext}
+        // Step 7: enforce visibility + org membership
+        string visibility = string.IsNullOrWhiteSpace(command.Visibility)
+            ? "public"
+            : command.Visibility.ToLowerInvariant();
+
+        Guid? ownerOrgId = command.OwnerOrgId;
+        Guid? ownerUserId = _currentUser.IsAuthenticated ? _currentUser.UserId : command.OwnerUserId;
+
+        // Private requires ownerOrgId — fail fast before any storage write
+        if (visibility == "private" && ownerOrgId is null)
+            throw new PrivatePluginRequiresOrgException();
+
+        // If private with org, caller must be a member of that org
+        if (visibility == "private" && ownerOrgId is not null)
+        {
+            IReadOnlySet<Guid> callerOrgIds = await ResolveCallerOrgIdsAsync(ct);
+            AccessDecision decision = _accessPolicy.DecideWrite(
+                _currentUser, ownerOrgId.Value, callerOrgIds);
+
+            if (decision == AccessDecision.Forbidden)
+                throw new PluginWriteForbiddenException();
+
+            // DecideWrite can return Unauthenticated but the upload endpoint gate handles
+            // that case at the HTTP layer when flag is ON. We defensively handle it here too.
+            if (decision == AccessDecision.Unauthenticated)
+                throw new AuthenticationException("Authentication is required to publish a private plugin.");
+        }
+
+        // Step 8: store package — key convention: plugins/{pluginId}/{version}/package.{ext}
         Guid pluginId = Guid.NewGuid();
         string packageKey = $"plugins/{pluginId}/{command.InitialVersion}/package.{ext}";
 
         await _storage.PutAsync(packageKey, new MemoryStream(packageBytes), ct);
 
-        // Step 8: persist — if this throws, best-effort delete the orphaned artifact (HIGH-3)
+        // Step 9: persist — if this throws, best-effort delete the orphaned artifact (HIGH-3)
         string slug = BuildSlug(nameNormalized);
         CreatePluginCommand createCommand = new(
             Name: command.Name,
@@ -92,7 +149,10 @@ public sealed class UploadPluginUseCase
             SizeBytes: sizeBytes,
             Sha256: sha256,
             ReleaseNotes: command.ReleaseNotes,
-            ReadmeText: contents.ReadmeText);
+            ReadmeText: contents.ReadmeText,
+            Visibility: visibility,
+            OwnerOrgId: ownerOrgId,
+            OwnerUserId: ownerUserId);
 
         try
         {
@@ -109,6 +169,17 @@ public sealed class UploadPluginUseCase
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    private async Task<IReadOnlySet<Guid>> ResolveCallerOrgIdsAsync(CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+        {
+            return new HashSet<Guid>();
+        }
+
+        Guid[] orgIds = await _membershipQuery.GetOrgIdsForUserAsync(_currentUser.UserId.Value, ct);
+        return new HashSet<Guid>(orgIds);
+    }
 
     private sealed record ParsedManifest(string Name, string Description, string Author);
 
@@ -218,4 +289,26 @@ public sealed class UploadPluginUseCase
         byte[] hash = SHA256.HashData(bytes);
         return Convert.ToHexStringLower(hash);
     }
+}
+
+// -------------------------------------------------------------------------
+// Internal stubs for backward-compatible constructor (anonymous caller)
+// -------------------------------------------------------------------------
+
+file sealed class UploadAnonymousCurrentUser : ICurrentUser
+{
+    public bool IsAuthenticated => false;
+    public Guid? UserId => null;
+    public string? Email => null;
+}
+
+file sealed class UploadNoOpMembershipQueryPort : IOrgMembershipQueryPort
+{
+    public Task<Guid[]> GetOrgIdsForUserAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult(Array.Empty<Guid>());
+
+    public Task<bool> IsMemberAsync(Guid userId, Guid orgId, string? minRole = null, CancellationToken ct = default)
+        => Task.FromResult(false);
+
+    public void InvalidateUser(Guid userId) { }
 }

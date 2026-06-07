@@ -1,6 +1,9 @@
 using ClaudeForge.Api.Module;
 using ClaudeForge.Application.Modules.PluginSearch.Ports;
 using ClaudeForge.Application.Modules.PluginSearch.UseCases;
+using ClaudeForge.Core.Shared.Authorization;
+using ClaudeForge.Infrastructure.Authorization;
+using ClaudeForge.Infrastructure.Persistence;
 using ClaudeForge.Infrastructure.PluginSearch;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +21,17 @@ public sealed class PluginSearchModule : IModule
     public IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration)
     {
         services.AddPluginSearchAdapters(configuration);
+
+        // IOrgMembershipQueryPort (requires IMemoryCache)
+        if (!services.Any(d => d.ServiceType == typeof(IOrgMembershipQueryPort)))
+        {
+            services.AddMemoryCache();
+            services.AddScoped<IOrgMembershipQueryPort>(sp =>
+                new OrgMembershipQueryAdapter(
+                    sp.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<MarketplaceDbContext>>(),
+                    sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>()));
+        }
+
         services.AddScoped<SearchPluginsUseCase>();
         services.AddScoped<DiscoverPluginsUseCase>();
 

@@ -3,9 +3,13 @@ using Amazon.S3;
 using ClaudeForge.Api.Module;
 using ClaudeForge.Application.Modules.PluginPublishing.Ports;
 using ClaudeForge.Application.Modules.PluginPublishing.UseCases;
+using ClaudeForge.Core.Modules.Organizations.Ports;
 using ClaudeForge.Core.Ports;
+using ClaudeForge.Core.Shared.Authorization;
 using ClaudeForge.Core.Shared.Exceptions;
 using ClaudeForge.Core.Shared.Model;
+using ClaudeForge.Infrastructure.Authorization;
+using ClaudeForge.Infrastructure.Organizations;
 using ClaudeForge.Infrastructure.Packaging;
 using ClaudeForge.Infrastructure.Persistence;
 using ClaudeForge.Infrastructure.PluginPublishing;
@@ -25,6 +29,7 @@ namespace ClaudeForge.Api.Modules.PluginPublishing;
 ///   GET    /api/v1/plugins/{pluginId:Guid}/versions
 ///   GET    /api/v1/plugins/{pluginId:Guid}/versions/{version}
 ///   PATCH  /api/v1/plugins/{pluginId:Guid}/versions/{version}  → 405
+///   PATCH  /api/v1/plugins/{pluginId:Guid}/visibility           (always auth-required)
 /// </summary>
 public sealed class PluginPublishingModule : IModule
 {
@@ -78,9 +83,32 @@ public sealed class PluginPublishingModule : IModule
         services.AddScoped<IPluginPublishingRepositoryPort>(sp =>
             new PluginPublishingRepositoryAdapter(sp.GetRequiredService<MarketplaceDbContext>()));
 
+        // IOrgAuditLogPort for ChangePluginVisibilityUseCase
+        if (!services.Any(d => d.ServiceType == typeof(IOrgAuditLogPort)))
+        {
+            services.AddScoped<IOrgAuditLogPort, OrgAuditLogAdapter>();
+        }
+
+        // Access policy (singleton — pure logic, no I/O)
+        if (!services.Any(d => d.ServiceType == typeof(IPluginAccessPolicy)))
+        {
+            services.AddSingleton<IPluginAccessPolicy, PluginAccessPolicy>();
+        }
+
+        // IOrgMembershipQueryPort (requires IMemoryCache)
+        if (!services.Any(d => d.ServiceType == typeof(IOrgMembershipQueryPort)))
+        {
+            services.AddMemoryCache();
+            services.AddScoped<IOrgMembershipQueryPort>(sp =>
+                new OrgMembershipQueryAdapter(
+                    sp.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<MarketplaceDbContext>>(),
+                    sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>()));
+        }
+
         // Use cases
         services.AddScoped<UploadPluginUseCase>();
         services.AddScoped<PublishVersionUseCase>();
+        services.AddScoped<ChangePluginVisibilityUseCase>();
 
         // Per-IP rate limiting for upload and version-publish endpoints
         services.AddRateLimiter(options =>
@@ -104,7 +132,15 @@ public sealed class PluginPublishingModule : IModule
 
     public IEndpointRouteBuilder MapEndpoints(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost("/api/v1/plugins/upload", UploadPluginHandler)
+        // Read the feature flag from the registered IConfiguration service.
+        IConfiguration configuration = endpoints.ServiceProvider.GetRequiredService<IConfiguration>();
+        bool requireAuthForUpload = configuration.GetValue<bool>("Features:RequireAuthForUpload");
+
+        // Capture flag value for use in handler closure
+        endpoints
+            .MapPost("/api/v1/plugins/upload",
+                (HttpRequest request, ICurrentUser currentUser, UploadPluginUseCase useCase) =>
+                    UploadPluginHandler(request, currentUser, useCase, requireAuthForUpload))
             .WithName("UploadPlugin")
             .WithTags("PluginPublishing")
             .RequireRateLimiting(UploadRateLimitPolicy)
@@ -131,6 +167,14 @@ public sealed class PluginPublishingModule : IModule
             .WithName("PatchVersion")
             .WithTags("PluginPublishing");
 
+        // PATCH /api/v1/plugins/{pluginId}/visibility — always auth-required (via ICurrentUser check in use case)
+        endpoints.MapMethods(
+            "/api/v1/plugins/{pluginId:guid}/visibility",
+            ["PATCH"],
+            ChangeVisibilityHandler)
+            .WithName("ChangePluginVisibility")
+            .WithTags("PluginPublishing");
+
         return endpoints;
     }
 
@@ -140,8 +184,18 @@ public sealed class PluginPublishingModule : IModule
 
     private static async Task<IResult> UploadPluginHandler(
         HttpRequest request,
-        [FromServices] UploadPluginUseCase useCase)
+        ICurrentUser currentUser,
+        UploadPluginUseCase useCase,
+        bool requireAuthForUpload)
     {
+        // Auth gate: when the feature flag is ON, reject anonymous requests
+        if (requireAuthForUpload && !currentUser.IsAuthenticated)
+        {
+            return Results.Problem(
+                detail: "Authentication is required to upload plugins.",
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
+
         IFormCollection form = await request.ReadFormAsync();
 
         if (!form.Files.Any() || form.Files["package"] is null)
@@ -153,6 +207,15 @@ public sealed class PluginPublishingModule : IModule
         string author = form["author"].FirstOrDefault() ?? string.Empty;
         string initialVersion = form["initialVersion"].FirstOrDefault() ?? string.Empty;
         string releaseNotes = form["releaseNotes"].FirstOrDefault() ?? string.Empty;
+        string? visibilityRaw = form["visibility"].FirstOrDefault();
+        string visibility = string.IsNullOrWhiteSpace(visibilityRaw) ? "public" : visibilityRaw;
+
+        Guid? ownerOrgId = null;
+        string? ownerOrgIdRaw = form["ownerOrgId"].FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(ownerOrgIdRaw) && Guid.TryParse(ownerOrgIdRaw, out Guid parsedOrgId))
+        {
+            ownerOrgId = parsedOrgId;
+        }
 
         UploadPluginCommand command = new(
             PackageStream: packageFile.OpenReadStream(),
@@ -161,7 +224,10 @@ public sealed class PluginPublishingModule : IModule
             Description: description,
             Author: author,
             InitialVersion: initialVersion,
-            ReleaseNotes: releaseNotes);
+            ReleaseNotes: releaseNotes,
+            Visibility: visibility,
+            OwnerOrgId: ownerOrgId,
+            OwnerUserId: null); // set by use case from ICurrentUser
 
         PluginPublishResult result = await useCase.ExecuteAsync(command);
 
@@ -241,6 +307,25 @@ public sealed class PluginPublishingModule : IModule
     {
         return Task.FromResult(Results.StatusCode(StatusCodes.Status405MethodNotAllowed));
     }
+
+    private static async Task<IResult> ChangeVisibilityHandler(
+        Guid pluginId,
+        HttpRequest request,
+        [FromServices] ChangePluginVisibilityUseCase useCase)
+    {
+        ChangeVisibilityRequest? body = await request.ReadFromJsonAsync<ChangeVisibilityRequest>();
+
+        string newVisibility = body?.Visibility ?? "public";
+        Guid? newOwnerOrgId = body?.OwnerOrgId;
+
+        await useCase.ExecuteAsync(pluginId, newVisibility, newOwnerOrgId, request.HttpContext.RequestAborted);
+
+        return Results.Ok();
+    }
+
+    // ─── Request DTOs ─────────────────────────────────────────────────────────
+
+    private sealed record ChangeVisibilityRequest(string Visibility, Guid? OwnerOrgId);
 }
 
 /// <summary>

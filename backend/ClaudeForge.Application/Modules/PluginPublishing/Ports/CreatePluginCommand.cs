@@ -16,4 +16,7 @@ public sealed record CreatePluginCommand(
     long SizeBytes,
     string Sha256,
     string ReleaseNotes,
-    string? ReadmeText);
+    string? ReadmeText,
+    string Visibility = "public",
+    Guid? OwnerOrgId = null,
+    Guid? OwnerUserId = null);

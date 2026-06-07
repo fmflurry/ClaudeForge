@@ -2,23 +2,50 @@ using ClaudeForge.Application.Modules.PluginDistribution.Ports;
 using ClaudeForge.Application.Modules.PluginCatalog.UseCases;
 using ClaudeForge.Core.Domain.Plugins;
 using ClaudeForge.Core.Ports;
+using ClaudeForge.Core.Shared.Authorization;
+using ClaudeForge.Core.Shared.Exceptions;
 
 namespace ClaudeForge.Application.Modules.PluginDistribution.UseCases;
 
 /// <summary>
-/// Resolves a plugin package, streams it from storage, and increments the download counter on success.
+/// Resolves a plugin package, enforces visibility-based access control,
+/// streams it from storage, and increments the download counter on success.
 /// </summary>
 public sealed class DownloadPluginUseCase
 {
     private readonly IPluginDistributionRepositoryPort _repo;
     private readonly IPackageStoragePort _storage;
+    private readonly ICurrentUser _currentUser;
+    private readonly IOrgMembershipQueryPort _membershipQuery;
+    private readonly IPluginAccessPolicy _accessPolicy;
 
+    public DownloadPluginUseCase(
+        IPluginDistributionRepositoryPort repo,
+        IPackageStoragePort storage,
+        ICurrentUser currentUser,
+        IOrgMembershipQueryPort membershipQuery,
+        IPluginAccessPolicy accessPolicy)
+    {
+        _repo = repo;
+        _storage = storage;
+        _currentUser = currentUser;
+        _membershipQuery = membershipQuery;
+        _accessPolicy = accessPolicy;
+    }
+
+    /// <summary>
+    /// Backward-compatible constructor for unit tests without identity context.
+    /// Behaves as anonymous caller (public plugins pass; private plugins get 401).
+    /// </summary>
     public DownloadPluginUseCase(
         IPluginDistributionRepositoryPort repo,
         IPackageStoragePort storage)
     {
         _repo = repo;
         _storage = storage;
+        _currentUser = new AnonymousCurrentUser();
+        _membershipQuery = new NoOpMembershipQueryPort();
+        _accessPolicy = new PluginAccessPolicy();
     }
 
     /// <summary>
@@ -52,7 +79,7 @@ public sealed class DownloadPluginUseCase
                 throw new VersionNotFoundException(vnf.Version),
 
             FoundResult found =>
-                await StreamAndIncrementAsync(pluginId, found.Resolution, ct),
+                await EnforceAccessAndStreamAsync(pluginId, found, ct),
 
             _ => throw new InvalidOperationException(
                 $"Unhandled {nameof(DownloadResolutionResult)} variant: {result.GetType().Name}"),
@@ -62,6 +89,52 @@ public sealed class DownloadPluginUseCase
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Resolves the caller's org memberships, applies the access policy,
+    /// then streams the package when access is allowed.
+    /// </summary>
+    private async Task<DownloadResult> EnforceAccessAndStreamAsync(
+        Guid pluginId,
+        FoundResult found,
+        CancellationToken ct)
+    {
+        // Compute caller org IDs (empty when anonymous)
+        IReadOnlySet<Guid> callerOrgIds = await ResolveCallerOrgIdsAsync(ct);
+
+        AccessDecision decision = _accessPolicy.DecideRead(
+            _currentUser,
+            found.Visibility,
+            found.OwnerOrgId,
+            callerOrgIds);
+
+        return decision switch
+        {
+            AccessDecision.Allow =>
+                await StreamAndIncrementAsync(pluginId, found.Resolution, ct),
+
+            AccessDecision.Unauthenticated =>
+                throw new AuthenticationException("Authentication is required to download this plugin."),
+
+            // NotFound and Forbidden both map to 404 for non-disclosure
+            AccessDecision.NotFound or AccessDecision.Forbidden =>
+                throw new PluginNotFoundException(),
+
+            _ => throw new InvalidOperationException(
+                $"Unhandled {nameof(AccessDecision)} variant: {decision}"),
+        };
+    }
+
+    private async Task<IReadOnlySet<Guid>> ResolveCallerOrgIdsAsync(CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+        {
+            return new HashSet<Guid>();
+        }
+
+        Guid[] orgIds = await _membershipQuery.GetOrgIdsForUserAsync(_currentUser.UserId.Value, ct);
+        return new HashSet<Guid>(orgIds);
+    }
 
     /// <summary>
     /// Validates the version string (if not null/"latest"), then normalises to the value the
@@ -116,4 +189,26 @@ public sealed class DownloadPluginUseCase
         string extension = packageFormat == "tar.gz" ? "tar.gz" : "zip";
         return $"{pluginName}-{version}.{extension}";
     }
+}
+
+// -------------------------------------------------------------------------
+// Internal stubs for backward-compatible constructor (anonymous caller)
+// -------------------------------------------------------------------------
+
+file sealed class AnonymousCurrentUser : ICurrentUser
+{
+    public bool IsAuthenticated => false;
+    public Guid? UserId => null;
+    public string? Email => null;
+}
+
+file sealed class NoOpMembershipQueryPort : IOrgMembershipQueryPort
+{
+    public Task<Guid[]> GetOrgIdsForUserAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult(Array.Empty<Guid>());
+
+    public Task<bool> IsMemberAsync(Guid userId, Guid orgId, string? minRole = null, CancellationToken ct = default)
+        => Task.FromResult(false);
+
+    public void InvalidateUser(Guid userId) { }
 }

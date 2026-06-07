@@ -456,18 +456,33 @@ public sealed class UserProvisioningTests : IAsyncLifetime
     {
         // Race-condition guard: concurrent first sign-in for the same (provider, subject)
         // must not create duplicate users (UNIQUE constraint on user_identities.provider+subject).
-        IUserStorePort store = MakeAdapter();
-
-        Task<ProvisionedUser>[] tasks = Enumerable.Range(0, 5)
-            .Select(_ => store.ProvisionOrLinkAsync(
-                "google", "google-sub-concurrent",
-                "concurrent@example.com", true, "Concurrent"))
+        //
+        // Each task gets its OWN MarketplaceDbContext + UserStoreAdapter, faithfully mirroring
+        // the per-HTTP-request DI scope in production (where each request has its own scoped
+        // DbContext). All five tasks hit the same test Postgres database concurrently.
+        // The UNIQUE(provider, subject) index on user_identities is the real deduplication guard;
+        // UserStoreAdapter catches the resulting DbUpdateException and re-queries the winner.
+        Task<ProvisionedUser?>[] tasks = Enumerable.Range(0, 5)
+            .Select(_ => Task.Run(async () =>
+            {
+                // Each task owns its own adapter + context — no sharing across tasks.
+                IUserStorePort taskStore = MakeAdapter();
+                try
+                {
+                    return (ProvisionedUser?)await taskStore.ProvisionOrLinkAsync(
+                        "google", "google-sub-concurrent",
+                        "concurrent@example.com", true, "Concurrent");
+                }
+                catch
+                {
+                    // A catastrophic error from the adapter is surfaced here.
+                    // Normal concurrent-insert conflicts are handled inside the adapter itself.
+                    return null;
+                }
+            }))
             .ToArray();
 
-        // One succeeds; others may throw (UNIQUE violation) or also succeed with same userId.
-        ProvisionedUser[] results = await Task.WhenAll(tasks
-            .Select(t => t.ContinueWith(task =>
-                task.IsCompletedSuccessfully ? task.Result : null)));
+        ProvisionedUser?[] results = await Task.WhenAll(tasks);
 
         ProvisionedUser[] successfulResults = results
             .Where(r => r is not null)

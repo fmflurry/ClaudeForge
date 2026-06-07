@@ -24,7 +24,8 @@ public sealed class PluginRepositoryAdapter : IPluginRepositoryPort, ICategoryRe
     // IPluginRepositoryPort
     // -------------------------------------------------------------------------
 
-    public async Task<(IReadOnlyList<PluginSummaryDto> Items, int TotalCount)> ListPluginsAsync(
+    /// <summary>Backward-compatible overload without viewerOrgIds (public-only).</summary>
+    public Task<(IReadOnlyList<PluginSummaryDto> Items, int TotalCount)> ListPluginsAsync(
         PaginationRequest pagination,
         string sortKey,
         string sortOrder,
@@ -32,11 +33,26 @@ public sealed class PluginRepositoryAdapter : IPluginRepositoryPort, ICategoryRe
         IReadOnlyList<string>? languageFilter,
         IReadOnlyList<string>? useCaseFilter,
         CancellationToken ct = default)
+        => ListPluginsAsync(pagination, sortKey, sortOrder, typeFilter, languageFilter, useCaseFilter,
+            new HashSet<Guid>(), ct);
+
+    public async Task<(IReadOnlyList<PluginSummaryDto> Items, int TotalCount)> ListPluginsAsync(
+        PaginationRequest pagination,
+        string sortKey,
+        string sortOrder,
+        IReadOnlyList<string>? typeFilter,
+        IReadOnlyList<string>? languageFilter,
+        IReadOnlyList<string>? useCaseFilter,
+        IReadOnlySet<Guid> viewerOrgIds,
+        CancellationToken ct = default)
     {
         IQueryable<PluginEntity> query = _context.Plugins
             .Include(p => p.PluginCategories)
                 .ThenInclude(pc => pc.Category)
             .Include(p => p.Versions);
+
+        // Visibility filter: public OR member of owning org
+        query = ApplyVisibilityFilter(query, viewerOrgIds);
 
         // Category filter: AND across dimensions, OR within a dimension
         if (typeFilter is { Count: > 0 })
@@ -63,6 +79,7 @@ public sealed class PluginRepositoryAdapter : IPluginRepositoryPort, ICategoryRe
                     useCaseFilter.Contains(pc.Category.Value)));
         }
 
+        // Count AFTER visibility + category filter so totalCount excludes hidden items
         int totalCount = await query.CountAsync(ct);
 
         query = ApplySort(query, sortKey, sortOrder);
@@ -81,14 +98,26 @@ public sealed class PluginRepositoryAdapter : IPluginRepositoryPort, ICategoryRe
         return (items, totalCount);
     }
 
-    public async Task<PluginDetailDto?> GetPluginByIdAsync(Guid pluginId, CancellationToken ct = default)
+    /// <summary>Backward-compatible overload without viewerOrgIds (public-only).</summary>
+    public Task<PluginDetailDto?> GetPluginByIdAsync(Guid pluginId, CancellationToken ct = default)
+        => GetPluginByIdAsync(pluginId, new HashSet<Guid>(), ct);
+
+    public async Task<PluginDetailDto?> GetPluginByIdAsync(
+        Guid pluginId,
+        IReadOnlySet<Guid> viewerOrgIds,
+        CancellationToken ct = default)
     {
-        PluginEntity? entity = await _context.Plugins
+        IQueryable<PluginEntity> query = _context.Plugins
             .Include(p => p.PluginCategories)
                 .ThenInclude(pc => pc.Category)
             .Include(p => p.Versions)
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == pluginId, ct);
+            .Where(p => p.Id == pluginId);
+
+        // Apply visibility filter — returns null for private plugins the caller cannot see
+        query = ApplyVisibilityFilter(query, viewerOrgIds);
+
+        PluginEntity? entity = await query.FirstOrDefaultAsync(ct);
 
         return entity is null ? null : MapToDetail(entity);
     }
@@ -154,6 +183,28 @@ public sealed class PluginRepositoryAdapter : IPluginRepositoryPort, ICategoryRe
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Applies the visibility predicate:
+    ///   visibility='public' OR owner_org_id = ANY(viewerOrgIds)
+    /// When <paramref name="viewerOrgIds"/> is empty, only public plugins pass.
+    /// </summary>
+    private static IQueryable<PluginEntity> ApplyVisibilityFilter(
+        IQueryable<PluginEntity> query,
+        IReadOnlySet<Guid> viewerOrgIds)
+    {
+        if (viewerOrgIds.Count == 0)
+        {
+            return query.Where(p => p.Visibility == "public");
+        }
+
+        // EF Core translates this to:
+        //   WHERE visibility = 'public' OR owner_org_id = ANY(@viewerOrgIds)
+        Guid[] viewerOrgIdsArray = viewerOrgIds.ToArray();
+        return query.Where(p =>
+            p.Visibility == "public" ||
+            (p.OwnerOrgId != null && viewerOrgIdsArray.Contains(p.OwnerOrgId.Value)));
+    }
 
     private static IQueryable<PluginEntity> ApplySort(
         IQueryable<PluginEntity> query,

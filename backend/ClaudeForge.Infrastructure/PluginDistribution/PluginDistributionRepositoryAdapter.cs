@@ -28,11 +28,20 @@ public sealed class PluginDistributionRepositoryAdapter : IPluginDistributionRep
         string? version,
         CancellationToken ct = default)
     {
-        // Check plugin existence first.
-        bool pluginExists = await _context.Plugins
-            .AnyAsync(p => p.Id == pluginId, ct);
+        // Load the plugin row (for existence check + visibility/ownerOrgId).
+        PluginEntity? pluginEntity = await _context.Plugins
+            .AsNoTracking()
+            .Where(p => p.Id == pluginId)
+            .Select(p => new PluginEntity
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Visibility = p.Visibility,
+                OwnerOrgId = p.OwnerOrgId,
+            })
+            .FirstOrDefaultAsync(ct);
 
-        if (!pluginExists)
+        if (pluginEntity is null)
             return new PluginNotFoundResult();
 
         // Resolve version row.
@@ -49,21 +58,15 @@ public sealed class PluginDistributionRepositoryAdapter : IPluginDistributionRep
         if (versionRow is null)
             return new VersionNotFoundResult(version ?? string.Empty);
 
-        // Fetch the plugin name for the filename.
-        string pluginName = await _context.Plugins
-            .Where(p => p.Id == pluginId)
-            .Select(p => p.Name)
-            .FirstAsync(ct);
-
         DownloadResolution resolution = new(
-            PluginName: pluginName,
+            PluginName: pluginEntity.Name,
             Version: versionRow.Version,
             PackageKey: versionRow.PackageKey,
             PackageFormat: versionRow.PackageFormat,
             SizeBytes: versionRow.SizeBytes,
             Sha256: versionRow.Sha256);
 
-        return new FoundResult(resolution);
+        return new FoundResult(resolution, pluginEntity.Visibility, pluginEntity.OwnerOrgId);
     }
 
     /// <inheritdoc />

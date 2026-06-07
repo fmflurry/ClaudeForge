@@ -25,23 +25,48 @@ public sealed class QdrantSearchAdapter : ISearchIndexPort
     public async Task<(IReadOnlyList<SearchResultDto> Items, int TotalCount)> SearchAsync(
         SearchCriteria criteria,
         PaginationRequest pagination,
+        IReadOnlySet<Guid> viewerOrgIds,
         CancellationToken ct = default)
     {
         _logger.LogInformation(
             "Qdrant search not available in MVP — falling back to FTS for query: {Query}",
             criteria.Query);
 
-        return await _ftsFallback.SearchAsync(criteria, pagination, ct);
+        return await _ftsFallback.SearchAsync(criteria, pagination, viewerOrgIds, ct);
+    }
+
+    /// <summary>Backward-compatible overload without viewerOrgIds (public-only).</summary>
+    public Task<(IReadOnlyList<SearchResultDto> Items, int TotalCount)> SearchAsync(
+        SearchCriteria criteria,
+        PaginationRequest pagination,
+        CancellationToken ct = default)
+    {
+        _logger.LogInformation(
+            "Qdrant search not available in MVP — falling back to FTS for query: {Query}",
+            criteria.Query);
+        return _ftsFallback.SearchAsync(criteria, pagination, ct);
     }
 
     public async Task<(IReadOnlyList<DiscoveryResultDto> Items, int TotalCount)> DiscoverAsync(
         SearchCriteria criteria,
+        IReadOnlySet<Guid> viewerOrgIds,
         CancellationToken ct = default)
     {
         _logger.LogInformation(
             "Qdrant discovery not available in MVP — falling back to FTS for query: {Query}",
             criteria.Query);
 
-        return await _ftsFallback.DiscoverAsync(criteria, ct);
+        return await _ftsFallback.DiscoverAsync(criteria, viewerOrgIds, ct);
+    }
+
+    /// <summary>Backward-compatible overload without viewerOrgIds (public-only).</summary>
+    public Task<(IReadOnlyList<DiscoveryResultDto> Items, int TotalCount)> DiscoverAsync(
+        SearchCriteria criteria,
+        CancellationToken ct = default)
+    {
+        _logger.LogInformation(
+            "Qdrant discovery not available in MVP — falling back to FTS for query: {Query}",
+            criteria.Query);
+        return _ftsFallback.DiscoverAsync(criteria, ct);
     }
 }

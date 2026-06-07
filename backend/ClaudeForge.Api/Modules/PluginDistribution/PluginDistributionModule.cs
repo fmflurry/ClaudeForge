@@ -1,6 +1,8 @@
 using ClaudeForge.Api.Module;
 using ClaudeForge.Application.Modules.PluginDistribution.Ports;
 using ClaudeForge.Application.Modules.PluginDistribution.UseCases;
+using ClaudeForge.Core.Shared.Authorization;
+using ClaudeForge.Infrastructure.Authorization;
 using ClaudeForge.Infrastructure.Persistence;
 using ClaudeForge.Infrastructure.PluginDistribution;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +24,22 @@ public sealed class PluginDistributionModule : IModule
         // Repository adapter
         services.AddScoped<IPluginDistributionRepositoryPort>(sp =>
             new PluginDistributionRepositoryAdapter(sp.GetRequiredService<MarketplaceDbContext>()));
+
+        // Access policy (singleton — pure logic, no I/O)
+        if (!services.Any(d => d.ServiceType == typeof(IPluginAccessPolicy)))
+        {
+            services.AddSingleton<IPluginAccessPolicy, PluginAccessPolicy>();
+        }
+
+        // IOrgMembershipQueryPort (requires IMemoryCache)
+        if (!services.Any(d => d.ServiceType == typeof(IOrgMembershipQueryPort)))
+        {
+            services.AddMemoryCache();
+            services.AddScoped<IOrgMembershipQueryPort>(sp =>
+                new OrgMembershipQueryAdapter(
+                    sp.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<MarketplaceDbContext>>(),
+                    sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>()));
+        }
 
         // Use case
         services.AddScoped<DownloadPluginUseCase>();

@@ -1,10 +1,13 @@
 using ClaudeForge.Application.Modules.PluginCatalog.Ports;
+using ClaudeForge.Core.Shared.Authorization;
 using ClaudeForge.Core.Shared.Model;
 
 namespace ClaudeForge.Application.Modules.PluginCatalog.UseCases;
 
 /// <summary>
 /// Queries the plugin catalog with pagination, sorting, and category filtering.
+/// Applies viewer-org-ids filtering so private plugins are excluded for callers
+/// who are not members of the owning organization.
 ///
 /// Validation rules (spec §3/§5):
 /// - Invalid sort key → silently falls back to "createdAt" (never throws).
@@ -24,10 +27,31 @@ public sealed class ListPluginsUseCase
         new(StringComparer.OrdinalIgnoreCase) { "typescript", "python", "go", "rust" };
 
     private readonly IPluginRepositoryPort _repository;
+    private readonly ICurrentUser? _currentUser;
+    private readonly IOrgMembershipQueryPort? _membershipQuery;
 
+    /// <summary>
+    /// Full constructor for production use with viewerOrgIds filtering.
+    /// </summary>
+    public ListPluginsUseCase(
+        IPluginRepositoryPort repository,
+        ICurrentUser currentUser,
+        IOrgMembershipQueryPort membershipQuery)
+    {
+        _repository = repository;
+        _currentUser = currentUser;
+        _membershipQuery = membershipQuery;
+    }
+
+    /// <summary>
+    /// Backward-compatible constructor for unit tests and contexts without identity.
+    /// Behaves as anonymous caller (public plugins only).
+    /// </summary>
     public ListPluginsUseCase(IPluginRepositoryPort repository)
     {
         _repository = repository;
+        _currentUser = null;
+        _membershipQuery = null;
     }
 
     public async Task<PaginatedEnvelope<PluginSummaryDto>> ExecuteAsync(
@@ -40,14 +64,35 @@ public sealed class ListPluginsUseCase
 
         PaginationRequest pagination = new() { Page = query.Page, Limit = query.Limit };
 
-        (IReadOnlyList<PluginSummaryDto> items, int totalCount) = await _repository.ListPluginsAsync(
-            pagination,
-            safeSortKey,
-            query.SortOrder,
-            query.TypeFilter,
-            query.LanguageFilter,
-            query.UseCaseFilter,
-            ct);
+        IReadOnlyList<PluginSummaryDto> items;
+        int totalCount;
+
+        if (_currentUser is not null && _membershipQuery is not null)
+        {
+            // Full production path: resolve viewer org IDs and apply visibility filter
+            IReadOnlySet<Guid> viewerOrgIds = await ResolveViewerOrgIdsAsync(ct);
+            (items, totalCount) = await _repository.ListPluginsAsync(
+                pagination,
+                safeSortKey,
+                query.SortOrder,
+                query.TypeFilter,
+                query.LanguageFilter,
+                query.UseCaseFilter,
+                viewerOrgIds,
+                ct);
+        }
+        else
+        {
+            // Backward-compat path (anonymous / unit-test mode): call legacy overload
+            (items, totalCount) = await _repository.ListPluginsAsync(
+                pagination,
+                safeSortKey,
+                query.SortOrder,
+                query.TypeFilter,
+                query.LanguageFilter,
+                query.UseCaseFilter,
+                ct);
+        }
 
         return new PaginatedEnvelope<PluginSummaryDto>
         {
@@ -56,6 +101,18 @@ public sealed class ListPluginsUseCase
             Page = query.Page,
             Limit = query.Limit,
         };
+    }
+
+    private async Task<IReadOnlySet<Guid>> ResolveViewerOrgIdsAsync(CancellationToken ct)
+    {
+        if (_currentUser is null || _membershipQuery is null ||
+            !_currentUser.IsAuthenticated || _currentUser.UserId is null)
+        {
+            return new HashSet<Guid>();
+        }
+
+        Guid[] orgIds = await _membershipQuery.GetOrgIdsForUserAsync(_currentUser.UserId.Value, ct);
+        return new HashSet<Guid>(orgIds);
     }
 
     private static void ValidateCategories(ListPluginsQuery query)

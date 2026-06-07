@@ -46,6 +46,9 @@ public sealed class PluginPublishingRepositoryAdapter : IPluginPublishingReposit
             DownloadCount = 0L,
             CreatedAt = now,
             UpdatedAt = now,
+            Visibility = command.Visibility,
+            OwnerOrgId = command.OwnerOrgId,
+            OwnerUserId = command.OwnerUserId,
         };
 
         PluginVersionEntity version = new()
@@ -199,6 +202,44 @@ public sealed class PluginPublishingRepositoryAdapter : IPluginPublishingReposit
             .ToList();
 
         return (items, totalCount);
+    }
+
+    // -------------------------------------------------------------------------
+    // GetPluginVisibilityAsync / UpdateVisibilityAsync
+    // -------------------------------------------------------------------------
+
+    public async Task<(string Visibility, Guid? OwnerOrgId)?> GetPluginVisibilityAsync(
+        Guid pluginId,
+        CancellationToken ct = default)
+    {
+        PluginEntity? plugin = await _context.Plugins
+            .AsNoTracking()
+            .Where(p => p.Id == pluginId)
+            .Select(p => new PluginEntity { Id = p.Id, Visibility = p.Visibility, OwnerOrgId = p.OwnerOrgId })
+            .FirstOrDefaultAsync(ct);
+
+        if (plugin is null)
+            return null;
+
+        return (plugin.Visibility, plugin.OwnerOrgId);
+    }
+
+    public async Task UpdateVisibilityAsync(
+        Guid pluginId,
+        string visibility,
+        Guid? ownerOrgId,
+        CancellationToken ct = default)
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        await _context.Plugins
+            .Where(p => p.Id == pluginId)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(p => p.Visibility, visibility)
+                    .SetProperty(p => p.OwnerOrgId, ownerOrgId)
+                    .SetProperty(p => p.UpdatedAt, now),
+                ct);
     }
 
     // -------------------------------------------------------------------------

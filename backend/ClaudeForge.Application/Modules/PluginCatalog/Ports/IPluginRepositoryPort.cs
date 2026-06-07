@@ -11,6 +11,9 @@ public interface IPluginRepositoryPort
 {
     /// <summary>
     /// Returns a paginated, filtered, and sorted list of plugin summaries plus the total count.
+    /// Only plugins visible to the caller are included:
+    ///   visibility='public' OR owner_org_id = ANY(viewerOrgIds).
+    /// Pass an empty set for anonymous callers (public only).
     /// </summary>
     Task<(IReadOnlyList<PluginSummaryDto> Items, int TotalCount)> ListPluginsAsync(
         PaginationRequest pagination,
@@ -19,12 +22,43 @@ public interface IPluginRepositoryPort
         IReadOnlyList<string>? typeFilter,
         IReadOnlyList<string>? languageFilter,
         IReadOnlyList<string>? useCaseFilter,
+        IReadOnlySet<Guid> viewerOrgIds,
         CancellationToken ct = default);
 
     /// <summary>
-    /// Returns full plugin details including version history, or <c>null</c> if not found.
+    /// Backward-compatible overload for callers without viewerOrgIds context (public-only).
     /// </summary>
-    Task<PluginDetailDto?> GetPluginByIdAsync(Guid pluginId, CancellationToken ct = default);
+    Task<(IReadOnlyList<PluginSummaryDto> Items, int TotalCount)> ListPluginsAsync(
+        PaginationRequest pagination,
+        string sortKey,
+        string sortOrder,
+        IReadOnlyList<string>? typeFilter,
+        IReadOnlyList<string>? languageFilter,
+        IReadOnlyList<string>? useCaseFilter,
+        CancellationToken ct = default)
+    {
+        return ListPluginsAsync(
+            pagination, sortKey, sortOrder,
+            typeFilter, languageFilter, useCaseFilter,
+            new HashSet<Guid>(), ct);
+    }
+
+    /// <summary>
+    /// Returns full plugin details including version history, or <c>null</c> if not found
+    /// or if the plugin is not visible to the caller (non-disclosure: private to non-member → null).
+    /// </summary>
+    Task<PluginDetailDto?> GetPluginByIdAsync(
+        Guid pluginId,
+        IReadOnlySet<Guid> viewerOrgIds,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Backward-compatible overload for callers without viewerOrgIds context (public-only).
+    /// </summary>
+    Task<PluginDetailDto?> GetPluginByIdAsync(Guid pluginId, CancellationToken ct = default)
+    {
+        return GetPluginByIdAsync(pluginId, new HashSet<Guid>());
+    }
 
     /// <summary>
     /// Returns <c>true</c> when a plugin with the given normalized name already exists.

@@ -16,6 +16,10 @@ public sealed record PluginNotFoundResult : DownloadResolutionResult;
 public sealed record VersionNotFoundResult(string Version) : DownloadResolutionResult;
 
 /// <summary>
-/// The plugin and version were found; contains all data needed to stream the package.
+/// The plugin and version were found; contains all data needed to stream the package
+/// and to make the authorization decision.
 /// </summary>
-public sealed record FoundResult(DownloadResolution Resolution) : DownloadResolutionResult;
+public sealed record FoundResult(
+    DownloadResolution Resolution,
+    string Visibility = "public",
+    Guid? OwnerOrgId = null) : DownloadResolutionResult;

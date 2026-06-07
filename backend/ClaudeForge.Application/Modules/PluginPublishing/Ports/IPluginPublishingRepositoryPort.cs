@@ -61,4 +61,23 @@ public interface IPluginPublishingRepositoryPort
         Guid pluginId,
         string version,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Updates the visibility and optionally the ownerOrgId of a plugin.
+    /// When changing to "public", ownerOrgId should be null.
+    /// When changing to "private", ownerOrgId must be provided.
+    /// Returns (currentVisibility, currentOwnerOrgId) before the update, or null if the plugin is not found.
+    /// </summary>
+    Task<(string Visibility, Guid? OwnerOrgId)?> GetPluginVisibilityAsync(
+        Guid pluginId,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Persists the new visibility and ownerOrgId for the plugin.
+    /// </summary>
+    Task UpdateVisibilityAsync(
+        Guid pluginId,
+        string visibility,
+        Guid? ownerOrgId,
+        CancellationToken ct = default);
 }

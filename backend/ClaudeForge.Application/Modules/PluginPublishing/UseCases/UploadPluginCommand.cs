@@ -10,4 +10,7 @@ public sealed record UploadPluginCommand(
     string Description,
     string Author,
     string InitialVersion,
-    string ReleaseNotes);
+    string ReleaseNotes,
+    string Visibility = "public",
+    Guid? OwnerOrgId = null,
+    Guid? OwnerUserId = null);
