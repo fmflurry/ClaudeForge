@@ -26,6 +26,32 @@ services:
       PackageStorage__LocalPath: /packages
       Features__QdrantEnabled: "${Features__QdrantEnabled:-false}"
       Features__TelemetryRetention: "${Features__TelemetryRetention:-90}"
+      # Feature flag: flip to true for Phase 3 (require auth to upload)
+      Features__RequireAuthForUpload: "${Features__RequireAuthForUpload:-false}"
+      # ── OIDC ──────────────────────────────────────────────────────────────
+      OIDC__ENABLEDPROVIDERS: "${OIDC__ENABLEDPROVIDERS:-google,microsoft}"
+      OIDC__ALLOWEDLOOPBACKREDIRECT: "${OIDC__ALLOWEDLOOPBACKREDIRECT:-http://127.0.0.1}"
+      OIDC__GOOGLE__CLIENTID: "${OIDC__GOOGLE__CLIENTID}"
+      OIDC__GOOGLE__CLIENTSECRET: "${OIDC__GOOGLE__CLIENTSECRET}"
+      OIDC__GOOGLE__REDIRECTURI: "${OIDC__GOOGLE__REDIRECTURI:-http://localhost:5010/auth/callback}"
+      OIDC__MICROSOFT__CLIENTID: "${OIDC__MICROSOFT__CLIENTID}"
+      OIDC__MICROSOFT__CLIENTSECRET: "${OIDC__MICROSOFT__CLIENTSECRET}"
+      OIDC__MICROSOFT__TENANT: "${OIDC__MICROSOFT__TENANT:-common}"
+      OIDC__MICROSOFT__REDIRECTURI: "${OIDC__MICROSOFT__REDIRECTURI:-http://localhost:5010/auth/callback}"
+      # ── JWT ───────────────────────────────────────────────────────────────
+      JWT__ISSUER: "${JWT__ISSUER:-https://api.claudeforge.dev}"
+      JWT__AUDIENCE: "${JWT__AUDIENCE:-claudeforge-spa-cli}"
+      JWT__ACCESSTOKENMINUTES: "${JWT__ACCESSTOKENMINUTES:-15}"
+      JWT__REFRESHTOKENDAYS: "${JWT__REFRESHTOKENDAYS:-30}"
+      # RS256 private key is mounted as a secret file — the backend reads it
+      # from /run/secrets/jwt_private_pem at startup. Do NOT set the key inline.
+      JWT__SIGNINGKEY__PRIVATEPEM_FILE: /run/secrets/jwt_private_pem
+      # ── Email (SMTP) ───────────────────────────────────────────────────────
+      EMAIL__SMTPHOST: "${EMAIL__SMTPHOST:-smtp.example.com}"
+      EMAIL__SMTPPORT: "${EMAIL__SMTPPORT:-587}"
+      EMAIL__SMTPUSER: "${EMAIL__SMTPUSER}"
+      EMAIL__SMTPPASSWORD: "${EMAIL__SMTPPASSWORD}"
+      EMAIL__FROM: "${EMAIL__FROM:-noreply@claudeforge.dev}"
     ports:
       - "5010:8080"
     depends_on:
@@ -35,6 +61,8 @@ services:
       - ../backend:/app
       - ../packages:/packages
       - dotnet-watch-cache:/root/.nuget
+    secrets:
+      - jwt_private_pem
     networks:
       - cf-net
     restart: unless-stopped
@@ -135,6 +163,21 @@ volumes:
   qdrant-data:
   dotnet-watch-cache:
   frontend-node-modules:
+
+# ─── Secrets ─────────────────────────────────────────────────────────────────
+# The RS256 private key is mounted as a Docker secret so it is NEVER baked into
+# the image or set as a plain env var visible in `docker inspect`.
+#
+# Dev setup — generate the key once and place it at infra/secrets/jwt_private.pem:
+#   mkdir -p infra/secrets
+#   openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 \
+#     -out infra/secrets/jwt_private.pem
+#   chmod 600 infra/secrets/jwt_private.pem
+#
+# The infra/secrets/ directory is git-ignored (see .gitignore).
+secrets:
+  jwt_private_pem:
+    file: ./secrets/jwt_private.pem
 
 networks:
   cf-net:

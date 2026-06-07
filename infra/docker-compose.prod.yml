@@ -6,16 +6,30 @@
 #   • Switches to production images built from multi-stage Dockerfiles
 #   • Enables OVH Object Storage for package artifacts
 #   • Uses managed Postgres (external connection string via env)
-#   • Injects all secrets via environment variables — NEVER hardcoded
+#   • Injects all secrets via environment variables / secret-file mounts — NEVER hardcoded
 #
 # Required environment variables (set in CI/CD secrets or injected at deploy):
-#   POSTGRES_CONNECTION_STRING  — full Npgsql connection string for managed Postgres
-#   OVH_S3_ENDPOINT             — e.g. https://s3.sbg.perf.cloud.ovh.net
-#   OVH_BUCKET_NAME             — e.g. claudeforge-plugins
-#   OVH_ACCESS_KEY              — OVH S3 access key
-#   OVH_SECRET_KEY              — OVH S3 secret key
-#   JWT_SECRET                  — signing key for JWT tokens (≥32 chars)
-#   ASPNETCORE_URLS             — optional override, defaults to http://+:8080
+#   POSTGRES_CONNECTION_STRING   — full Npgsql connection string for managed Postgres
+#   OVH_S3_ENDPOINT              — e.g. https://s3.sbg.perf.cloud.ovh.net
+#   OVH_BUCKET_NAME              — e.g. claudeforge-plugins
+#   OVH_ACCESS_KEY               — OVH S3 access key
+#   OVH_SECRET_KEY               — OVH S3 secret key
+#   ASPNETCORE_URLS              — optional override, defaults to http://+:8080
+#
+# OIDC / Auth env vars (inject via CI/CD secrets — never commit values):
+#   OIDC__GOOGLE__CLIENTID       — Google OAuth client ID
+#   OIDC__GOOGLE__CLIENTSECRET   — Google OAuth client secret
+#   OIDC__MICROSOFT__CLIENTID    — Azure Entra application (client) ID
+#   OIDC__MICROSOFT__CLIENTSECRET— Azure Entra client secret
+#   OIDC__MICROSOFT__TENANT      — Tenant ID or 'common'
+#   EMAIL__SMTPPASSWORD          — SMTP password for invitation emails
+#   EMAIL__SMTPUSER              — SMTP username
+#
+# JWT RS256 secret wiring:
+#   The private PEM is provisioned as a Docker secret / Kubernetes secret and
+#   mounted at /run/secrets/jwt_private_pem inside the container.
+#   In Kubernetes: use a Secret volume mount to the same path.
+#   See docs/auth-provider-setup.md — "JWT Key Generation" for generation steps.
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -36,12 +50,36 @@ services:
       PackageStorage__Ovh__BucketName: "${OVH_BUCKET_NAME}"
       PackageStorage__Ovh__AccessKey: "${OVH_ACCESS_KEY}"
       PackageStorage__Ovh__SecretKey: "${OVH_SECRET_KEY}"
-      # Security
-      Jwt__Secret: "${JWT_SECRET}"
       # Feature flags
       Features__QdrantEnabled: "${Features__QdrantEnabled:-false}"
       Features__TelemetryRetention: "${Features__TelemetryRetention:-90}"
       Features__SeedPlugins: "false"
+      Features__RequireAuthForUpload: "${Features__RequireAuthForUpload:-false}"
+      # ── OIDC — production redirect URIs use HTTPS on the production domain ──
+      OIDC__ENABLEDPROVIDERS: "${OIDC__ENABLEDPROVIDERS:-google,microsoft}"
+      OIDC__ALLOWEDLOOPBACKREDIRECT: "${OIDC__ALLOWEDLOOPBACKREDIRECT:-http://127.0.0.1}"
+      OIDC__GOOGLE__CLIENTID: "${OIDC__GOOGLE__CLIENTID}"
+      OIDC__GOOGLE__CLIENTSECRET: "${OIDC__GOOGLE__CLIENTSECRET}"
+      OIDC__GOOGLE__REDIRECTURI: "${OIDC__GOOGLE__REDIRECTURI:-https://api.claudeforge.dev/auth/callback}"
+      OIDC__MICROSOFT__CLIENTID: "${OIDC__MICROSOFT__CLIENTID}"
+      OIDC__MICROSOFT__CLIENTSECRET: "${OIDC__MICROSOFT__CLIENTSECRET}"
+      OIDC__MICROSOFT__TENANT: "${OIDC__MICROSOFT__TENANT:-common}"
+      OIDC__MICROSOFT__REDIRECTURI: "${OIDC__MICROSOFT__REDIRECTURI:-https://api.claudeforge.dev/auth/callback}"
+      # ── JWT ───────────────────────────────────────────────────────────────
+      JWT__ISSUER: "${JWT__ISSUER:-https://api.claudeforge.dev}"
+      JWT__AUDIENCE: "${JWT__AUDIENCE:-claudeforge-spa-cli}"
+      JWT__ACCESSTOKENMINUTES: "${JWT__ACCESSTOKENMINUTES:-15}"
+      JWT__REFRESHTOKENDAYS: "${JWT__REFRESHTOKENDAYS:-30}"
+      # RS256 private key loaded from Docker secret file mount (NOT an inline value)
+      JWT__SIGNINGKEY__PRIVATEPEM_FILE: /run/secrets/jwt_private_pem
+      # ── Email (SMTP) ───────────────────────────────────────────────────────
+      EMAIL__SMTPHOST: "${EMAIL__SMTPHOST}"
+      EMAIL__SMTPPORT: "${EMAIL__SMTPPORT:-587}"
+      EMAIL__SMTPUSER: "${EMAIL__SMTPUSER}"
+      EMAIL__SMTPPASSWORD: "${EMAIL__SMTPPASSWORD}"
+      EMAIL__FROM: "${EMAIL__FROM:-noreply@claudeforge.dev}"
+    secrets:
+      - jwt_private_pem
     volumes: []             # no source bind-mounts in production
     restart: on-failure:3
     deploy:
@@ -72,3 +110,17 @@ services:
   postgres:
     deploy:
       replicas: 0
+
+# ─── Secrets ─────────────────────────────────────────────────────────────────
+# In production the JWT RS256 private key is NOT stored in this repository.
+# It is provisioned via:
+#   • Kubernetes: a Secret mounted as a file at /run/secrets/jwt_private_pem
+#   • Docker Swarm: `docker secret create jwt_private_pem /path/to/key.pem`
+#   • OVH managed deployments: secret manager → volume mount to the same path
+#
+# Declaring external=true tells Docker Compose the secret is managed outside
+# of this compose file. The deploy pipeline must create it before stack deploy.
+# See docs/auth-provider-setup.md — "JWT Key Generation" for creation steps.
+secrets:
+  jwt_private_pem:
+    external: true

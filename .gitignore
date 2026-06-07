@@ -17,6 +17,14 @@
 .env.local
 .env.*.local
 
+# ─── Local Secrets (key files for dev mounts — never commit) ─────────────────
+# Ignore PEM/key files anywhere in the repo; the infra/secrets/ dir is kept
+# (tracked via .gitkeep) but real key material inside it is never committed.
+infra/secrets/*.pem
+infra/secrets/*.key
+*.pem
+*.key
+
 # ─── .NET / C# ───────────────────────────────────────────────────────────────
 [Bb]in/
 [Oo]bj/
