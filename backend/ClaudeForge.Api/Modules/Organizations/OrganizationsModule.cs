@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using ClaudeForge.Api.Infrastructure.Context;
 using ClaudeForge.Api.Infrastructure.Serialization;
 using ClaudeForge.Api.Module;
@@ -8,6 +9,7 @@ using ClaudeForge.Core.Shared.Authorization;
 using ClaudeForge.Infrastructure.Authorization;
 using ClaudeForge.Infrastructure.Organizations;
 using ClaudeForge.Infrastructure.Persistence;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClaudeForge.Api.Modules.Organizations;
@@ -18,6 +20,8 @@ namespace ClaudeForge.Api.Modules.Organizations;
 /// </summary>
 public sealed class OrganizationsModule : IModule
 {
+    private const string InviteRateLimitPolicy = "auth-invite-limit";
+
     public IServiceCollection RegisterModule(
         IServiceCollection services,
         IConfiguration configuration)
@@ -67,6 +71,23 @@ public sealed class OrganizationsModule : IModule
                     sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>()));
         }
 
+        // ── Group 8 — Per-IP rate limiting for invitation endpoint ───────────────
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            options.AddPolicy(InviteRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    }));
+        });
+
         return services;
     }
 
@@ -114,7 +135,8 @@ public sealed class OrganizationsModule : IModule
             OrgRole role = OrgRole.Parse(req.Role ?? "member");
             InvitationDto result = await useCase.ExecuteAsync(orgId, req.Email, role, ct);
             return Results.Created($"/api/v1/orgs/{orgId}/invitations/{result.Id}", result);
-        });
+        })
+        .RequireRateLimiting(InviteRateLimitPolicy);
 
         // POST /api/v1/orgs/{orgId}/invitations/{id}/accept — Accept invitation
         orgs.MapPost("/{orgId:guid}/invitations/{id:guid}/accept", async (

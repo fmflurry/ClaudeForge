@@ -30,4 +30,25 @@ public partial class Assert
 
         throw Xunit.Sdk.ContainsException.ForCollectionFilterNotMatched(userMessage);
     }
+
+    /// <summary>
+    /// Asserts that the collection contains exactly one element.
+    /// The <paramref name="userMessage"/> is shown on failure instead of the default message.
+    ///
+    /// This overload mirrors the xUnit v3 signature
+    /// <c>Assert.Single&lt;T&gt;(IEnumerable&lt;T&gt;, string)</c>
+    /// and is provided here for xUnit 2.x compatibility.
+    /// </summary>
+    public static T Single<T>(IEnumerable<T> collection, string userMessage)
+    {
+        NotNull(collection);
+
+        List<T> items = collection.ToList();
+
+        if (items.Count == 1)
+            return items[0];
+
+        throw new Xunit.Sdk.XunitException(
+            $"{userMessage} — expected exactly 1 item, found {items.Count}.");
+    }
 }

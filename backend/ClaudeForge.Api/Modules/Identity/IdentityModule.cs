@@ -1,15 +1,19 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 using ClaudeForge.Api.Infrastructure.Context;
 using ClaudeForge.Api.Module;
 using ClaudeForge.Core.Identity.Ports;
 using ClaudeForge.Core.Modules.Identity.UseCases;
+using ClaudeForge.Core.Modules.Organizations.Ports;
 using ClaudeForge.Core.Shared.Authorization;
 using ClaudeForge.Infrastructure.Identity;
 using ClaudeForge.Infrastructure.Identity.Validation;
+using ClaudeForge.Infrastructure.Organizations;
 using ClaudeForge.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
@@ -25,6 +29,11 @@ namespace ClaudeForge.Api.Modules.Identity;
 /// </summary>
 public sealed class IdentityModule : IModule
 {
+    private const string AuthorizeRateLimitPolicy = "auth-authorize-limit";
+    private const string TokenRateLimitPolicy = "auth-token-limit";
+    private const string RefreshRateLimitPolicy = "auth-refresh-limit";
+    private const string DeviceTokenRateLimitPolicy = "auth-device-token-limit";
+
     public IServiceCollection RegisterModule(
         IServiceCollection services,
         IConfiguration configuration)
@@ -183,6 +192,24 @@ public sealed class IdentityModule : IModule
                 sp.GetRequiredService<IRefreshTokenStorePort>(),
                 sp.GetRequiredService<IRevokedJtiStorePort>()));
 
+        // ── Group 13 — GDPR Account Deletion ─────────────────────────────────────
+        services.AddScoped<IUserDeletionPort>(sp =>
+            new UserDeletionAdapter(
+                sp.GetRequiredService<MarketplaceDbContext>()));
+
+        services.AddScoped<IOrgDeletionPort>(sp =>
+            new OrgDeletionAdapter(
+                sp.GetRequiredService<MarketplaceDbContext>()));
+
+        services.AddScoped<DeleteAccountUseCase>(sp =>
+            new DeleteAccountUseCase(
+                sp.GetRequiredService<ICurrentUser>(),
+                sp.GetRequiredService<IUserDeletionPort>(),
+                sp.GetRequiredService<IMembershipStorePort>(),
+                sp.GetRequiredService<IRefreshTokenStorePort>(),
+                sp.GetRequiredService<IOrgMembershipQueryPort>(),
+                sp.GetRequiredService<IOrgDeletionPort>()));
+
         // Device code use cases (Singleton — DeviceCodeStore is a singleton in-memory store)
         services.AddSingleton<DeviceCodeStore>();
         services.AddSingleton<IssueDeviceCodeUseCase>(sp =>
@@ -238,6 +265,56 @@ public sealed class IdentityModule : IModule
             _ => new JwtSigningKeyValidator());
         services.Configure<JwtOptions>(configuration.GetSection("JWT"));
 
+        // ── Group 8 — Per-IP rate limiting for auth endpoints ────────────────────
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            options.AddPolicy(AuthorizeRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    }));
+
+            options.AddPolicy(TokenRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 3,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    }));
+
+            options.AddPolicy(RefreshRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 3,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    }));
+
+            options.AddPolicy(DeviceTokenRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    }));
+        });
+
         return services;
     }
 
@@ -276,7 +353,8 @@ public sealed class IdentityModule : IModule
             })
             .AllowAnonymous()
             .WithName("AuthorizeOidc")
-            .WithTags("Identity");
+            .WithTags("Identity")
+            .RequireRateLimiting(AuthorizeRateLimitPolicy);
 
         // ── GET /auth/callback?code=&state= ─────────────────────────────────────
         endpoints.MapGet(
@@ -326,7 +404,8 @@ public sealed class IdentityModule : IModule
             })
             .AllowAnonymous()
             .WithName("ExchangeToken")
-            .WithTags("Identity");
+            .WithTags("Identity")
+            .RequireRateLimiting(TokenRateLimitPolicy);
 
         // ── POST /auth/refresh {refreshToken} ────────────────────────────────────
         endpoints.MapPost(
@@ -347,7 +426,8 @@ public sealed class IdentityModule : IModule
             })
             .AllowAnonymous()
             .WithName("RefreshTokens")
-            .WithTags("Identity");
+            .WithTags("Identity")
+            .RequireRateLimiting(RefreshRateLimitPolicy);
 
         // ── GET /auth/me [Authorize] ─────────────────────────────────────────────
         endpoints.MapGet(
@@ -403,6 +483,20 @@ public sealed class IdentityModule : IModule
             })
             .RequireAuthorization("RequireAuthenticatedUser")
             .WithName("SignOut")
+            .WithTags("Identity");
+
+        // ── DELETE /auth/me [Authorize] — GDPR account deletion ─────────────────
+        endpoints.MapDelete(
+            "/auth/me",
+            async (
+                [FromServices] DeleteAccountUseCase useCase,
+                CancellationToken ct) =>
+            {
+                await useCase.ExecuteAsync(ct);
+                return Results.NoContent();
+            })
+            .RequireAuthorization("RequireAuthenticatedUser")
+            .WithName("DeleteAccount")
             .WithTags("Identity");
 
         // ── POST /auth/device/code {provider} ────────────────────────────────────
@@ -464,7 +558,8 @@ public sealed class IdentityModule : IModule
             })
             .AllowAnonymous()
             .WithName("PollDeviceToken")
-            .WithTags("Identity");
+            .WithTags("Identity")
+            .RequireRateLimiting(DeviceTokenRateLimitPolicy);
 
         return endpoints;
     }

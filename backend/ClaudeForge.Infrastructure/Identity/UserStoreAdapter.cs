@@ -137,7 +137,7 @@ public sealed class UserStoreAdapter : IUserStorePort
     {
         var user = await _db.Users
             .AsNoTracking()
-            .Where(u => u.Id == userId)
+            .Where(u => u.Id == userId && u.DeletedAt == null)
             .Select(u => new
             {
                 u.Id,

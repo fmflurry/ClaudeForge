@@ -695,6 +695,17 @@
             "description": "OK"
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "DeleteAccount",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/auth/signout": {
