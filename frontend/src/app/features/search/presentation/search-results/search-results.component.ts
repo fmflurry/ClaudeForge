@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  Signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, Signal } from '@angular/core';
 import { SearchFacade } from '../../application/facades/search.facade';
 import type { DiscoveryCriteria, DiscoveryResult, SearchResult } from '../../domain/models/search.models';
 import type { SearchFilterQuery } from '../../domain/rules/search-filter.rules';
@@ -21,9 +15,7 @@ import { EmptyStateComponent } from '../../../../shared/design-system/empty-stat
     }
 
     @if (!isLoading() && hasError()) {
-      <div role="alert" class="error" data-testid="error-message">
-        Failed to load search results. Please try again.
-      </div>
+      <div role="alert" class="error" data-testid="error-message">Failed to load search results. Please try again.</div>
     }
 
     @if (!isLoading() && !hasError() && isEmpty() && categorySuggestions().length > 0) {
@@ -87,9 +79,7 @@ export class SearchResultsComponent {
     this.facade.search(keyword);
   }
 
-  onFilterChange(
-    filters: Partial<Pick<SearchFilterQuery, 'types' | 'languages' | 'useCases'>>,
-  ): void {
+  onFilterChange(filters: Partial<Pick<SearchFilterQuery, 'types' | 'languages' | 'useCases'>>): void {
     this.facade.setFilters(filters);
   }
 

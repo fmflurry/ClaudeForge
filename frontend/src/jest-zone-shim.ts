@@ -40,7 +40,9 @@ if (typeof globalThis !== 'undefined') {
     return () => void 0;
   }
   noopTest.each = noopEachFactory;
-  noopTest.todo = (_name: string): void => { void _name; };
+  noopTest.todo = (_name: string): void => {
+    void _name;
+  };
   noopTest.failing = noopTest;
   noopTest.skip = noopTest;
   noopTest.only = noopTest;

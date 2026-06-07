@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  output,
-  Signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
 import { CatalogFacade } from '../../application/facades/catalog.facade';
 import type { PluginDetail } from '../../domain/models/catalog.models';
 
@@ -16,12 +9,7 @@ import type { PluginDetail } from '../../domain/models/catalog.models';
   imports: [],
   template: `
     <div class="cf-plugin-detail">
-      <button
-        aria-label="Back to list"
-        data-testid="back-button"
-        (click)="onBack()"
-        class="cf-plugin-detail__back"
-      >
+      <button aria-label="Back to list" data-testid="back-button" (click)="onBack()" class="cf-plugin-detail__back">
         &larr; Back
       </button>
 
@@ -98,9 +86,7 @@ export class PluginDetailComponent {
 
   readonly plugin: Signal<PluginDetail | undefined> = this.facade.selectedPlugin;
   readonly isLoading: Signal<boolean> = this.facade.isLoadingDetail;
-  readonly hasError: Signal<boolean> = computed(
-    () => this.facade.detailError() !== undefined,
-  );
+  readonly hasError: Signal<boolean> = computed(() => this.facade.detailError() !== undefined);
 
   readonly backRequested = output<void>();
 

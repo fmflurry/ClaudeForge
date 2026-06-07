@@ -201,23 +201,17 @@ describe('readCredentials – happy path', () => {
 describe('readCredentials – permission enforcement', () => {
   it('throws PermissionError when file mode is 0o644 (too loose)', async () => {
     const fakeFs = makeMode(0o644, 0o700);
-    await expect(readCredentials('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(
-      PermissionError,
-    );
+    await expect(readCredentials('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(PermissionError);
   });
 
   it('throws PermissionError when file mode is 0o666 (world-readable)', async () => {
     const fakeFs = makeMode(0o666, 0o700);
-    await expect(readCredentials('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(
-      PermissionError,
-    );
+    await expect(readCredentials('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(PermissionError);
   });
 
   it('throws PermissionError when dir mode is 0o755 (too loose)', async () => {
     const fakeFs = makeMode(0o600, 0o755);
-    await expect(readCredentials('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(
-      PermissionError,
-    );
+    await expect(readCredentials('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(PermissionError);
   });
 
   it('thrown PermissionError has the correct expected mode for file', async () => {
@@ -247,9 +241,7 @@ describe('readCredentials – permission enforcement', () => {
   it('does not accept 0o700 for file (stricter-is-ok: only exact 0o600)', async () => {
     // 0o700 means executable — wrong for credentials file
     const fakeFs = makeMode(0o700, 0o700);
-    await expect(readCredentials('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(
-      PermissionError,
-    );
+    await expect(readCredentials('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(PermissionError);
   });
 });
 
@@ -357,16 +349,12 @@ describe('verifyCredentialsPermissions', () => {
 
   it('throws PermissionError when file is 0644', async () => {
     const fakeFs = makeMode(0o644, 0o700);
-    await expect(verifyCredentialsPermissions('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(
-      PermissionError,
-    );
+    await expect(verifyCredentialsPermissions('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(PermissionError);
   });
 
   it('throws PermissionError when dir is 0755', async () => {
     const fakeFs = makeMode(0o600, 0o755);
-    await expect(verifyCredentialsPermissions('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(
-      PermissionError,
-    );
+    await expect(verifyCredentialsPermissions('/home/.claude-plugins', fakeFs)).rejects.toBeInstanceOf(PermissionError);
   });
 
   it('resolves gracefully when credentials.json does not exist yet (no file to check)', async () => {

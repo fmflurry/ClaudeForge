@@ -51,11 +51,7 @@ import * as http from 'node:http';
 import * as net from 'node:net';
 
 // These imports WILL FAIL until src/auth/pkce-login.ts is created (RED state).
-import {
-  generatePkceVerifierChallenge,
-  runPkceLogin,
-  createLoopbackServer,
-} from '../auth/pkce-login.js';
+import { generatePkceVerifierChallenge, runPkceLogin, createLoopbackServer } from '../auth/pkce-login.js';
 import type {
   PkceVerifierChallengePair,
   PkceLoginDeps,
@@ -176,9 +172,7 @@ describe('generatePkceVerifierChallenge', () => {
     const pair = generatePkceVerifierChallenge();
     // Verify the challenge matches SHA-256(verifier) in BASE64URL
     const { createHash } = await import('node:crypto');
-    const expected = createHash('sha256')
-      .update(pair.verifier)
-      .digest('base64url');
+    const expected = createHash('sha256').update(pair.verifier).digest('base64url');
     expect(pair.challenge).toBe(expected);
   });
 });
@@ -401,10 +395,13 @@ describe('createLoopbackServer – integration', () => {
 
     // Now simulate receiving a code by making an HTTP request to the callback
     const receivedCode = await new Promise<string>((resolve, reject) => {
-      const req = http.get(`http://127.0.0.1:${handle.port}/callback?code=test-code-integration&state=test-state`, (res) => {
-        res.resume();
-        res.on('end', () => resolve('test-code-integration'));
-      });
+      const req = http.get(
+        `http://127.0.0.1:${handle.port}/callback?code=test-code-integration&state=test-state`,
+        (res) => {
+          res.resume();
+          res.on('end', () => resolve('test-code-integration'));
+        },
+      );
       req.on('error', reject);
     });
 
@@ -437,13 +434,10 @@ describe('createLoopbackServer – integration', () => {
     const [code] = await Promise.all([
       handle.waitForCode(),
       new Promise<void>((resolve, reject) => {
-        const req = http.get(
-          `http://127.0.0.1:${handle.port}/callback?code=real-auth-code&state=some-state`,
-          (res) => {
-            res.resume();
-            res.on('end', resolve);
-          },
-        );
+        const req = http.get(`http://127.0.0.1:${handle.port}/callback?code=real-auth-code&state=some-state`, (res) => {
+          res.resume();
+          res.on('end', resolve);
+        });
         req.on('error', reject);
       }),
     ]);

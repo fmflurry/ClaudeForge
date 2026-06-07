@@ -136,7 +136,10 @@ export class TelemetryFacade {
 
     this.apiClient
       .postTelemetryEvent(payload)
-      .pipe(takeUntilDestroyed(this.destroyRef), catchError(() => EMPTY))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(() => EMPTY),
+      )
       .subscribe();
   }
 }

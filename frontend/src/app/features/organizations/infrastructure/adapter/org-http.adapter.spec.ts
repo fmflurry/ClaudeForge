@@ -4,20 +4,12 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { OrgHttpAdapter } from './org-http.adapter';
 import { API_BASE_URL } from '../../../../core/config/api-config';
 import { OrgPort } from '../../domain/ports/org.port';
-import type {
-  OrgDto,
-  OrgMemberDto,
-  OrgInvitationDto,
-  OrgSummaryDto,
-} from '../../domain/mappers/organizations-mapper';
+import type { OrgDto, OrgMemberDto, OrgInvitationDto, OrgSummaryDto } from '../../domain/mappers/organizations-mapper';
 import type { Organization, OrgMember, OrgInvitation, OrgSummary } from '../../domain/models/organizations.models';
 
 const BASE = 'https://api.test';

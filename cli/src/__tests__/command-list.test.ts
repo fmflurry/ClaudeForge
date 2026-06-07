@@ -89,7 +89,7 @@ describe('runList – empty registry', () => {
 
   it('returns exitCode 0 when no plugins are installed', async () => {
     const client = makeFakeClient();
-    const result: CommandResult = await runList({ }, { client, homeDir });
+    const result: CommandResult = await runList({}, { client, homeDir });
     expect(result.exitCode).toBe(0);
   });
 

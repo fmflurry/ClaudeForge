@@ -38,11 +38,9 @@ import { Injectable, signal, WritableSignal } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthFacade } from '../../application/facades/auth.facade';
-import { AuthStore } from '../../application/store/auth.store';
-import { AuthPort } from '../../domain/ports/auth.port';
 import { FunctionalAuthGuard } from './auth.guard';
 import { OrgMemberGuard } from './org-member.guard';
-import type { AuthProvider, AuthToken, CurrentUser } from '../../domain/models/auth.models';
+import type { AuthProvider, CurrentUser } from '../../domain/models/auth.models';
 
 // ---------------------------------------------------------------------------
 // Fake AuthFacade — a minimal facade stub for guard tests
@@ -59,32 +57,54 @@ class StubAuthFacade {
   private readonly _currentUser: WritableSignal<CurrentUser | undefined> = signal(undefined);
 
   // Signal getters — same interface as the real AuthFacade
-  get isAuthenticated() { return this._isAuthenticated.asReadonly(); }
-  get activeOrgId() { return this._activeOrgId.asReadonly(); }
-  get currentUser() { return this._currentUser.asReadonly(); }
-  get authStatus() { return signal<'idle' | 'authenticating' | 'authenticated' | 'error'>('idle').asReadonly(); }
-  get isAuthenticating() { return signal(false).asReadonly(); }
-  get authError() { return signal<string | undefined>(undefined).asReadonly(); }
+  get isAuthenticated() {
+    return this._isAuthenticated.asReadonly();
+  }
+  get activeOrgId() {
+    return this._activeOrgId.asReadonly();
+  }
+  get currentUser() {
+    return this._currentUser.asReadonly();
+  }
+  get authStatus() {
+    return signal<'idle' | 'authenticating' | 'authenticated' | 'error'>('idle').asReadonly();
+  }
+  get isAuthenticating() {
+    return signal(false).asReadonly();
+  }
+  get authError() {
+    return signal<string | undefined>(undefined).asReadonly();
+  }
 
   // Methods (guards do not call these but they must exist on the type)
-  login(_provider: AuthProvider): void {}
-  completeLogin(_code: string, _state: string): void {}
-  logout(): void {}
-  silentRefresh(): void {}
-  setActiveOrg(_orgId: string): void {}
+  login(_provider: AuthProvider): void {
+    return undefined;
+  }
+  completeLogin(_code: string, _state: string): void {
+    return undefined;
+  }
+  logout(): void {
+    return undefined;
+  }
+  silentRefresh(): void {
+    return undefined;
+  }
+  setActiveOrg(_orgId: string): void {
+    return undefined;
+  }
 
   // Test helpers to control signals
   simulateAuthenticated(orgId?: string, user?: CurrentUser): void {
     this._isAuthenticated.set(true);
     this._activeOrgId.set(orgId);
-    this._currentUser.set(user ?? {
-      userId: 'u1',
-      email: 'alice@example.com',
-      displayName: 'Alice',
-      orgMemberships: orgId
-        ? [{ orgId, orgName: 'Test Org', role: 'member' as const }]
-        : [],
-    });
+    this._currentUser.set(
+      user ?? {
+        userId: 'u1',
+        email: 'alice@example.com',
+        displayName: 'Alice',
+        orgMemberships: orgId ? [{ orgId, orgName: 'Test Org', role: 'member' as const }] : [],
+      },
+    );
   }
 
   simulateUnauthenticated(): void {
@@ -105,8 +125,12 @@ class FakeRouter {
     this.navigatedCommands.push(commands);
     return Promise.resolve(false);
   }
-  createUrlTree(_commands: string[]): unknown { return {}; }
-  serializeUrl(_tree: unknown): string { return ''; }
+  createUrlTree(_commands: string[]): unknown {
+    return {};
+  }
+  serializeUrl(_tree: unknown): string {
+    return '';
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -147,7 +171,10 @@ function setupGuardHarness(): GuardHarness {
 
 // Helper: run a guard in TestBed injection context and get the sync result
 function runGuard(
-  guardFn: (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => boolean | Observable<boolean> | Promise<boolean>,
+  guardFn: (
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot,
+  ) => boolean | Observable<boolean> | Promise<boolean>,
   route = makeRouteSnapshot(),
   state = makeStateSnapshot(),
 ): boolean | Observable<boolean> | Promise<boolean> {
@@ -275,9 +302,7 @@ describe('OrgMemberGuard — authenticated but no active org', () => {
     runGuard(OrgMemberGuard);
     tick();
 
-    expect(
-      router.navigatedCommands.some((cmds) => cmds.includes('/orgs') || cmds.includes('orgs')),
-    ).toBe(true);
+    expect(router.navigatedCommands.some((cmds) => cmds.includes('/orgs') || cmds.includes('orgs'))).toBe(true);
   }));
 
   it('should not navigate to /login when user is authenticated but missing org', fakeAsync(() => {
@@ -287,9 +312,7 @@ describe('OrgMemberGuard — authenticated but no active org', () => {
     runGuard(OrgMemberGuard);
     tick();
 
-    expect(
-      router.navigatedCommands.some((cmds) => cmds.includes('/login') || cmds.includes('login')),
-    ).toBe(false);
+    expect(router.navigatedCommands.some((cmds) => cmds.includes('/login') || cmds.includes('login'))).toBe(false);
   }));
 });
 
@@ -313,9 +336,7 @@ describe('OrgMemberGuard — unauthenticated user', () => {
     runGuard(OrgMemberGuard);
     tick();
 
-    expect(
-      router.navigatedCommands.some((cmds) => cmds.includes('/login') || cmds.includes('login')),
-    ).toBe(true);
+    expect(router.navigatedCommands.some((cmds) => cmds.includes('/login') || cmds.includes('login'))).toBe(true);
   }));
 });
 
@@ -351,9 +372,7 @@ describe('OrgMemberGuard — requiredOrgId route data', () => {
     runGuard(OrgMemberGuard, route);
     tick();
 
-    expect(
-      router.navigatedCommands.some((cmds) => cmds.includes('/orgs') || cmds.includes('orgs')),
-    ).toBe(true);
+    expect(router.navigatedCommands.some((cmds) => cmds.includes('/orgs') || cmds.includes('orgs'))).toBe(true);
   }));
 
   it('should return true when no requiredOrgId is specified and user has any activeOrgId', () => {

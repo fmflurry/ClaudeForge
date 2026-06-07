@@ -21,9 +21,7 @@ import { toListPluginsParams } from '../../domain/rules/catalog-filter.rules';
 export class CatalogHttpAdapter extends CatalogPort {
   private readonly apiClient = inject(ApiClient);
 
-  loadPlugins(
-    query: CatalogFilterQuery,
-  ): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }> {
+  loadPlugins(query: CatalogFilterQuery): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }> {
     const params = toListPluginsParams(query);
     return this.apiClient.listPlugins(params).pipe(
       map((envelope) => ({

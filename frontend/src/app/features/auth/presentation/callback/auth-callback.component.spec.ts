@@ -52,13 +52,15 @@ function buildFakeActivatedRoute(params: { code?: string; state?: string } = {})
   };
 }
 
-function setup(opts: {
-  authStatus?: AuthStatus;
-  authError?: string | undefined;
-  isAuthenticated?: boolean;
-  completeLoginSpy?: (code: string, state: string) => void;
-  routeParams?: { code?: string; state?: string };
-} = {}): { fixture: ComponentFixture<AuthCallbackComponent>; fakeRouter: { navigate: ReturnType<typeof vi.fn> } } {
+function setup(
+  opts: {
+    authStatus?: AuthStatus;
+    authError?: string | undefined;
+    isAuthenticated?: boolean;
+    completeLoginSpy?: (code: string, state: string) => void;
+    routeParams?: { code?: string; state?: string };
+  } = {},
+): { fixture: ComponentFixture<AuthCallbackComponent>; fakeRouter: { navigate: ReturnType<typeof vi.fn> } } {
   const fakeRouter = { navigate: vi.fn().mockResolvedValue(true) };
   const fakeFacade = buildFakeAuthFacade(opts);
   const fakeRoute = buildFakeActivatedRoute(opts.routeParams ?? { code: 'test-code', state: 'test-state' });

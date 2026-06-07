@@ -69,9 +69,7 @@ export class AuthFacade {
   }
 
   get isAuthenticating(): Signal<boolean> {
-    return computed(
-      () => this.store.get(AuthStoreEnum.AUTH)().data?.status === 'authenticating',
-    );
+    return computed(() => this.store.get(AuthStoreEnum.AUTH)().data?.status === 'authenticating');
   }
 
   get authError(): Signal<string | undefined> {
@@ -114,23 +112,25 @@ export class AuthFacade {
     // but for the callback component we pass empty string as the spec does not require PKCE here
     this.port
       .exchangeToken(code, state, '')
-      .pipe(switchMap((token: AuthToken) => this.port.getCurrentUser().pipe(
-        // Carry token forward
-        switchMap((user: CurrentUser) => {
-          const activeOrgId = user.orgMemberships.length > 0
-            ? user.orgMemberships[0].orgId
-            : undefined;
-          this.setData({
-            status: 'authenticated',
-            user,
-            token,
-            activeOrgId,
-            errorMessage: undefined,
-          });
-          // Return an empty observable that completes immediately
-          return [] as never[];
-        }),
-      )))
+      .pipe(
+        switchMap((token: AuthToken) =>
+          this.port.getCurrentUser().pipe(
+            // Carry token forward
+            switchMap((user: CurrentUser) => {
+              const activeOrgId = user.orgMemberships.length > 0 ? user.orgMemberships[0].orgId : undefined;
+              this.setData({
+                status: 'authenticated',
+                user,
+                token,
+                activeOrgId,
+                errorMessage: undefined,
+              });
+              // Return an empty observable that completes immediately
+              return [] as never[];
+            }),
+          ),
+        ),
+      )
       .subscribe({
         error: (err: unknown) => {
           const message = err instanceof Error ? err.message : 'Login failed';
@@ -171,21 +171,23 @@ export class AuthFacade {
   silentRefresh(): void {
     this.port
       .refreshToken()
-      .pipe(switchMap((token: AuthToken) => this.port.getCurrentUser().pipe(
-        switchMap((user: CurrentUser) => {
-          const activeOrgId = user.orgMemberships.length > 0
-            ? user.orgMemberships[0].orgId
-            : undefined;
-          this.setData({
-            status: 'authenticated',
-            user,
-            token,
-            activeOrgId,
-            errorMessage: undefined,
-          });
-          return [] as never[];
-        }),
-      )))
+      .pipe(
+        switchMap((token: AuthToken) =>
+          this.port.getCurrentUser().pipe(
+            switchMap((user: CurrentUser) => {
+              const activeOrgId = user.orgMemberships.length > 0 ? user.orgMemberships[0].orgId : undefined;
+              this.setData({
+                status: 'authenticated',
+                user,
+                token,
+                activeOrgId,
+                errorMessage: undefined,
+              });
+              return [] as never[];
+            }),
+          ),
+        ),
+      )
       .subscribe({
         error: () => {
           // Silent refresh failure is not an error — user is simply unauthenticated

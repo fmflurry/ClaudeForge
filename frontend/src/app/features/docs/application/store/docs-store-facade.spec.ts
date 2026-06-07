@@ -152,11 +152,7 @@ class ErrorDocsPort extends DocsPort {
 
 function setupWithFakePort(): { store: DocsStore; facade: DocsFacade } {
   TestBed.configureTestingModule({
-    providers: [
-      DocsStore,
-      DocsFacade,
-      { provide: DocsPort, useClass: FakeDocsPort },
-    ],
+    providers: [DocsStore, DocsFacade, { provide: DocsPort, useClass: FakeDocsPort }],
   });
   return {
     store: TestBed.inject(DocsStore),
@@ -166,11 +162,7 @@ function setupWithFakePort(): { store: DocsStore; facade: DocsFacade } {
 
 function setupWithErrorPort(): { store: DocsStore; facade: DocsFacade } {
   TestBed.configureTestingModule({
-    providers: [
-      DocsStore,
-      DocsFacade,
-      { provide: DocsPort, useClass: ErrorDocsPort },
-    ],
+    providers: [DocsStore, DocsFacade, { provide: DocsPort, useClass: ErrorDocsPort }],
   });
   return {
     store: TestBed.inject(DocsStore),

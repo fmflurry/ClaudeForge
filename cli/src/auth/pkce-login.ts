@@ -140,11 +140,7 @@ export function createLoopbackServer(): LoopbackServerPort {
 // runPkceLogin
 // ---------------------------------------------------------------------------
 
-export async function runPkceLogin(
-  provider: string,
-  apiUrl: string,
-  deps: PkceLoginDeps,
-): Promise<PkceLoginResult> {
+export async function runPkceLogin(provider: string, apiUrl: string, deps: PkceLoginDeps): Promise<PkceLoginResult> {
   const { generatePkce, openBrowser, loopbackServer, tokenExchange, storeCredentials } = deps;
 
   // Generate PKCE pair and state

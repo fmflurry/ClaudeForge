@@ -92,7 +92,13 @@ describe('validateManifest – valid manifest', () => {
 
 describe('validateManifest – missing required fields', () => {
   const requiredFields: (keyof PluginManifest)[] = [
-    'name', 'version', 'description', 'author', 'types', 'languages', 'entrypoints',
+    'name',
+    'version',
+    'description',
+    'author',
+    'types',
+    'languages',
+    'entrypoints',
   ];
 
   for (const field of requiredFields) {
@@ -169,10 +175,7 @@ describe('runValidate – valid plugin directory', () => {
     const fakeFs = makeFakeFs({
       '/my/plugin/plugin.json': VALID_MANIFEST_JSON(),
     });
-    const result: CommandResult = await runValidate(
-      { pluginPath: '/my/plugin' },
-      { fs: fakeFs },
-    );
+    const result: CommandResult = await runValidate({ pluginPath: '/my/plugin' }, { fs: fakeFs });
     expect(result.exitCode).toBe(0);
   });
 
@@ -188,10 +191,7 @@ describe('runValidate – valid plugin directory', () => {
 describe('runValidate – missing manifest', () => {
   it('returns exitCode 2 when plugin.json is not found', async () => {
     const fakeFs = makeFakeFs({});
-    const result: CommandResult = await runValidate(
-      { pluginPath: '/my/plugin' },
-      { fs: fakeFs },
-    );
+    const result: CommandResult = await runValidate({ pluginPath: '/my/plugin' }, { fs: fakeFs });
     expect(result.exitCode).toBe(2);
   });
 

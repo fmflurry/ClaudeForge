@@ -49,10 +49,7 @@
 
 import { TeamContextStoragePort } from '../../domain/ports/team-context-storage.port';
 import { TelemetryPreferencePort } from '../../domain/ports/telemetry-preference.port';
-import {
-  InstalledPluginRecord,
-  InstalledPluginsStoragePort,
-} from '../../domain/ports/installed-plugins-storage.port';
+import { InstalledPluginRecord, InstalledPluginsStoragePort } from '../../domain/ports/installed-plugins-storage.port';
 import { LocalStorageTeamContextAdapter } from './local-storage-team-context.adapter';
 import { LocalStorageTelemetryPreferenceAdapter } from './local-storage-telemetry-preference.adapter';
 import { LocalStorageInstalledPluginsAdapter } from './local-storage-installed-plugins.adapter';
@@ -315,7 +312,11 @@ describe('LocalStorageInstalledPluginsAdapter', () => {
     adapter.add(baseRecord);
     const result = adapter.list();
     // Attempt to mutate
-    (result as InstalledPluginRecord[]).push({ name: 'injected', version: '0.0.1', installedAt: '2024-01-01T00:00:00.000Z' });
+    (result as InstalledPluginRecord[]).push({
+      name: 'injected',
+      version: '0.0.1',
+      installedAt: '2024-01-01T00:00:00.000Z',
+    });
     expect(adapter.list()).toHaveLength(1);
   });
 

@@ -89,20 +89,14 @@ describe('runScaffold – explicit --name and --language', () => {
 
   it('creates plugin.json in the target directory', async () => {
     const fakeFs = makeCapturingFs();
-    await runScaffold(
-      { name: '@test/my-plugin', language: 'typescript', targetDir: '/tmp/output' },
-      { fs: fakeFs },
-    );
+    await runScaffold({ name: '@test/my-plugin', language: 'typescript', targetDir: '/tmp/output' }, { fs: fakeFs });
     const manifestPath = Object.keys(fakeFs.written).find((k) => k.endsWith('plugin.json'));
     expect(manifestPath).toBeDefined();
   });
 
   it('generated plugin.json passes validateManifest', async () => {
     const fakeFs = makeCapturingFs();
-    await runScaffold(
-      { name: '@test/my-plugin', language: 'typescript', targetDir: '/tmp/output' },
-      { fs: fakeFs },
-    );
+    await runScaffold({ name: '@test/my-plugin', language: 'typescript', targetDir: '/tmp/output' }, { fs: fakeFs });
     const manifestPath = Object.keys(fakeFs.written).find((k) => k.endsWith('plugin.json'));
     if (!manifestPath) throw new Error('plugin.json not written');
     const parsed = JSON.parse(fakeFs.written[manifestPath]) as PluginManifest;
@@ -112,10 +106,7 @@ describe('runScaffold – explicit --name and --language', () => {
 
   it('generated plugin.json includes the plugin name', async () => {
     const fakeFs = makeCapturingFs();
-    await runScaffold(
-      { name: '@test/my-plugin', language: 'typescript', targetDir: '/tmp/output' },
-      { fs: fakeFs },
-    );
+    await runScaffold({ name: '@test/my-plugin', language: 'typescript', targetDir: '/tmp/output' }, { fs: fakeFs });
     const manifestPath = Object.keys(fakeFs.written).find((k) => k.endsWith('plugin.json'));
     if (!manifestPath) throw new Error('plugin.json not written');
     const parsed = JSON.parse(fakeFs.written[manifestPath]) as { name: string };
@@ -124,10 +115,7 @@ describe('runScaffold – explicit --name and --language', () => {
 
   it('generated plugin.json includes the correct language', async () => {
     const fakeFs = makeCapturingFs();
-    await runScaffold(
-      { name: '@test/my-plugin', language: 'python', targetDir: '/tmp/output' },
-      { fs: fakeFs },
-    );
+    await runScaffold({ name: '@test/my-plugin', language: 'python', targetDir: '/tmp/output' }, { fs: fakeFs });
     const manifestPath = Object.keys(fakeFs.written).find((k) => k.endsWith('plugin.json'));
     if (!manifestPath) throw new Error('plugin.json not written');
     const parsed = JSON.parse(fakeFs.written[manifestPath]) as { languages: string[] };
@@ -136,10 +124,7 @@ describe('runScaffold – explicit --name and --language', () => {
 
   it('creates at minimum a src/ subdirectory', async () => {
     const fakeFs = makeCapturingFs();
-    await runScaffold(
-      { name: '@test/my-plugin', language: 'typescript', targetDir: '/tmp/output' },
-      { fs: fakeFs },
-    );
+    await runScaffold({ name: '@test/my-plugin', language: 'typescript', targetDir: '/tmp/output' }, { fs: fakeFs });
     const mkdirCalls = (fakeFs.mkdir as ReturnType<typeof vi.fn>).mock.calls as [string][];
     const hasSrc = mkdirCalls.some(([d]) => d.includes('src'));
     expect(hasSrc).toBe(true);
@@ -153,10 +138,7 @@ describe('runScaffold – explicit --name and --language', () => {
 describe('runScaffold – name inferred from directory', () => {
   it('uses the basename of targetDir as the plugin name when --name is omitted', async () => {
     const fakeFs = makeCapturingFs();
-    await runScaffold(
-      { language: 'typescript', targetDir: '/projects/my-awesome-plugin' },
-      { fs: fakeFs },
-    );
+    await runScaffold({ language: 'typescript', targetDir: '/projects/my-awesome-plugin' }, { fs: fakeFs });
     const manifestPath = Object.keys(fakeFs.written).find((k) => k.endsWith('plugin.json'));
     if (!manifestPath) throw new Error('plugin.json not written');
     const parsed = JSON.parse(fakeFs.written[manifestPath]) as { name: string };
@@ -200,10 +182,7 @@ describe('runScaffold – --interactive', () => {
   it('calls prompter.ask for the plugin name', async () => {
     const fakeFs = makeCapturingFs();
     const prompter = makePrompter(['@test/interactive-plugin', 'typescript', 'An interactive plugin', 'author']);
-    await runScaffold(
-      { interactive: true, targetDir: '/tmp/output' },
-      { fs: fakeFs, prompter },
-    );
+    await runScaffold({ interactive: true, targetDir: '/tmp/output' }, { fs: fakeFs, prompter });
     const askMock = prompter.ask as ReturnType<typeof vi.fn>;
     const questions = askMock.mock.calls.map(([q]: [string]) => q.toLowerCase()) as string[];
     expect(questions.some((q) => q.includes('name'))).toBe(true);
@@ -212,10 +191,7 @@ describe('runScaffold – --interactive', () => {
   it('calls prompter.ask for the language', async () => {
     const fakeFs = makeCapturingFs();
     const prompter = makePrompter(['@test/interactive-plugin', 'typescript', 'A plugin', 'author']);
-    await runScaffold(
-      { interactive: true, targetDir: '/tmp/output' },
-      { fs: fakeFs, prompter },
-    );
+    await runScaffold({ interactive: true, targetDir: '/tmp/output' }, { fs: fakeFs, prompter });
     const askMock = prompter.ask as ReturnType<typeof vi.fn>;
     const questions = askMock.mock.calls.map(([q]: [string]) => q.toLowerCase()) as string[];
     expect(questions.some((q) => q.includes('language'))).toBe(true);
@@ -224,10 +200,7 @@ describe('runScaffold – --interactive', () => {
   it('generates a valid plugin.json from interactive answers', async () => {
     const fakeFs = makeCapturingFs();
     const prompter = makePrompter(['@test/interactive-plugin', 'typescript', 'A test plugin', 'Test Author']);
-    await runScaffold(
-      { interactive: true, targetDir: '/tmp/output' },
-      { fs: fakeFs, prompter },
-    );
+    await runScaffold({ interactive: true, targetDir: '/tmp/output' }, { fs: fakeFs, prompter });
     const manifestPath = Object.keys(fakeFs.written).find((k) => k.endsWith('plugin.json'));
     if (!manifestPath) throw new Error('plugin.json not written');
     const parsed = JSON.parse(fakeFs.written[manifestPath]) as PluginManifest;

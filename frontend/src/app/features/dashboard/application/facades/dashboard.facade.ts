@@ -36,9 +36,7 @@ export class DashboardFacade {
 
   /** True when at least one installed plugin has status 'update-available'. */
   get hasUpdates(): Signal<boolean> {
-    return computed(() =>
-      this.installedPlugins().some((p) => p.status === 'update-available'),
-    );
+    return computed(() => this.installedPlugins().some((p) => p.status === 'update-available'));
   }
 
   /** Single DashboardGroup for the currently active team. */
@@ -83,12 +81,9 @@ export class DashboardFacade {
    */
   loadInstalled(): void {
     const records = this.storagePort.list();
-    const updateChecks =
-      this.store.get(DashboardStoreEnum.UPDATE_CHECKS)().data ?? {};
+    const updateChecks = this.store.get(DashboardStoreEnum.UPDATE_CHECKS)().data ?? {};
 
-    const plugins = records.map((r) =>
-      enrichInstalledPlugin(r, updateChecks[r.name] ?? null),
-    );
+    const plugins = records.map((r) => enrichInstalledPlugin(r, updateChecks[r.name] ?? null));
 
     this.store.update(DashboardStoreEnum.INSTALLED_PLUGINS, {
       data: plugins,
@@ -135,9 +130,7 @@ export class DashboardFacade {
       return;
     }
 
-    const versionRequests = currentPlugins.map((plugin) =>
-      this.catalogPort.getLatestVersion(plugin.name),
-    );
+    const versionRequests = currentPlugins.map((plugin) => this.catalogPort.getLatestVersion(plugin.name));
 
     forkJoin(versionRequests)
       .pipe(
@@ -169,9 +162,7 @@ export class DashboardFacade {
 
         // Re-enrich installed plugins with the new update checks.
         const records = this.storagePort.list();
-        const enrichedPlugins = records.map((r) =>
-          enrichInstalledPlugin(r, updateChecks[r.name] ?? null),
-        );
+        const enrichedPlugins = records.map((r) => enrichInstalledPlugin(r, updateChecks[r.name] ?? null));
 
         this.store.update(DashboardStoreEnum.INSTALLED_PLUGINS, {
           data: enrichedPlugins,

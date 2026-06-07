@@ -113,10 +113,7 @@ export abstract class BaseStore<
    * Registers a callback invoked whenever the state for `key` changes.
    * Returns an idempotent unsubscribe function.
    */
-  onUpdate<K extends TEnum[keyof TEnum]>(
-    key: K,
-    cb: (next: TState[K], prev: TState[K]) => void,
-  ): () => void {
+  onUpdate<K extends TEnum[keyof TEnum]>(key: K, cb: (next: TState[K], prev: TState[K]) => void): () => void {
     const id = this.nextListenerId++;
     const list = this.requireListenerList(key);
 

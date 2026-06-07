@@ -9,7 +9,13 @@ import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { API_BASE_URL } from '../../../../core/config/api-config';
 import { OrgPort } from '../../domain/ports/org.port';
-import type { OrgInvitation, OrgMember, OrgRole, OrgSummary, Organization } from '../../domain/models/organizations.models';
+import type {
+  OrgInvitation,
+  OrgMember,
+  OrgRole,
+  OrgSummary,
+  Organization,
+} from '../../domain/models/organizations.models';
 import type { OrgDto, OrgInvitationDto, OrgMemberDto, OrgSummaryDto } from '../../domain/mappers/organizations-mapper';
 import {
   mapOrgDtoToOrganization,
@@ -39,9 +45,7 @@ export class OrgHttpAdapter extends OrgPort {
 
   createOrganization(name: string, slug: string): Observable<Organization> {
     const body: CreateOrgBody = { name, slug };
-    return this.http
-      .post<OrgDto>(`${this.baseUrl}/api/v1/orgs`, body)
-      .pipe(map(mapOrgDtoToOrganization));
+    return this.http.post<OrgDto>(`${this.baseUrl}/api/v1/orgs`, body).pipe(map(mapOrgDtoToOrganization));
   }
 
   listOrganizations(): Observable<OrgSummary[]> {
@@ -64,16 +68,11 @@ export class OrgHttpAdapter extends OrgPort {
   }
 
   acceptInvitation(orgId: string, invitationId: string): Observable<void> {
-    return this.http.post<void>(
-      `${this.baseUrl}/api/v1/orgs/${orgId}/invitations/${invitationId}/accept`,
-      {},
-    );
+    return this.http.post<void>(`${this.baseUrl}/api/v1/orgs/${orgId}/invitations/${invitationId}/accept`, {});
   }
 
   revokeInvitation(orgId: string, invitationId: string): Observable<void> {
-    return this.http.delete<void>(
-      `${this.baseUrl}/api/v1/orgs/${orgId}/invitations/${invitationId}`,
-    );
+    return this.http.delete<void>(`${this.baseUrl}/api/v1/orgs/${orgId}/invitations/${invitationId}`);
   }
 
   removeMember(orgId: string, userId: string): Observable<void> {
@@ -82,9 +81,6 @@ export class OrgHttpAdapter extends OrgPort {
 
   changeMemberRole(orgId: string, userId: string, role: OrgRole): Observable<void> {
     const body: ChangeMemberRoleBody = { role };
-    return this.http.patch<void>(
-      `${this.baseUrl}/api/v1/orgs/${orgId}/members/${userId}`,
-      body,
-    );
+    return this.http.patch<void>(`${this.baseUrl}/api/v1/orgs/${orgId}/members/${userId}`, body);
   }
 }

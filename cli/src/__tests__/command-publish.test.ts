@@ -110,20 +110,14 @@ describe('runPublish – happy path', () => {
   it('output contains "Published @namespace/plugin-name@1.0.0"', async () => {
     const client = makeFakeClient();
     const fakeFs = makeFakeFs(makeValidManifestJson());
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(result.output).toContain('Published @namespace/plugin-name@1.0.0');
   });
 
   it('output contains a marketplace URL', async () => {
     const client = makeFakeClient();
     const fakeFs = makeFakeFs(makeValidManifestJson());
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     // Spec: "Published @namespace/plugin-name@1.0.0 at https://..."
     expect(result.output).toMatch(/at https?:\/\//);
   });
@@ -132,10 +126,7 @@ describe('runPublish – happy path', () => {
     const uploadFn = vi.fn().mockResolvedValue(SUCCESS_UPLOAD);
     const client = makeFakeClient({ uploadPlugin: uploadFn });
     const fakeFs = makeFakeFs(makeValidManifestJson());
-    await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(uploadFn).toHaveBeenCalled();
     const [formData] = uploadFn.mock.calls[0] as [FormData];
     expect(formData).toBeInstanceOf(FormData);
@@ -145,10 +136,7 @@ describe('runPublish – happy path', () => {
     const compressFn = vi.fn(async () => new Blob(['archive']));
     const client = makeFakeClient();
     const fakeFs = makeFakeFs(makeValidManifestJson(), { compress: compressFn });
-    await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(compressFn).toHaveBeenCalled();
   });
 });
@@ -162,10 +150,7 @@ describe('runPublish – missing required metadata', () => {
     const incompleteManifest = JSON.stringify({ name: '@namespace/plugin-name', version: '1.0.0' });
     const client = makeFakeClient();
     const fakeFs = makeFakeFs(incompleteManifest);
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(result.exitCode).toBeGreaterThan(0);
   });
 
@@ -173,10 +158,7 @@ describe('runPublish – missing required metadata', () => {
     const incompleteManifest = JSON.stringify({ name: '@namespace/plugin-name', version: '1.0.0' });
     const client = makeFakeClient();
     const fakeFs = makeFakeFs(incompleteManifest);
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     // Spec: "Missing required field: type"
     expect(result.output).toContain('Missing required field');
   });
@@ -185,10 +167,7 @@ describe('runPublish – missing required metadata', () => {
     const incompleteManifest = JSON.stringify({ name: '@namespace/plugin-name' });
     const client = makeFakeClient();
     const fakeFs = makeFakeFs(incompleteManifest);
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(result.output).toContain('claude plugin scaffold');
   });
 
@@ -196,10 +175,7 @@ describe('runPublish – missing required metadata', () => {
     const uploadFn = vi.fn();
     const client = makeFakeClient({ uploadPlugin: uploadFn });
     const fakeFs = makeFakeFs(JSON.stringify({ name: '@test/plugin' }));
-    await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(uploadFn).not.toHaveBeenCalled();
   });
 });
@@ -214,10 +190,7 @@ describe('runPublish – duplicate version', () => {
       uploadPlugin: vi.fn().mockRejectedValue(make409Error()),
     });
     const fakeFs = makeFakeFs(makeValidManifestJson());
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(result.exitCode).toBeGreaterThan(0);
   });
 
@@ -226,10 +199,7 @@ describe('runPublish – duplicate version', () => {
       uploadPlugin: vi.fn().mockRejectedValue(make409Error()),
     });
     const fakeFs = makeFakeFs(makeValidManifestJson());
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(result.output).toContain('Version 1.0.0 of @namespace/plugin-name already exists');
   });
 
@@ -238,10 +208,7 @@ describe('runPublish – duplicate version', () => {
       uploadPlugin: vi.fn().mockRejectedValue(make409Error()),
     });
     const fakeFs = makeFakeFs(makeValidManifestJson());
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(result.output.toLowerCase()).toContain('incrementing');
   });
 });
@@ -254,28 +221,26 @@ describe('runPublish – missing plugin.json', () => {
   it('returns non-zero exitCode when plugin.json is absent', async () => {
     const client = makeFakeClient();
     const fakeFs: PublishFsPort = {
-      readFile: vi.fn(async () => { throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' }); }),
+      readFile: vi.fn(async () => {
+        throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+      }),
       exists: vi.fn(async () => false),
       compress: vi.fn(async () => new Blob()),
     };
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(result.exitCode).toBeGreaterThan(0);
   });
 
   it('output mentions plugin.json when manifest is missing', async () => {
     const client = makeFakeClient();
     const fakeFs: PublishFsPort = {
-      readFile: vi.fn(async () => { throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' }); }),
+      readFile: vi.fn(async () => {
+        throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+      }),
       exists: vi.fn(async () => false),
       compress: vi.fn(async () => new Blob()),
     };
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(result.output).toContain('plugin.json');
   });
 });
@@ -290,10 +255,7 @@ describe('runPublish – authentication', () => {
       uploadPlugin: vi.fn().mockRejectedValue(new SessionExpiredError()),
     });
     const fakeFs = makeFakeFs(makeValidManifestJson());
-    const result = await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    const result = await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(result.exitCode).toBe(1);
     expect(result.output).toContain('Session expired');
     expect(result.output).toContain('claude-plugin login');
@@ -303,10 +265,7 @@ describe('runPublish – authentication', () => {
     const uploadFn = vi.fn().mockResolvedValue(SUCCESS_UPLOAD);
     const client = makeFakeClient({ uploadPlugin: uploadFn });
     const fakeFs = makeFakeFs(makeValidManifestJson());
-    await runPublish(
-      { pluginPath: '/my/plugin', org: 'my-org' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    await runPublish({ pluginPath: '/my/plugin', org: 'my-org' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     expect(uploadFn).toHaveBeenCalled();
     const [formData] = uploadFn.mock.calls[0] as [FormData];
     expect(formData.get('orgId')).toBe('my-org');
@@ -316,10 +275,7 @@ describe('runPublish – authentication', () => {
     const uploadFn = vi.fn().mockResolvedValue(SUCCESS_UPLOAD);
     const client = makeFakeClient({ uploadPlugin: uploadFn });
     const fakeFs = makeFakeFs(makeValidManifestJson());
-    await runPublish(
-      { pluginPath: '/my/plugin' },
-      { client, homeDir: '/tmp/home', fs: fakeFs },
-    );
+    await runPublish({ pluginPath: '/my/plugin' }, { client, homeDir: '/tmp/home', fs: fakeFs });
     const [formData] = uploadFn.mock.calls[0] as [FormData];
     expect(formData.get('orgId')).toBeNull();
   });

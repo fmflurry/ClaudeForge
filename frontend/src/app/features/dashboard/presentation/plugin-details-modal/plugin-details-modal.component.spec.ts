@@ -72,24 +72,46 @@ class StubDashboardFacade {
   private readonly _groupsByTeam = signal<DashboardGroup>({ teamId: 'team-test', plugins: [] });
   private readonly _recommended = signal<readonly RecommendedPlugin[]>([]);
 
-  setInstalled(plugins: InstalledPlugin[]): void { this._installed.set(plugins); }
-  setHasUpdates(v: boolean): void { this._hasUpdates.set(v); }
+  setInstalled(plugins: InstalledPlugin[]): void {
+    this._installed.set(plugins);
+  }
+  setHasUpdates(v: boolean): void {
+    this._hasUpdates.set(v);
+  }
 
-  get installedPlugins(): Signal<InstalledPlugin[]> { return this._installed; }
-  get isLoading(): Signal<boolean> { return this._isLoading; }
-  get error(): Signal<{ code: string; message: string }[] | undefined> { return this._error; }
-  get hasUpdates(): Signal<boolean> { return this._hasUpdates; }
-  get groupsByTeam(): Signal<DashboardGroup> { return this._groupsByTeam; }
-  get recommendedPlugins(): Signal<readonly RecommendedPlugin[]> { return this._recommended; }
+  get installedPlugins(): Signal<InstalledPlugin[]> {
+    return this._installed;
+  }
+  get isLoading(): Signal<boolean> {
+    return this._isLoading;
+  }
+  get error(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._error;
+  }
+  get hasUpdates(): Signal<boolean> {
+    return this._hasUpdates;
+  }
+  get groupsByTeam(): Signal<DashboardGroup> {
+    return this._groupsByTeam;
+  }
+  get recommendedPlugins(): Signal<readonly RecommendedPlugin[]> {
+    return this._recommended;
+  }
 
   checkForUpdatesCalls = 0;
   loadInstalledCalls = 0;
   removeInstalledCalls: string[] = [];
   recordIntentCalls: { name: string; version: string }[] = [];
 
-  checkForUpdates(): void { this.checkForUpdatesCalls++; }
-  loadInstalled(): void { this.loadInstalledCalls++; }
-  removeInstalled(name: string): void { this.removeInstalledCalls.push(name); }
+  checkForUpdates(): void {
+    this.checkForUpdatesCalls++;
+  }
+  loadInstalled(): void {
+    this.loadInstalledCalls++;
+  }
+  removeInstalled(name: string): void {
+    this.removeInstalledCalls.push(name);
+  }
   recordInstallIntent(name: string, version: string): void {
     this.recordIntentCalls.push({ name, version });
   }
@@ -122,9 +144,9 @@ const PLUGIN_NEEDS_UPDATE = makePlugin({
 // PluginDetailsModalComponent — setup
 // ---------------------------------------------------------------------------
 
-function setupModal(
-  plugin: InstalledPlugin | undefined = PLUGIN_BASIC,
-): { fixture: ComponentFixture<PluginDetailsModalComponent> } {
+function setupModal(plugin: InstalledPlugin | undefined = PLUGIN_BASIC): {
+  fixture: ComponentFixture<PluginDetailsModalComponent>;
+} {
   TestBed.configureTestingModule({
     imports: [PluginDetailsModalComponent],
   }).overrideComponent(PluginDetailsModalComponent, {
@@ -155,9 +177,7 @@ describe('PluginDetailsModalComponent — rendering', () => {
   it('should render the plugin name in the modal title', () => {
     const { fixture } = setupModal(PLUGIN_BASIC);
     fixture.detectChanges();
-    const title = fixture.debugElement.query(
-      By.css('[data-testid="modal-title"], .modal-title, h2, h3'),
-    );
+    const title = fixture.debugElement.query(By.css('[data-testid="modal-title"], .modal-title, h2, h3'));
     expect(title).not.toBeNull();
     expect((title.nativeElement as HTMLElement).textContent).toContain('alpha-plugin');
   });
@@ -165,9 +185,7 @@ describe('PluginDetailsModalComponent — rendering', () => {
   it('should render the plugin version', () => {
     const { fixture } = setupModal(PLUGIN_BASIC);
     fixture.detectChanges();
-    const el = fixture.debugElement.query(
-      By.css('[data-testid="plugin-version"]'),
-    );
+    const el = fixture.debugElement.query(By.css('[data-testid="plugin-version"]'));
     if (el) {
       expect((el.nativeElement as HTMLElement).textContent).toContain('1.2.0');
     } else {
@@ -187,18 +205,14 @@ describe('PluginDetailsModalComponent — rendering', () => {
   it('should render a remove confirm button', () => {
     const { fixture } = setupModal();
     fixture.detectChanges();
-    const btn = fixture.debugElement.query(
-      By.css('[data-testid="modal-remove-btn"], button[aria-label*="Remove"]'),
-    );
+    const btn = fixture.debugElement.query(By.css('[data-testid="modal-remove-btn"], button[aria-label*="Remove"]'));
     expect(btn).not.toBeNull();
   });
 
   it('should render update section when status is "update-available"', () => {
     const { fixture } = setupModal(PLUGIN_NEEDS_UPDATE);
     fixture.detectChanges();
-    const section = fixture.debugElement.query(
-      By.css('[data-testid="update-section"], .update-section'),
-    );
+    const section = fixture.debugElement.query(By.css('[data-testid="update-section"], .update-section'));
     expect(section).not.toBeNull();
   });
 
@@ -212,9 +226,7 @@ describe('PluginDetailsModalComponent — rendering', () => {
   it('should render release notes section when latestVersion is known', () => {
     const { fixture } = setupModal(PLUGIN_NEEDS_UPDATE);
     fixture.detectChanges();
-    const el = fixture.debugElement.query(
-      By.css('[data-testid="release-notes"], .release-notes'),
-    );
+    const el = fixture.debugElement.query(By.css('[data-testid="release-notes"], .release-notes'));
     expect(el).not.toBeNull();
   });
 
@@ -312,9 +324,7 @@ describe('DashboardPageComponent — rendering', () => {
   it('should include an install-search section', () => {
     const { fixture } = setupPage();
     fixture.detectChanges();
-    const search = fixture.debugElement.query(
-      By.css('[data-testid="install-search"], .install-search'),
-    );
+    const search = fixture.debugElement.query(By.css('[data-testid="install-search"], .install-search'));
     expect(search).not.toBeNull();
   });
 
@@ -322,9 +332,7 @@ describe('DashboardPageComponent — rendering', () => {
     const { fixture, stub } = setupPage();
     stub.setHasUpdates(true);
     fixture.detectChanges();
-    const banner = fixture.debugElement.query(
-      By.css('[data-testid="update-banner"], .update-banner'),
-    );
+    const banner = fixture.debugElement.query(By.css('[data-testid="update-banner"], .update-banner'));
     expect(banner).not.toBeNull();
   });
 
@@ -366,7 +374,9 @@ describe('DashboardPageComponent — periodic update check', () => {
     vi.useFakeTimers();
     // We test this by overriding checkForUpdates to throw and verifying the page doesn't crash
     const stub = new StubDashboardFacade();
-    stub.checkForUpdates = () => { throw new Error('Update check failed'); };
+    stub.checkForUpdates = () => {
+      throw new Error('Update check failed');
+    };
     TestBed.configureTestingModule({
       imports: [DashboardPageComponent],
       providers: [{ provide: DashboardFacade, useValue: stub }],

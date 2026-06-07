@@ -15,11 +15,7 @@ export interface DocsSearchResponse {
 }
 
 export abstract class DocsPort {
-  abstract search(
-    query: string,
-    page?: number,
-    limit?: number,
-  ): Observable<DocsSearchResponse>;
+  abstract search(query: string, page?: number, limit?: number): Observable<DocsSearchResponse>;
 
   abstract getPage(slug: string): Observable<DocPage>;
 }

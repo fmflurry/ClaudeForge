@@ -12,10 +12,7 @@ import {
 } from '../../domain/mappers/search-mapper';
 import type { DiscoveryCriteria, DiscoveryResults, SearchResultsPage } from '../../domain/models/search.models';
 import { SearchPort } from '../../domain/ports/search.port';
-import {
-  buildDiscoveryQueryParams,
-  buildSearchQueryParams,
-} from '../../domain/rules/search-filter.rules';
+import { buildDiscoveryQueryParams, buildSearchQueryParams } from '../../domain/rules/search-filter.rules';
 import type { SearchFilterQuery } from '../../domain/rules/search-filter.rules';
 
 @Injectable()
@@ -36,8 +33,8 @@ export class SearchHttpAdapter extends SearchPort {
 
   discover(criteria: DiscoveryCriteria): Observable<DiscoveryResults> {
     const params = buildDiscoveryQueryParams(criteria);
-    return this.apiClient.discoverPlugins(params).pipe(
-      map((envelope) => mapDiscoveryEnvelopeToDiscoveryResults(envelope, criteria)),
-    );
+    return this.apiClient
+      .discoverPlugins(params)
+      .pipe(map((envelope) => mapDiscoveryEnvelopeToDiscoveryResults(envelope, criteria)));
   }
 }

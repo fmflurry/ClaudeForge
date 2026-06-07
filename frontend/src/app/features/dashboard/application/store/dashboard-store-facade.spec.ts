@@ -151,18 +151,18 @@ function setup(
   };
 }
 
-function setupWithFakePort(
-  ...records: InstalledPluginRecord[]
-): { store: DashboardStore; facade: DashboardFacade; catalogPort: FakeCatalogLatestVersionPort } {
+function setupWithFakePort(...records: InstalledPluginRecord[]): {
+  store: DashboardStore;
+  facade: DashboardFacade;
+  catalogPort: FakeCatalogLatestVersionPort;
+} {
   const storage = buildStorage(...records);
   const catalogPort = new FakeCatalogLatestVersionPort();
   const { store, facade } = setup(storage, catalogPort);
   return { store, facade, catalogPort };
 }
 
-function setupWithErrorPort(
-  ...records: InstalledPluginRecord[]
-): { store: DashboardStore; facade: DashboardFacade } {
+function setupWithErrorPort(...records: InstalledPluginRecord[]): { store: DashboardStore; facade: DashboardFacade } {
   const storage = buildStorage(...records);
   const catalogPort = new ErrorCatalogLatestVersionPort();
   return setup(storage, catalogPort);

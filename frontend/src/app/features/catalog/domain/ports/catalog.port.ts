@@ -8,9 +8,7 @@ import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '..
 import type { CatalogFilterQuery } from '../rules/catalog-filter.rules';
 
 export abstract class CatalogPort {
-  abstract loadPlugins(
-    query: CatalogFilterQuery,
-  ): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }>;
+  abstract loadPlugins(query: CatalogFilterQuery): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }>;
 
   abstract getPlugin(pluginId: string): Observable<PluginDetail>;
 

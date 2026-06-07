@@ -15,9 +15,7 @@ import { DocsFacade } from '../../application/facades/docs.facade';
   imports: [DatePipe],
   template: `
     @if (facade.isLoadingDoc()) {
-      <div aria-busy="true" data-testid="loading" class="loading">
-        Loading plugin documentation…
-      </div>
+      <div aria-busy="true" data-testid="loading" class="loading">Loading plugin documentation…</div>
     } @else if (facade.docError(); as errors) {
       <div role="alert" data-testid="error-message" class="error">
         {{ pluginErrorMessage(errors) }}
@@ -27,7 +25,7 @@ import { DocsFacade } from '../../application/facades/docs.facade';
         <article>
           <header>
             <h2>{{ doc.title }}</h2>
-            <time>{{ doc.lastUpdated | date:'mediumDate' }}</time>
+            <time>{{ doc.lastUpdated | date: 'mediumDate' }}</time>
           </header>
           <pre data-testid="doc-content">{{ doc.contentMarkdown }}</pre>
         </article>

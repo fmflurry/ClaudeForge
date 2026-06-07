@@ -71,10 +71,7 @@ describe('LoadPluginsUseCase', () => {
   function setup(): LoadPluginsUseCase {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [
-        LoadPluginsUseCase,
-        { provide: CatalogPort, useClass: FakeCatalogPort },
-      ],
+      providers: [LoadPluginsUseCase, { provide: CatalogPort, useClass: FakeCatalogPort }],
     });
     return TestBed.inject(LoadPluginsUseCase);
   }
@@ -103,16 +100,17 @@ describe('LoadPluginsUseCase', () => {
         captured = q;
         return of({ plugins: [], meta: { totalCount: 0, page: 1, limit: 20, totalPages: 0 } });
       }
-      getPlugin(_: string): Observable<PluginDetail> { return of(DETAIL); }
-      getCategories(): Observable<Categories> { return of(CATEGORIES); }
+      getPlugin(_: string): Observable<PluginDetail> {
+        return of(DETAIL);
+      }
+      getCategories(): Observable<Categories> {
+        return of(CATEGORIES);
+      }
     }
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [
-        LoadPluginsUseCase,
-        { provide: CatalogPort, useClass: SpyPort },
-      ],
+      providers: [LoadPluginsUseCase, { provide: CatalogPort, useClass: SpyPort }],
     });
     const uc = TestBed.inject(LoadPluginsUseCase);
     const q: CatalogFilterQuery = { page: 3, limit: 5 };
@@ -135,10 +133,7 @@ describe('LoadPluginDetailUseCase', () => {
   function setup(): LoadPluginDetailUseCase {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [
-        LoadPluginDetailUseCase,
-        { provide: CatalogPort, useClass: FakeCatalogPort },
-      ],
+      providers: [LoadPluginDetailUseCase, { provide: CatalogPort, useClass: FakeCatalogPort }],
     });
     return TestBed.inject(LoadPluginDetailUseCase);
   }
@@ -162,15 +157,14 @@ describe('LoadPluginDetailUseCase', () => {
         capturedId = id;
         return of(DETAIL);
       }
-      getCategories(): Observable<Categories> { return of(CATEGORIES); }
+      getCategories(): Observable<Categories> {
+        return of(CATEGORIES);
+      }
     }
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [
-        LoadPluginDetailUseCase,
-        { provide: CatalogPort, useClass: SpyPort },
-      ],
+      providers: [LoadPluginDetailUseCase, { provide: CatalogPort, useClass: SpyPort }],
     });
     const uc = TestBed.inject(LoadPluginDetailUseCase);
     uc.execute('plugin-xyz').subscribe();
@@ -192,10 +186,7 @@ describe('LoadCategoriesUseCase', () => {
   function setup(): LoadCategoriesUseCase {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [
-        LoadCategoriesUseCase,
-        { provide: CatalogPort, useClass: FakeCatalogPort },
-      ],
+      providers: [LoadCategoriesUseCase, { provide: CatalogPort, useClass: FakeCatalogPort }],
     });
     return TestBed.inject(LoadCategoriesUseCase);
   }

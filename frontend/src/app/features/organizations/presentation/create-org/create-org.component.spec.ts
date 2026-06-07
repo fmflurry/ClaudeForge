@@ -44,12 +44,14 @@ function buildFakeAuthFacade(isAuthenticated: boolean): Partial<AuthFacade> {
 // Setup
 // ---------------------------------------------------------------------------
 
-function setup(opts: {
-  isAuthenticated?: boolean;
-  isLoadingOrgs?: boolean;
-  orgsError?: { code: string; message: string }[] | undefined;
-  createOrgSpy?: (name: string, slug: string) => void;
-} = {}): ComponentFixture<CreateOrgComponent> {
+function setup(
+  opts: {
+    isAuthenticated?: boolean;
+    isLoadingOrgs?: boolean;
+    orgsError?: { code: string; message: string }[] | undefined;
+    createOrgSpy?: (name: string, slug: string) => void;
+  } = {},
+): ComponentFixture<CreateOrgComponent> {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [CreateOrgComponent],

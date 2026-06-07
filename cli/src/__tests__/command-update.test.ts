@@ -83,12 +83,14 @@ function makeFakeFs(overrides?: Partial<UpdateFsPort>): UpdateFsPort {
 
 function registryWithPlugin(name: string, version: string): InstalledRegistry {
   return {
-    plugins: [{
-      name,
-      version,
-      installedAt: '2024-01-01T00:00:00.000Z',
-      path: `/tmp/plugins/${name}`,
-    }],
+    plugins: [
+      {
+        name,
+        version,
+        installedAt: '2024-01-01T00:00:00.000Z',
+        path: `/tmp/plugins/${name}`,
+      },
+    ],
   };
 }
 
@@ -119,10 +121,7 @@ describe('runUpdate – already up-to-date', () => {
 
   it('output says "Plugin is already up-to-date at v1.5.0"', async () => {
     const client = makeFakeClient({ getLatestVersion: vi.fn().mockResolvedValue(makeVersion('1.5.0')) });
-    const result = await runUpdate(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: makeFakeFs() },
-    );
+    const result = await runUpdate({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: makeFakeFs() });
     expect(result.output).toContain('Plugin is already up-to-date at v1.5.0');
   });
 
@@ -132,10 +131,7 @@ describe('runUpdate – already up-to-date', () => {
       getLatestVersion: vi.fn().mockResolvedValue(makeVersion('1.5.0')),
       downloadPlugin: downloadFn,
     });
-    await runUpdate(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: makeFakeFs() },
-    );
+    await runUpdate({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: makeFakeFs() });
     expect(downloadFn).not.toHaveBeenCalled();
   });
 });
@@ -158,19 +154,13 @@ describe('runUpdate – successful update', () => {
 
   it('returns exitCode 0', async () => {
     const client = makeFakeClient();
-    const result = await runUpdate(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: makeFakeFs() },
-    );
+    const result = await runUpdate({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: makeFakeFs() });
     expect(result.exitCode).toBe(0);
   });
 
   it('output says "Updated @namespace/plugin-name from v1.2.3 to v1.5.0"', async () => {
     const client = makeFakeClient();
-    const result = await runUpdate(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: makeFakeFs() },
-    );
+    const result = await runUpdate({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: makeFakeFs() });
     expect(result.output).toContain('Updated @namespace/plugin-name from v1.2.3 to v1.5.0');
   });
 
@@ -178,20 +168,14 @@ describe('runUpdate – successful update', () => {
     const copyDir = vi.fn().mockResolvedValue(undefined);
     const fakeFs = makeFakeFs({ copyDir });
     const client = makeFakeClient();
-    await runUpdate(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runUpdate({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     expect(copyDir).toHaveBeenCalled();
   });
 
   it('updates the registry with the new version after success', async () => {
     const { readRegistry } = await import('../registry/registry.js');
     const client = makeFakeClient();
-    await runUpdate(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: makeFakeFs() },
-    );
+    await runUpdate({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: makeFakeFs() });
     const reg = await readRegistry(homeDir);
     const found = reg.plugins.find((p) => p.name === '@namespace/plugin-name');
     expect(found?.version).toBe('1.5.0');
@@ -219,10 +203,7 @@ describe('runUpdate – rollback on extraction failure', () => {
       writeStream: vi.fn().mockRejectedValue(new Error('extraction failed')),
     });
     const client = makeFakeClient();
-    const result = await runUpdate(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runUpdate({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     expect(result.exitCode).toBeGreaterThan(0);
   });
 
@@ -231,10 +212,7 @@ describe('runUpdate – rollback on extraction failure', () => {
       writeStream: vi.fn().mockRejectedValue(new Error('extraction failed')),
     });
     const client = makeFakeClient();
-    const result = await runUpdate(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runUpdate({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     expect(result.output.toLowerCase()).toMatch(/backup|rollback|previous version/);
   });
 
@@ -244,10 +222,7 @@ describe('runUpdate – rollback on extraction failure', () => {
       writeStream: vi.fn().mockRejectedValue(new Error('extraction failed')),
     });
     const client = makeFakeClient();
-    await runUpdate(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runUpdate({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     const reg = await readRegistry(homeDir);
     const found = reg.plugins.find((p) => p.name === '@namespace/plugin-name');
     expect(found?.version).toBe('1.2.3');
@@ -272,19 +247,13 @@ describe('runUpdate – plugin not installed', () => {
 
   it('returns non-zero exitCode when plugin is not installed', async () => {
     const client = makeFakeClient();
-    const result = await runUpdate(
-      { pluginName: '@namespace/nonexistent' },
-      { client, homeDir, fs: makeFakeFs() },
-    );
+    const result = await runUpdate({ pluginName: '@namespace/nonexistent' }, { client, homeDir, fs: makeFakeFs() });
     expect(result.exitCode).toBeGreaterThan(0);
   });
 
   it('output mentions the plugin is not installed', async () => {
     const client = makeFakeClient();
-    const result = await runUpdate(
-      { pluginName: '@namespace/nonexistent' },
-      { client, homeDir, fs: makeFakeFs() },
-    );
+    const result = await runUpdate({ pluginName: '@namespace/nonexistent' }, { client, homeDir, fs: makeFakeFs() });
     expect(result.output).toContain('@namespace/nonexistent');
     expect(result.output.toLowerCase()).toContain('not installed');
   });

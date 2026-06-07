@@ -81,14 +81,16 @@ function buildFakeRoute(orgId?: string): Partial<ActivatedRoute> {
 // Setup
 // ---------------------------------------------------------------------------
 
-function setup(opts: {
-  isAuthenticated?: boolean;
-  orgId?: string;
-  members?: OrgMember[];
-  invitations?: OrgInvitation[];
-  activeOrg?: OrgSummary;
-  listMembersSpy?: (orgId: string) => void;
-} = {}): ComponentFixture<OrgDetailComponent> {
+function setup(
+  opts: {
+    isAuthenticated?: boolean;
+    orgId?: string;
+    members?: OrgMember[];
+    invitations?: OrgInvitation[];
+    activeOrg?: OrgSummary;
+    listMembersSpy?: (orgId: string) => void;
+  } = {},
+): ComponentFixture<OrgDetailComponent> {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [OrgDetailComponent, RouterModule.forRoot([])],

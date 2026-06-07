@@ -99,18 +99,12 @@ describe('resolveHome', () => {
 
 describe('resolveApiUrl', () => {
   it('returns explicit URL when provided, ignoring env and default', () => {
-    const result = resolveApiUrl(
-      'https://explicit.example.com',
-      { CLAUDE_PLUGINS_API_URL: 'https://env.example.com' },
-    );
+    const result = resolveApiUrl('https://explicit.example.com', { CLAUDE_PLUGINS_API_URL: 'https://env.example.com' });
     expect(result).toBe('https://explicit.example.com');
   });
 
   it('returns env URL when no explicit URL provided', () => {
-    const result = resolveApiUrl(
-      undefined,
-      { CLAUDE_PLUGINS_API_URL: 'https://env.example.com' },
-    );
+    const result = resolveApiUrl(undefined, { CLAUDE_PLUGINS_API_URL: 'https://env.example.com' });
     expect(result).toBe('https://env.example.com');
   });
 
@@ -193,11 +187,7 @@ describe('readConfig', () => {
 
   it('returns written config when config.json exists with valid data', async () => {
     const expected: CliConfig = { apiUrl: 'https://custom.example.com' };
-    await fs.writeFile(
-      path.join(tmpDir, 'config.json'),
-      JSON.stringify(expected),
-      'utf-8',
-    );
+    await fs.writeFile(path.join(tmpDir, 'config.json'), JSON.stringify(expected), 'utf-8');
     const config = await readConfig(tmpDir);
     expect(config).toEqual(expected);
   });

@@ -128,20 +128,14 @@ describe('runInstall – happy path', () => {
   it('output contains "Installed @namespace/plugin-name v1.2.3"', async () => {
     const client = makeFakeClient();
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     expect(result.output).toContain('Installed @namespace/plugin-name v1.2.3');
   });
 
   it('records the plugin in the installed registry after success', async () => {
     const client = makeFakeClient();
     const fakeFs = makeFakeFs();
-    await runInstall(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runInstall({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     const registry = await readRegistry(homeDir);
     const found = registry.plugins.find((p) => p.name === '@namespace/plugin-name');
     expect(found).toBeDefined();
@@ -152,10 +146,7 @@ describe('runInstall – happy path', () => {
     const downloadFn = vi.fn().mockResolvedValue(new ReadableStream());
     const client = makeFakeClient({ downloadPlugin: downloadFn });
     const fakeFs = makeFakeFs();
-    await runInstall(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runInstall({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     expect(downloadFn).toHaveBeenCalled();
   });
 });
@@ -228,10 +219,7 @@ describe('runInstall – network error', () => {
       getPlugin: vi.fn().mockRejectedValue(new TypeError('fetch failed')),
     });
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     expect(result.exitCode).toBeGreaterThan(0);
   });
 
@@ -240,10 +228,7 @@ describe('runInstall – network error', () => {
       getPlugin: vi.fn().mockRejectedValue(new TypeError('fetch failed')),
     });
     const fakeFs = makeFakeFs();
-    await runInstall(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runInstall({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     const registry = await readRegistry(homeDir);
     expect(registry.plugins).toHaveLength(0);
   });
@@ -254,10 +239,7 @@ describe('runInstall – network error', () => {
       downloadPlugin: vi.fn().mockRejectedValue(new TypeError('download failed')),
     });
     const fakeFs = makeFakeFs();
-    await runInstall(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runInstall({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     const registry = await readRegistry(homeDir);
     expect(registry.plugins).toHaveLength(0);
   });
@@ -267,10 +249,7 @@ describe('runInstall – network error', () => {
       getPlugin: vi.fn().mockRejectedValue(new TypeError('fetch failed')),
     });
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     expect(result.output.toLowerCase()).toContain('could not reach marketplace');
   });
 
@@ -279,10 +258,7 @@ describe('runInstall – network error', () => {
       getPlugin: vi.fn().mockRejectedValue(new TypeError('fetch failed')),
     });
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     // Spec says: "Suggest retry or manual configuration of API URL"
     expect(result.output).toMatch(/retry|api.url|config/i);
   });
@@ -338,10 +314,7 @@ describe('runInstall – authentication', () => {
       downloadPlugin: vi.fn().mockRejectedValue(new SessionExpiredError()),
     });
     const fakeFs = makeFakeFs();
-    await runInstall(
-      { pluginName: '@namespace/plugin-name' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runInstall({ pluginName: '@namespace/plugin-name' }, { client, homeDir, fs: fakeFs });
     const registry = await readRegistry(homeDir);
     expect(registry.plugins).toHaveLength(0);
   });

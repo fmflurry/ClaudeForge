@@ -18,11 +18,7 @@ import type { DocCategoryNode, DocSearchResult } from '../../domain/models/docs.
         <ul>
           @for (doc of node.docs; track doc.slug) {
             <li>
-              <button
-                type="button"
-                [attr.data-testid]="'doc-link-' + doc.slug"
-                (click)="selectDoc(doc.slug)"
-              >
+              <button type="button" [attr.data-testid]="'doc-link-' + doc.slug" (click)="selectDoc(doc.slug)">
                 {{ doc.title }}
               </button>
             </li>

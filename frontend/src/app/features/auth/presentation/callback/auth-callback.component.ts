@@ -22,12 +22,7 @@ import type { AuthStatus } from '../../domain/models/auth.models';
           <a href="/login" class="cf-callback__retry">Try again</a>
         </div>
       } @else {
-        <div
-          class="cf-callback__loading"
-          role="status"
-          aria-live="polite"
-          aria-label="Completing sign-in"
-        >
+        <div class="cf-callback__loading" role="status" aria-live="polite" aria-label="Completing sign-in">
           <p>Completing sign-in…</p>
         </div>
       }

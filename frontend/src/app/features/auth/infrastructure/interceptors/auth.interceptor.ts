@@ -12,12 +12,7 @@
  * 4. Non-401 errors pass through unchanged.
  */
 
-import {
-  HttpErrorResponse,
-  HttpEvent,
-  HttpHandlerFn,
-  HttpRequest,
-} from '@angular/common/http';
+import { HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, shareReplay, switchMap, tap, throwError } from 'rxjs';
@@ -75,10 +70,7 @@ function clearPendingRefresh(): void {
 // Interceptor
 // ---------------------------------------------------------------------------
 
-export function authInterceptor(
-  req: HttpRequest<unknown>,
-  next: HttpHandlerFn,
-): Observable<HttpEvent<unknown>> {
+export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
   const store = inject(AuthStore);
   const port = inject(AuthPort);
   const router = inject(Router);
@@ -87,18 +79,11 @@ export function authInterceptor(
 
   // Attach Bearer header if a token is in-memory and the request is not skipped
   const token = store.get(AuthStoreEnum.AUTH)().data?.token?.accessToken;
-  const authorizedReq =
-    !skip && token
-      ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-      : req;
+  const authorizedReq = !skip && token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
   return next(authorizedReq).pipe(
     catchError((err: unknown) => {
-      if (
-        !skip &&
-        err instanceof HttpErrorResponse &&
-        err.status === 401
-      ) {
+      if (!skip && err instanceof HttpErrorResponse && err.status === 401) {
         return handle401(req, next, store, port, router);
       }
       return throwError(() => err);

@@ -71,10 +71,7 @@ describe('runSearch – happy path', () => {
     const client = makeFakeClient({
       searchPlugins: vi.fn().mockResolvedValue(makePagedResponse([result])),
     });
-    const outcome: CommandResult = await runSearch(
-      { query: 'authentication' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome: CommandResult = await runSearch({ query: 'authentication' }, { client, homeDir: '/tmp/fake-home' });
     expect(outcome.exitCode).toBe(0);
   });
 
@@ -82,10 +79,7 @@ describe('runSearch – happy path', () => {
     const client = makeFakeClient({
       searchPlugins: vi.fn().mockResolvedValue(makePagedResponse([makeSearchResult()])),
     });
-    const outcome = await runSearch(
-      { query: 'authentication' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome = await runSearch({ query: 'authentication' }, { client, homeDir: '/tmp/fake-home' });
     expect(outcome.output).toContain('Name');
     expect(outcome.output).toContain('Version');
     expect(outcome.output).toContain('Description');
@@ -94,27 +88,17 @@ describe('runSearch – happy path', () => {
 
   it('output contains the result plugin name', async () => {
     const client = makeFakeClient({
-      searchPlugins: vi.fn().mockResolvedValue(
-        makePagedResponse([makeSearchResult({ name: '@auth/plugin' })]),
-      ),
+      searchPlugins: vi.fn().mockResolvedValue(makePagedResponse([makeSearchResult({ name: '@auth/plugin' })])),
     });
-    const outcome = await runSearch(
-      { query: 'authentication' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome = await runSearch({ query: 'authentication' }, { client, homeDir: '/tmp/fake-home' });
     expect(outcome.output).toContain('@auth/plugin');
   });
 
   it('output contains the download count', async () => {
     const client = makeFakeClient({
-      searchPlugins: vi.fn().mockResolvedValue(
-        makePagedResponse([makeSearchResult({ downloadCount: 777 })]),
-      ),
+      searchPlugins: vi.fn().mockResolvedValue(makePagedResponse([makeSearchResult({ downloadCount: 777 })])),
     });
-    const outcome = await runSearch(
-      { query: 'authentication' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome = await runSearch({ query: 'authentication' }, { client, homeDir: '/tmp/fake-home' });
     expect(outcome.output).toContain('777');
   });
 });
@@ -138,10 +122,7 @@ describe('runSearch – default limit', () => {
     const client = makeFakeClient({
       searchPlugins: vi.fn().mockResolvedValue(makePagedResponse([makeSearchResult()])),
     });
-    const outcome = await runSearch(
-      { query: 'authentication' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome = await runSearch({ query: 'authentication' }, { client, homeDir: '/tmp/fake-home' });
     // Spec: "Suggest --limit 20 to fetch more results"
     expect(outcome.output).toContain('--limit 20');
   });
@@ -152,10 +133,7 @@ describe('runSearch – no results', () => {
     const client = makeFakeClient({
       searchPlugins: vi.fn().mockResolvedValue(makePagedResponse([])),
     });
-    const outcome = await runSearch(
-      { query: 'xyz-nonexistent-plugin' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome = await runSearch({ query: 'xyz-nonexistent-plugin' }, { client, homeDir: '/tmp/fake-home' });
     expect(outcome.exitCode).toBe(0);
   });
 
@@ -163,10 +141,7 @@ describe('runSearch – no results', () => {
     const client = makeFakeClient({
       searchPlugins: vi.fn().mockResolvedValue(makePagedResponse([])),
     });
-    const outcome = await runSearch(
-      { query: 'xyz-nonexistent-plugin' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome = await runSearch({ query: 'xyz-nonexistent-plugin' }, { client, homeDir: '/tmp/fake-home' });
     expect(outcome.output).toContain("No plugins found matching 'xyz-nonexistent-plugin'");
   });
 
@@ -174,10 +149,7 @@ describe('runSearch – no results', () => {
     const client = makeFakeClient({
       searchPlugins: vi.fn().mockResolvedValue(makePagedResponse([])),
     });
-    const outcome = await runSearch(
-      { query: 'xyz' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome = await runSearch({ query: 'xyz' }, { client, homeDir: '/tmp/fake-home' });
     expect(outcome.output).toContain('claude plugin list-available');
   });
 });
@@ -187,10 +159,7 @@ describe('runSearch – network error', () => {
     const client = makeFakeClient({
       searchPlugins: vi.fn().mockRejectedValue(new Error('Network failure')),
     });
-    const outcome = await runSearch(
-      { query: 'auth' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome = await runSearch({ query: 'auth' }, { client, homeDir: '/tmp/fake-home' });
     expect(outcome.exitCode).toBeGreaterThan(0);
   });
 
@@ -198,10 +167,7 @@ describe('runSearch – network error', () => {
     const client = makeFakeClient({
       searchPlugins: vi.fn().mockRejectedValue(new TypeError('fetch failed')),
     });
-    const outcome = await runSearch(
-      { query: 'auth' },
-      { client, homeDir: '/tmp/fake-home' },
-    );
+    const outcome = await runSearch({ query: 'auth' }, { client, homeDir: '/tmp/fake-home' });
     expect(outcome.output.toLowerCase()).toContain('could not reach marketplace');
   });
 });

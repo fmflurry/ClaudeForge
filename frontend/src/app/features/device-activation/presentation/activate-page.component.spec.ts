@@ -60,10 +60,7 @@ import { ChangeDetectionStrategy, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ActivatePageComponent } from './activate-page.component';
 import { DeviceActivationFacade } from '../application/facades/device-activation.facade';
-import type {
-  DeviceActivationStatus,
-  DeviceActivationErrorReason,
-} from '../domain/ports/device-activation.port';
+import type { DeviceActivationStatus, DeviceActivationErrorReason } from '../domain/ports/device-activation.port';
 
 // ---------------------------------------------------------------------------
 // Fake DeviceActivationFacade
@@ -197,33 +194,25 @@ describe('ActivatePageComponent — query param prefill', () => {
 describe('ActivatePageComponent — submit button disabled during submitting', () => {
   it('should NOT disable submit button when status is "idle"', () => {
     const { fixture } = setup({ status: 'idle' });
-    const btn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
-      'button[type="submit"]',
-    );
+    const btn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(btn?.disabled).toBe(false);
   });
 
   it('should disable submit button when status is "submitting"', () => {
     const { fixture } = setup({ status: 'submitting' });
-    const btn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
-      'button[type="submit"]',
-    );
+    const btn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(btn?.disabled).toBe(true);
   });
 
   it('should NOT disable submit button when status is "error"', () => {
     const { fixture } = setup({ status: 'error', errorReason: 'invalid' });
-    const btn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
-      'button[type="submit"]',
-    );
+    const btn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(btn?.disabled).toBe(false);
   });
 
   it('should NOT disable submit button when status is "approved"', () => {
     const { fixture } = setup({ status: 'approved' });
-    const btn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
-      'button[type="submit"]',
-    );
+    const btn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[type="submit"]');
     // After approval the button may be hidden entirely — either null or not disabled
     if (btn !== null) {
       expect(btn.disabled).toBe(false);

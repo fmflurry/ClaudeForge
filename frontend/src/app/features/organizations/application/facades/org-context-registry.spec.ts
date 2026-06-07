@@ -52,7 +52,13 @@ import { OrgContextFacade, ORG_ACTIVE_ORG_SWITCHED } from './org-context.facade'
 import type { ActiveOrgSwitchedPayload } from './org-context.facade';
 import { OrganizationsStore } from '../store/organizations.store';
 import { OrgPort } from '../../domain/ports/org.port';
-import type { OrgInvitation, OrgMember, OrgRole, OrgSummary, Organization } from '../../domain/models/organizations.models';
+import type {
+  OrgInvitation,
+  OrgMember,
+  OrgRole,
+  OrgSummary,
+  Organization,
+} from '../../domain/models/organizations.models';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -105,11 +111,7 @@ class MinimalFakeOrgPort extends OrgPort {
     return of([]);
   }
 
-  invite(
-    _orgId: string,
-    _email: string,
-    _role: OrgRole,
-  ): Observable<OrgInvitation> {
+  invite(_orgId: string, _email: string, _role: OrgRole): Observable<OrgInvitation> {
     return of({
       invitationId: 'inv-1',
       orgId: _orgId,
@@ -151,11 +153,7 @@ function setupContextHarness(): ContextHarness {
   TestBed.resetTestingModule();
   const port = new MinimalFakeOrgPort();
   TestBed.configureTestingModule({
-    providers: [
-      OrganizationsStore,
-      OrgContextFacade,
-      { provide: OrgPort, useValue: port },
-    ],
+    providers: [OrganizationsStore, OrgContextFacade, { provide: OrgPort, useValue: port }],
   });
   const facade = TestBed.inject(OrgContextFacade);
   return { facade, port };
@@ -194,10 +192,7 @@ describe('OrgContextFacade — setActiveOrg() publishes via contextRegistry', ()
     facade.loadOrganizations();
 
     const received: ActiveOrgSwitchedPayload[] = [];
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (payload) => received.push(payload),
-    );
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (payload) => received.push(payload));
 
     facade.setActiveOrg('org-uuid-2');
 
@@ -209,10 +204,9 @@ describe('OrgContextFacade — setActiveOrg() publishes via contextRegistry', ()
     facade.loadOrganizations();
 
     let captured: ActiveOrgSwitchedPayload | undefined;
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (payload) => { captured = payload; },
-    );
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (payload) => {
+      captured = payload;
+    });
 
     facade.setActiveOrg('org-uuid-2');
 
@@ -225,10 +219,9 @@ describe('OrgContextFacade — setActiveOrg() publishes via contextRegistry', ()
     facade.loadOrganizations();
 
     let captured: ActiveOrgSwitchedPayload | undefined;
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (payload) => { captured = payload; },
-    );
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (payload) => {
+      captured = payload;
+    });
 
     facade.setActiveOrg('org-uuid-1');
 
@@ -244,9 +237,8 @@ describe('OrgContextFacade — setActiveOrg() publishes via contextRegistry', ()
     facade.loadOrganizations();
 
     const received: string[] = [];
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (payload) => received.push(payload.orgId),
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (payload) =>
+      received.push(payload.orgId),
     );
 
     facade.setActiveOrg('org-uuid-2');
@@ -264,18 +256,9 @@ describe('OrgContextFacade — setActiveOrg() publishes via contextRegistry', ()
     const received2: string[] = [];
     const received3: string[] = [];
 
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (p) => received1.push(p.orgId),
-    );
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (p) => received2.push(p.orgId),
-    );
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (p) => received3.push(p.orgId),
-    );
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (p) => received1.push(p.orgId));
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (p) => received2.push(p.orgId));
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (p) => received3.push(p.orgId));
 
     facade.setActiveOrg('org-uuid-2');
 
@@ -289,9 +272,8 @@ describe('OrgContextFacade — setActiveOrg() publishes via contextRegistry', ()
     facade.loadOrganizations();
 
     const received: string[] = [];
-    const unsubscribe = contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (p) => received.push(p.orgId),
+    const unsubscribe = contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (p) =>
+      received.push(p.orgId),
     );
 
     facade.setActiveOrg('org-uuid-2');
@@ -307,10 +289,7 @@ describe('OrgContextFacade — setActiveOrg() publishes via contextRegistry', ()
     const { facade } = setupContextHarness();
     facade.loadOrganizations();
 
-    const unsubscribe = contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      () => undefined,
-    );
+    const unsubscribe = contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, () => undefined);
 
     expect(() => {
       unsubscribe();
@@ -322,10 +301,7 @@ describe('OrgContextFacade — setActiveOrg() publishes via contextRegistry', ()
     const { facade } = setupContextHarness();
 
     const received: ActiveOrgSwitchedPayload[] = [];
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (p) => received.push(p),
-    );
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (p) => received.push(p));
 
     // Only load — no explicit setActiveOrg call
     facade.loadOrganizations();
@@ -341,10 +317,9 @@ describe('OrgContextFacade — setActiveOrg() publishes via contextRegistry', ()
     facade.loadOrganizations();
 
     let fired = false;
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      () => { fired = true; },
-    );
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, () => {
+      fired = true;
+    });
 
     facade.setActiveOrg('org-uuid-2');
 
@@ -386,10 +361,7 @@ describe('contextRegistry — subscriber isolation between tests', () => {
     facade.loadOrganizations();
 
     const received: string[] = [];
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (p) => received.push(p.orgId),
-    );
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (p) => received.push(p.orgId));
 
     facade.setActiveOrg('org-uuid-1');
 
@@ -399,10 +371,7 @@ describe('contextRegistry — subscriber isolation between tests', () => {
 
   it('clear() removes all subscribers', () => {
     const received: string[] = [];
-    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      (p) => received.push(p.orgId),
-    );
+    contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, (p) => received.push(p.orgId));
     contextRegistry.clear();
 
     const { facade } = setupContextHarness();

@@ -71,10 +71,7 @@ const FAKE_UUID_2 = 'ffffffff-0000-4111-a222-333333333333';
  * constant is always in sync.
  */
 async function sha256Hex(input: string): Promise<string> {
-  const buf = await globalThis.crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(input),
-  );
+  const buf = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
@@ -271,12 +268,14 @@ describe('AnonIdAdapter — rotate', () => {
         if (!id) throw new Error('exhausted');
         return id;
       }
-      sha256Hex(input: string): Promise<string> { return sha256Hex(input); }
+      sha256Hex(input: string): Promise<string> {
+        return sha256Hex(input);
+      }
     }
     const adapter = new AnonIdAdapter(new CountingCrypto());
-    await adapter.getOrCreate();   // call 1
-    await adapter.rotate();         // call 2
-    await adapter.getOrCreate();   // should NOT call randomUUID again
+    await adapter.getOrCreate(); // call 1
+    await adapter.rotate(); // call 2
+    await adapter.getOrCreate(); // should NOT call randomUUID again
     expect(uuidCallCount).toBe(2);
   });
 

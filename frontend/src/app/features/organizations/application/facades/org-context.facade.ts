@@ -42,9 +42,7 @@ export class OrgContextFacade {
   // ---------------------------------------------------------------------------
 
   get organizations(): Signal<OrgSummary[]> {
-    return computed(
-      () => this.store.get(OrganizationsStoreEnum.ORGANIZATIONS)().data?.organizations ?? [],
-    );
+    return computed(() => this.store.get(OrganizationsStoreEnum.ORGANIZATIONS)().data?.organizations ?? []);
   }
 
   get activeOrg(): Signal<OrgSummary | undefined> {
@@ -95,8 +93,7 @@ export class OrgContextFacade {
 
           // Set default active org to first if none is currently active
           const currentId = this._activeOrgId();
-          const stillPresent =
-            currentId !== undefined && orgs.some((o) => o.orgId === currentId);
+          const stillPresent = currentId !== undefined && orgs.some((o) => o.orgId === currentId);
 
           if (!stillPresent && orgs.length > 0) {
             // Internal default selection — do NOT publish switch event

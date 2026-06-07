@@ -23,9 +23,7 @@ const NETWORK_ERROR_SENTINEL = '__networkError' as const;
 type NetworkErrorSentinel = typeof NETWORK_ERROR_SENTINEL;
 type InternalResult = DeviceApprovalResult | { kind: NetworkErrorSentinel };
 
-function mapResultToErrorReason(
-  result: DeviceApprovalResult,
-): DeviceActivationErrorReason | undefined {
+function mapResultToErrorReason(result: DeviceApprovalResult): DeviceActivationErrorReason | undefined {
   switch (result.kind) {
     case 'Approved':
       return undefined;
@@ -70,9 +68,7 @@ export class DeviceActivationFacade {
     this._errorReason.set(undefined);
 
     const networkErrorResult: InternalResult = { kind: NETWORK_ERROR_SENTINEL };
-    const safe$: Observable<InternalResult> = (
-      this.port.approve(userCode) as Observable<InternalResult>
-    ).pipe(
+    const safe$: Observable<InternalResult> = (this.port.approve(userCode) as Observable<InternalResult>).pipe(
       catchError((): Observable<InternalResult> => of(networkErrorResult)),
     );
 

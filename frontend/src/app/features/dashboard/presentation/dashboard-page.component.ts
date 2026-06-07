@@ -1,12 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnDestroy,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { DashboardFacade } from '../application/facades/dashboard.facade';
 import { InstalledPluginsTableComponent } from './installed-plugins/installed-plugins-table.component';
 import { PluginDetailsModalComponent } from './plugin-details-modal/plugin-details-modal.component';
@@ -22,19 +14,12 @@ const UPDATE_CHECK_INTERVAL_MS = 300_000;
   imports: [InstalledPluginsTableComponent, PluginDetailsModalComponent],
   template: `
     <div data-testid="dashboard-page" class="dashboard-page">
-
       @if (facade.hasUpdates()) {
-        <div data-testid="update-banner" class="update-banner">
-          Updates are available for your installed plugins.
-        </div>
+        <div data-testid="update-banner" class="update-banner">Updates are available for your installed plugins.</div>
       }
 
       <div data-testid="install-search" class="install-search">
-        <input
-          type="text"
-          placeholder="Search for plugins to install…"
-          aria-label="Search for plugins to install"
-        />
+        <input type="text" placeholder="Search for plugins to install…" aria-label="Search for plugins to install" />
       </div>
 
       <cf-installed-plugins-table
@@ -52,7 +37,6 @@ const UPDATE_CHECK_INTERVAL_MS = 300_000;
           (confirmUpdate)="onConfirmUpdate($event)"
         />
       }
-
     </div>
   `,
 })

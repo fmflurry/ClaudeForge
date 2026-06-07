@@ -59,10 +59,7 @@ const realClock = {
 // runDeviceCodeLogin
 // ---------------------------------------------------------------------------
 
-export async function runDeviceCodeLogin(
-  provider: string,
-  deps: DeviceCodeDeps,
-): Promise<DeviceCodeResult> {
+export async function runDeviceCodeLogin(provider: string, deps: DeviceCodeDeps): Promise<DeviceCodeResult> {
   const { api, storeCredentials, displayInstructions } = deps;
   const clock = deps.clock ?? realClock;
   const maxAttempts = deps.maxAttempts ?? 180;

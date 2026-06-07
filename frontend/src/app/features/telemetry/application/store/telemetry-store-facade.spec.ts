@@ -82,9 +82,15 @@ import type { IngestTelemetryRequestDto } from '../../../../shared/infrastructur
 class FakeTelemetryPreferencePort extends TelemetryPreferencePort {
   private disabled = false;
 
-  isDisabled(): boolean { return this.disabled; }
-  setDisabled(disabled: boolean): void { this.disabled = disabled; }
-  clear(): void { this.disabled = false; }
+  isDisabled(): boolean {
+    return this.disabled;
+  }
+  setDisabled(disabled: boolean): void {
+    this.disabled = disabled;
+  }
+  clear(): void {
+    this.disabled = false;
+  }
 }
 
 const FAKE_ANON_ID_1 = 'aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffff0000000011111111';
@@ -117,7 +123,9 @@ class FakeAnonIdPort extends AnonIdPort {
     return Promise.resolve(this.stored);
   }
 
-  clear(): void { this.stored = null; }
+  clear(): void {
+    this.stored = null;
+  }
 }
 
 /**

@@ -1,12 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  HostListener,
-  input,
-  output,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, input, output, viewChild } from '@angular/core';
 
 @Component({
   selector: 'cf-modal',
@@ -24,9 +16,7 @@ import {
       <div class="cf-modal__panel" #panel>
         <header class="cf-modal__header">
           <h2 class="cf-modal__title">{{ title() }}</h2>
-          <button class="cf-modal__close" aria-label="Close modal" (click)="modalClose.emit()">
-            &times;
-          </button>
+          <button class="cf-modal__close" aria-label="Close modal" (click)="modalClose.emit()">&times;</button>
         </header>
         <div class="cf-modal__body">
           <ng-content />

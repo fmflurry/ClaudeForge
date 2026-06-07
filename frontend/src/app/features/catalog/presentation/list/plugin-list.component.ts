@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  output,
-  Signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
 import { CatalogFacade } from '../../application/facades/catalog.facade';
 import type { PaginationMeta, PluginSummary } from '../../domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../../domain/rules/catalog-filter.rules';
@@ -23,9 +16,7 @@ import { PaginationComponent } from '../../../../shared/design-system/pagination
     }
 
     @if (!isLoading() && hasError()) {
-      <div role="alert" class="error" data-testid="error-message">
-        Failed to load plugins. Please try again.
-      </div>
+      <div role="alert" class="error" data-testid="error-message">Failed to load plugins. Please try again.</div>
     }
 
     @if (!isLoading() && !hasError() && plugins().length === 0) {
@@ -45,11 +36,7 @@ import { PaginationComponent } from '../../../../shared/design-system/pagination
         </thead>
         <tbody>
           @for (plugin of plugins(); track plugin.pluginId) {
-            <tr
-              class="cf-plugin-table__row"
-              (click)="selectPlugin(plugin.pluginId)"
-              style="cursor:pointer"
-            >
+            <tr class="cf-plugin-table__row" (click)="selectPlugin(plugin.pluginId)" style="cursor:pointer">
               <td>{{ plugin.name }}</td>
               <td>{{ plugin.author }}</td>
               <td>{{ plugin.latestVersion }}</td>
@@ -62,11 +49,7 @@ import { PaginationComponent } from '../../../../shared/design-system/pagination
     }
 
     @if (showPagination()) {
-      <cf-pagination
-        [currentPage]="currentPage()"
-        [totalPages]="totalPages()"
-        (pageChange)="onPageChange($event)"
-      />
+      <cf-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" (pageChange)="onPageChange($event)" />
     }
   `,
 })
@@ -76,9 +59,7 @@ export class PluginListComponent {
   readonly plugins: Signal<PluginSummary[]> = this.facade.plugins;
   readonly isLoading: Signal<boolean> = this.facade.isLoadingPlugins;
   readonly paginationMeta: Signal<PaginationMeta | undefined> = this.facade.paginationMeta;
-  readonly hasError: Signal<boolean> = computed(
-    () => this.facade.pluginsError() !== undefined,
-  );
+  readonly hasError: Signal<boolean> = computed(() => this.facade.pluginsError() !== undefined);
 
   readonly showPagination = computed(() => (this.paginationMeta()?.totalPages ?? 0) > 1);
   readonly currentPage = computed(() => this.paginationMeta()?.page ?? 1);
@@ -94,9 +75,7 @@ export class PluginListComponent {
     this.facade.setSort(sort, order);
   }
 
-  onFilterChange(
-    filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>,
-  ): void {
+  onFilterChange(filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>): void {
     this.facade.setFilters(filters);
   }
 

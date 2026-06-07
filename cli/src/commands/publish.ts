@@ -64,10 +64,7 @@ const realPublishFsPort: PublishFsPort = {
 // Command
 // ---------------------------------------------------------------------------
 
-export async function runPublish(
-  args: PublishArgs,
-  deps: PublishDeps,
-): Promise<CommandResult> {
+export async function runPublish(args: PublishArgs, deps: PublishDeps): Promise<CommandResult> {
   const { pluginPath, org } = args;
   const { client, fs: fsPort = realPublishFsPort } = deps;
 
@@ -81,10 +78,9 @@ export async function runPublish(
   } catch {
     return {
       exitCode: 1,
-      output: [
-        `plugin.json not found in ${dir}`,
-        `Run \`claude plugin scaffold\` to generate a plugin template.`,
-      ].join('\n'),
+      output: [`plugin.json not found in ${dir}`, `Run \`claude plugin scaffold\` to generate a plugin template.`].join(
+        '\n',
+      ),
     };
   }
 

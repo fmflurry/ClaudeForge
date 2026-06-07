@@ -98,7 +98,7 @@ import { AuthStore, AuthStoreEnum } from './auth.store';
 import type { AuthState, AuthStoreData } from './auth.store';
 import { AuthFacade } from '../facades/auth.facade';
 import { AuthPort } from '../../domain/ports/auth.port';
-import type { AuthProvider, AuthStatus, AuthToken, CurrentUser } from '../../domain/models/auth.models';
+import type { AuthProvider, AuthToken, CurrentUser } from '../../domain/models/auth.models';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -112,9 +112,7 @@ const FAKE_USER: CurrentUser = {
   userId: 'user-uuid-1',
   email: 'alice@example.com',
   displayName: 'Alice',
-  orgMemberships: [
-    { orgId: 'org-uuid-1', orgName: 'Acme Corp', role: 'owner' },
-  ],
+  orgMemberships: [{ orgId: 'org-uuid-1', orgName: 'Acme Corp', role: 'owner' }],
 };
 
 const FAKE_USER_NO_ORGS: CurrentUser = {
@@ -130,7 +128,7 @@ const FAKE_USER_NO_ORGS: CurrentUser = {
 
 @Injectable()
 class FakeAuthPort extends AuthPort {
-  authorizeUrlToReturn: string = 'https://accounts.google.com/o/oauth2/auth?client_id=test';
+  authorizeUrlToReturn = 'https://accounts.google.com/o/oauth2/auth?client_id=test';
   tokenToReturn: AuthToken = FAKE_TOKEN;
   userToReturn: CurrentUser = FAKE_USER;
   shouldErrorOnAuthorize = false;
@@ -146,11 +144,7 @@ class FakeAuthPort extends AuthPort {
     return of(this.authorizeUrlToReturn);
   }
 
-  exchangeToken(
-    _code: string,
-    _state: string,
-    _codeVerifier: string,
-  ): Observable<AuthToken> {
+  exchangeToken(_code: string, _state: string, _codeVerifier: string): Observable<AuthToken> {
     if (this.shouldErrorOnExchange) {
       return throwError(() => new Error('Invalid code'));
     }
@@ -185,11 +179,7 @@ class ErrorAuthPort extends AuthPort {
     return throwError(() => new Error('Network error'));
   }
 
-  exchangeToken(
-    _code: string,
-    _state: string,
-    _codeVerifier: string,
-  ): Observable<AuthToken> {
+  exchangeToken(_code: string, _state: string, _codeVerifier: string): Observable<AuthToken> {
     return throwError(() => new Error('Exchange error'));
   }
 
@@ -220,11 +210,7 @@ function setupHarness(): TestHarness {
   TestBed.resetTestingModule();
   const port = new FakeAuthPort();
   TestBed.configureTestingModule({
-    providers: [
-      AuthStore,
-      AuthFacade,
-      { provide: AuthPort, useValue: port },
-    ],
+    providers: [AuthStore, AuthFacade, { provide: AuthPort, useValue: port }],
   });
   return {
     store: TestBed.inject(AuthStore),
@@ -236,11 +222,7 @@ function setupHarness(): TestHarness {
 function setupWithErrorPort(): { store: AuthStore; facade: AuthFacade } {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    providers: [
-      AuthStore,
-      AuthFacade,
-      { provide: AuthPort, useClass: ErrorAuthPort },
-    ],
+    providers: [AuthStore, AuthFacade, { provide: AuthPort, useClass: ErrorAuthPort }],
   });
   return {
     store: TestBed.inject(AuthStore),
@@ -776,9 +758,7 @@ describe('AuthFacade — architecture boundary', () => {
 
     // 1. Verify `store` is NOT declared as a prototype-level property/getter.
     //    Angular inject() sets instance fields — prototype should only have declared getters/methods.
-    const protoKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(facade)).filter(
-      (k) => k !== 'constructor',
-    );
+    const protoKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(facade)).filter((k) => k !== 'constructor');
     expect(protoKeys).not.toContain('store');
 
     // 2. The documented public signal getters must exist on the prototype (via `get` accessors).

@@ -53,28 +53,18 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // These imports WILL FAIL until src/auth/token-attachment.ts is created (RED state).
-import {
-  createAuthenticatedClient,
-  isTokenExpired,
-  SessionExpiredError,
-} from '../auth/token-attachment.js';
+import { createAuthenticatedClient, isTokenExpired, SessionExpiredError } from '../auth/token-attachment.js';
 import type { AuthenticatedClientDeps } from '../auth/token-attachment.js';
 import type { Credentials } from '../auth/credentials-store.js';
-import {
-  MarketplaceApiError,
-} from '../api/client.js';
-import type {
-  IMarketplaceClient,
-  UploadResponse,
-  ProblemDetails,
-} from '../api/client.js';
+import { MarketplaceApiError } from '../api/client.js';
+import type { IMarketplaceClient, UploadResponse, ProblemDetails } from '../api/client.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 const FUTURE_ISO = new Date(Date.now() + 3_600_000).toISOString(); // 1 hour from now
-const PAST_ISO = new Date(Date.now() - 3_600_000).toISOString();   // 1 hour ago
+const PAST_ISO = new Date(Date.now() - 3_600_000).toISOString(); // 1 hour ago
 
 const VALID_CREDS: Credentials = {
   access: 'eyJ.valid.access.token',
@@ -106,7 +96,10 @@ function make403Error(): MarketplaceApiError {
   return new MarketplaceApiError(pd, 403);
 }
 
-function makeDeps(creds: Credentials | null, overrides: Partial<AuthenticatedClientDeps> = {}): AuthenticatedClientDeps {
+function makeDeps(
+  creds: Credentials | null,
+  overrides: Partial<AuthenticatedClientDeps> = {},
+): AuthenticatedClientDeps {
   return {
     credentials: creds,
     ...overrides,
@@ -340,9 +333,7 @@ describe('createAuthenticatedClient – public downloadPlugin sends NO auth head
 
     // searchPlugins should be called without any auth header in its args
     const callArgs = capturedArgs[0] ?? [];
-    const authHeaderArg = callArgs.find(
-      (a) => typeof a === 'object' && a !== null && 'Authorization' in a,
-    );
+    const authHeaderArg = callArgs.find((a) => typeof a === 'object' && a !== null && 'Authorization' in a);
     expect(authHeaderArg).toBeUndefined();
   });
 

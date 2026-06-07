@@ -15,13 +15,7 @@ export const MAX_TEAM_ID_LENGTH = 50;
 /**
  * Ordered preset team names that are guaranteed to pass validateTeamId.
  */
-export const PRESET_TEAMS: readonly string[] = [
-  'Engineering',
-  'Product',
-  'Design',
-  'QA',
-  'DevOps',
-] as const;
+export const PRESET_TEAMS: readonly string[] = ['Engineering', 'Product', 'Design', 'QA', 'DevOps'] as const;
 
 /**
  * Allowed characters: letters (a-z, A-Z), digits (0-9), hyphens (-),
@@ -65,8 +59,7 @@ export function validateTeamId(raw: string): TeamIdValidationResult {
   if (!ALLOWED_CHARS_PATTERN.test(trimmed)) {
     return {
       valid: false,
-      error:
-        'Team ID may only contain letters, digits, hyphens, underscores, and spaces.',
+      error: 'Team ID may only contain letters, digits, hyphens, underscores, and spaces.',
     };
   }
 

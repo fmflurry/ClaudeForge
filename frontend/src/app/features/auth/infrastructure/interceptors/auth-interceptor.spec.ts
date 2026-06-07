@@ -56,10 +56,7 @@ import {
   provideHttpClient,
   withInterceptors,
 } from '@angular/common/http';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthStore } from '../../application/store/auth.store';
@@ -104,11 +101,7 @@ class FakeAuthPort extends AuthPort {
     return of('https://accounts.google.com/auth');
   }
 
-  exchangeToken(
-    _code: string,
-    _state: string,
-    _codeVerifier: string,
-  ): Observable<AuthToken> {
+  exchangeToken(_code: string, _state: string, _codeVerifier: string): Observable<AuthToken> {
     return of(FAKE_TOKEN);
   }
 
@@ -150,7 +143,7 @@ class FakeRouter {
 // ---------------------------------------------------------------------------
 
 function seedTokenInStore(store: AuthStore, token: AuthToken): void {
-  store.update('AUTH' as 'AUTH', {
+  store.update('AUTH' as const, {
     data: {
       status: 'authenticated',
       user: FAKE_USER,
@@ -287,11 +280,7 @@ describe('authInterceptor — skip-list: auth endpoints', () => {
     TestBed.inject(HttpTestingController).verify();
   });
 
-  const AUTH_PATHS = [
-    '/auth/authorize',
-    '/auth/token',
-    '/auth/refresh',
-  ];
+  const AUTH_PATHS = ['/auth/authorize', '/auth/token', '/auth/refresh'];
 
   for (const path of AUTH_PATHS) {
     it(`should NOT attach Bearer header to auth endpoint: ${path}`, () => {
@@ -380,7 +369,7 @@ describe('authInterceptor — 401 refresh and retry', () => {
     tick();
 
     // The store's in-memory token must now be the refreshed token
-    const storeData = store.get('AUTH' as 'AUTH')().data;
+    const storeData = store.get('AUTH' as const)().data;
     expect(storeData?.token?.accessToken).toBe(REFRESHED_TOKEN);
   }));
 

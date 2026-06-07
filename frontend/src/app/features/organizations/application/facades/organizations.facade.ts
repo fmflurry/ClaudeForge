@@ -22,33 +22,23 @@ export class OrganizationsFacade {
   // ---------------------------------------------------------------------------
 
   get organizations(): Signal<OrgSummary[]> {
-    return computed(
-      () => this.store.get(OrganizationsStoreEnum.ORGANIZATIONS)().data?.organizations ?? [],
-    );
+    return computed(() => this.store.get(OrganizationsStoreEnum.ORGANIZATIONS)().data?.organizations ?? []);
   }
 
   get members(): Signal<OrgMember[]> {
-    return computed(
-      () => this.store.get(OrganizationsStoreEnum.MEMBERS)().data?.members ?? [],
-    );
+    return computed(() => this.store.get(OrganizationsStoreEnum.MEMBERS)().data?.members ?? []);
   }
 
   get invitations(): Signal<OrgInvitation[]> {
-    return computed(
-      () => this.store.get(OrganizationsStoreEnum.INVITATIONS)().data?.invitations ?? [],
-    );
+    return computed(() => this.store.get(OrganizationsStoreEnum.INVITATIONS)().data?.invitations ?? []);
   }
 
   get isLoadingOrgs(): Signal<boolean> {
-    return computed(
-      () => this.store.get(OrganizationsStoreEnum.ORGANIZATIONS)().isLoading ?? false,
-    );
+    return computed(() => this.store.get(OrganizationsStoreEnum.ORGANIZATIONS)().isLoading ?? false);
   }
 
   get isLoadingMembers(): Signal<boolean> {
-    return computed(
-      () => this.store.get(OrganizationsStoreEnum.MEMBERS)().isLoading ?? false,
-    );
+    return computed(() => this.store.get(OrganizationsStoreEnum.MEMBERS)().isLoading ?? false);
   }
 
   get orgsError(): Signal<{ code: string; message: string }[] | undefined> {

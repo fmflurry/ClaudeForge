@@ -4,7 +4,6 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, signal } from '@angular/core';
-import { By } from '@angular/platform-browser';
 import { LoginPageComponent } from './login-page.component';
 import { AuthFacade } from '../../application/facades/auth.facade';
 import type { AuthStatus } from '../../domain/models/auth.models';
@@ -41,12 +40,14 @@ function buildFakeAuthFacade(opts: {
 // Setup
 // ---------------------------------------------------------------------------
 
-function setup(opts: {
-  isAuthenticating?: boolean;
-  authStatus?: AuthStatus;
-  authError?: string | undefined;
-  loginSpy?: (provider: string) => void;
-} = {}): { fixture: ComponentFixture<LoginPageComponent>; fakeFacade: Partial<AuthFacade> } {
+function setup(
+  opts: {
+    isAuthenticating?: boolean;
+    authStatus?: AuthStatus;
+    authError?: string | undefined;
+    loginSpy?: (provider: string) => void;
+  } = {},
+): { fixture: ComponentFixture<LoginPageComponent>; fakeFacade: Partial<AuthFacade> } {
   const fakeFacade = buildFakeAuthFacade(opts);
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({

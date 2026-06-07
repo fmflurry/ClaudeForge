@@ -2,13 +2,7 @@
  * Config command — get/set CLI configuration.
  */
 
-import {
-  DEFAULT_API_URL,
-  readConfig,
-  writeConfig,
-  validateUrl,
-  resolveApiUrl,
-} from '../config/config.js';
+import { DEFAULT_API_URL, readConfig, writeConfig, validateUrl, resolveApiUrl } from '../config/config.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,10 +46,7 @@ function isValidKey(key: string): key is ValidKey {
 // Commands
 // ---------------------------------------------------------------------------
 
-export async function runConfigSet(
-  args: ConfigSetArgs,
-  deps: ConfigDeps,
-): Promise<CommandResult> {
+export async function runConfigSet(args: ConfigSetArgs, deps: ConfigDeps): Promise<CommandResult> {
   const { key, value } = args;
   const { homeDir, connectivityCheck } = deps;
 
@@ -92,10 +83,7 @@ export async function runConfigSet(
   // Informational warning: plain HTTP to a remote host sends credentials in clear text.
   try {
     const parsed = new URL(value);
-    const isLocalhost =
-      parsed.hostname === 'localhost' ||
-      parsed.hostname === '127.0.0.1' ||
-      parsed.hostname === '::1';
+    const isLocalhost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '::1';
     if (parsed.protocol === 'http:' && !isLocalhost) {
       lines.push(
         'Warning: the configured URL uses plain HTTP with a non-localhost host. ' +
@@ -117,10 +105,7 @@ export async function runConfigShow(deps: ConfigShowDeps): Promise<CommandResult
   const config = await readConfig(homeDir);
 
   // When config.json has the default value, the file may not exist; prefer env override.
-  const displayUrl =
-    config.apiUrl !== DEFAULT_API_URL
-      ? config.apiUrl
-      : resolveApiUrl(undefined, env);
+  const displayUrl = config.apiUrl !== DEFAULT_API_URL ? config.apiUrl : resolveApiUrl(undefined, env);
 
   return {
     exitCode: 0,

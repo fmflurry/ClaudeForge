@@ -15,9 +15,7 @@ import type { CatalogFilterQuery } from '../../catalog/domain/rules/catalog-filt
 class StubCatalogFacade {
   private readonly _plugins = signal<PluginSummary[]>([]);
   private readonly _isLoadingPlugins = signal(false);
-  private readonly _pluginsError = signal<{ code: string; message: string }[] | undefined>(
-    undefined,
-  );
+  private readonly _pluginsError = signal<{ code: string; message: string }[] | undefined>(undefined);
 
   setPlugins(plugins: PluginSummary[]): void {
     this._plugins.set(plugins);
@@ -115,8 +113,7 @@ describe('LandingPageComponent', () => {
 
   it('renders Browse plugins CTA linking to /catalog', () => {
     const { fixture } = setup();
-    const anchors: NodeListOf<HTMLAnchorElement> =
-      fixture.nativeElement.querySelectorAll('a[href]');
+    const anchors: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('a[href]');
     const browse = Array.from(anchors).find((a) => a.textContent?.trim() === 'Browse plugins');
     expect(browse).toBeDefined();
     expect(browse?.getAttribute('href')).toBe('/catalog');
@@ -124,35 +121,28 @@ describe('LandingPageComponent', () => {
 
   it('renders Publish a plugin CTA linking to /docs', () => {
     const { fixture } = setup();
-    const anchors: NodeListOf<HTMLAnchorElement> =
-      fixture.nativeElement.querySelectorAll('a[href]');
-    const publish = Array.from(anchors).find(
-      (a) => a.textContent?.trim() === 'Publish a plugin',
-    );
+    const anchors: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('a[href]');
+    const publish = Array.from(anchors).find((a) => a.textContent?.trim() === 'Publish a plugin');
     expect(publish).toBeDefined();
     expect(publish?.getAttribute('href')).toBe('/docs');
   });
 
   it('renders the sign-in placeholder button as aria-disabled', () => {
     const { fixture } = setup();
-    const btn = fixture.nativeElement.querySelector(
-      'button[aria-disabled="true"]',
-    ) as HTMLButtonElement | null;
+    const btn = fixture.nativeElement.querySelector('button[aria-disabled="true"]') as HTMLButtonElement | null;
     expect(btn).not.toBeNull();
     expect(btn?.textContent).toContain('Sign in');
   });
 
   it('renders 4 How-it-works steps', () => {
     const { fixture } = setup();
-    const steps: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.lp-how__step');
+    const steps: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.lp-how__step');
     expect(steps.length).toBe(4);
   });
 
   it('renders the footer with catalog and docs links', () => {
     const { fixture } = setup();
-    const footerLinks: NodeListOf<HTMLAnchorElement> =
-      fixture.nativeElement.querySelectorAll('.lp-footer__link');
+    const footerLinks: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.lp-footer__link');
     const hrefs = Array.from(footerLinks).map((a) => a.getAttribute('href'));
     expect(hrefs).toContain('/catalog');
     expect(hrefs).toContain('/docs');
@@ -204,8 +194,7 @@ describe('LandingPageComponent', () => {
       makeSummary({ pluginId: 'p2', name: 'Plugin Beta', downloadCount: 200 }),
     ]);
     fixture.detectChanges();
-    const cards: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.lp-plugin-card');
+    const cards: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.lp-plugin-card');
     expect(cards.length).toBe(2);
   });
 
@@ -217,8 +206,7 @@ describe('LandingPageComponent', () => {
       ),
     );
     fixture.detectChanges();
-    const cards: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.lp-plugin-card');
+    const cards: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.lp-plugin-card');
     expect(cards.length).toBe(6);
   });
 
@@ -230,8 +218,7 @@ describe('LandingPageComponent', () => {
       makeSummary({ pluginId: 'mid', name: 'Mid Downloads', downloadCount: 500 }),
     ]);
     fixture.detectChanges();
-    const cardNames: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.lp-plugin-card__name');
+    const cardNames: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.lp-plugin-card__name');
     expect(cardNames[0].textContent?.trim()).toBe('High Downloads');
     expect(cardNames[1].textContent?.trim()).toBe('Mid Downloads');
     expect(cardNames[2].textContent?.trim()).toBe('Low Downloads');
@@ -243,9 +230,7 @@ describe('LandingPageComponent', () => {
 
   it('updates searchQuery signal on input', () => {
     const { fixture, component } = setup();
-    const input = fixture.nativeElement.querySelector(
-      '#lp-search-input',
-    ) as HTMLInputElement | null;
+    const input = fixture.nativeElement.querySelector('#lp-search-input') as HTMLInputElement | null;
     expect(input).not.toBeNull();
     if (input) {
       input.value = 'git helper';

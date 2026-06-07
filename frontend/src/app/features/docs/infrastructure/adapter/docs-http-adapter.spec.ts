@@ -90,9 +90,7 @@ class FakeApiClient {
   getDocBySlug(slug: string) {
     this.getDocBySlugCalls.push(slug);
     if (slug === 'not-found-slug') {
-      return throwError(
-        () => new HttpErrorResponse({ status: 404, statusText: 'Not Found' }),
-      );
+      return throwError(() => new HttpErrorResponse({ status: 404, statusText: 'Not Found' }));
     }
     if (slug === 'plugin:awesome-plugin') {
       return of(FAKE_PLUGIN_DOC_DTO);
@@ -108,10 +106,7 @@ class FakeApiClient {
 function setupAdapter(): { adapter: DocsHttpAdapter; fakeApiClient: FakeApiClient } {
   const fakeApiClient = new FakeApiClient();
   TestBed.configureTestingModule({
-    providers: [
-      DocsHttpAdapter,
-      { provide: ApiClient, useValue: fakeApiClient },
-    ],
+    providers: [DocsHttpAdapter, { provide: ApiClient, useValue: fakeApiClient }],
   });
   return {
     adapter: TestBed.inject(DocsHttpAdapter) as DocsHttpAdapter,
@@ -138,7 +133,13 @@ describe('DocsPort — abstract contract', () => {
 // DocsHttpAdapter — search()
 // ---------------------------------------------------------------------------
 
-interface SearchResponse { items: DocSearchResult[]; totalCount: number; page: number; limit: number; totalPages: number }
+interface SearchResponse {
+  items: DocSearchResult[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 describe('DocsHttpAdapter — search()', () => {
   it('should return an observable emitting items array', () => {
@@ -184,7 +185,9 @@ describe('DocsHttpAdapter — search()', () => {
   it('should default page to 1 when not provided', () => {
     const { adapter, fakeApiClient } = setupAdapter();
     adapter.search('install').subscribe();
-    expect(fakeApiClient.searchDocsCalls[0].page === undefined || fakeApiClient.searchDocsCalls[0].page === 1).toBe(true);
+    expect(fakeApiClient.searchDocsCalls[0].page === undefined || fakeApiClient.searchDocsCalls[0].page === 1).toBe(
+      true,
+    );
   });
 
   it('should handle empty search results gracefully', () => {
@@ -194,10 +197,7 @@ describe('DocsHttpAdapter — search()', () => {
       getDocBySlug: () => of(FAKE_DOC_DTO),
     };
     TestBed.configureTestingModule({
-      providers: [
-        DocsHttpAdapter,
-        { provide: ApiClient, useValue: emptyApiClient },
-      ],
+      providers: [DocsHttpAdapter, { provide: ApiClient, useValue: emptyApiClient }],
     });
     const adapter: DocsHttpAdapter = TestBed.inject(DocsHttpAdapter) as DocsHttpAdapter;
     let result: SearchResponse | undefined;

@@ -16,8 +16,6 @@
 
 import { provideZonelessChangeDetection, EnvironmentProviders } from '@angular/core';
 
-const providers: EnvironmentProviders[] = [
-  provideZonelessChangeDetection(),
-];
+const providers: EnvironmentProviders[] = [provideZonelessChangeDetection()];
 
 export default providers;

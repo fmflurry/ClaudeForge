@@ -9,16 +9,9 @@ export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
   imports: [NgClass],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div
-      class="cf-toast"
-      [ngClass]="'cf-toast--' + variant()"
-      role="alert"
-      aria-live="polite"
-    >
+    <div class="cf-toast" [ngClass]="'cf-toast--' + variant()" role="alert" aria-live="polite">
       <span class="cf-toast__message">{{ message() }}</span>
-      <button class="cf-toast__dismiss" aria-label="Dismiss" (click)="dismiss.emit()">
-        &times;
-      </button>
+      <button class="cf-toast__dismiss" aria-label="Dismiss" (click)="dismiss.emit()">&times;</button>
     </div>
   `,
   styles: [

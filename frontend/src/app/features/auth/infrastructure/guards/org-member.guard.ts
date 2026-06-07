@@ -17,10 +17,7 @@ import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot } from '@angular/router';
 import { AuthFacade } from '../../application/facades/auth.facade';
 
-export const OrgMemberGuard: (
-  route: ActivatedRouteSnapshot,
-  state: RouterStateSnapshot,
-) => boolean = (
+export const OrgMemberGuard: (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => boolean = (
   route: ActivatedRouteSnapshot,
   _state: RouterStateSnapshot,
 ): boolean => {

@@ -102,15 +102,17 @@ function buildFakeAuthFacade(isAuthenticated: boolean): Partial<AuthFacade> {
 // Setup
 // ---------------------------------------------------------------------------
 
-function setup(opts: {
-  isAuthenticated?: boolean;
-  organizations?: OrgSummary[];
-  isLoadingOrgs?: boolean;
-  orgsError?: { code: string; message: string }[] | undefined;
-  activeOrgId?: string;
-  activeOrg?: OrgSummary;
-  loadOrganizationsSpy?: () => void;
-} = {}): ComponentFixture<OrgsPageComponent> {
+function setup(
+  opts: {
+    isAuthenticated?: boolean;
+    organizations?: OrgSummary[];
+    isLoadingOrgs?: boolean;
+    orgsError?: { code: string; message: string }[] | undefined;
+    activeOrgId?: string;
+    activeOrg?: OrgSummary;
+    loadOrganizationsSpy?: () => void;
+  } = {},
+): ComponentFixture<OrgsPageComponent> {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [OrgsPageComponent, RouterModule.forRoot([])],

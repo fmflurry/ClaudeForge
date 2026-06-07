@@ -70,12 +70,7 @@ export function validateManifest(manifest: unknown): ValidationResult {
   const m = manifest as Record<string, unknown>;
 
   // Required string fields
-  const requiredStrings: (keyof PluginManifest)[] = [
-    'name',
-    'version',
-    'description',
-    'author',
-  ];
+  const requiredStrings: (keyof PluginManifest)[] = ['name', 'version', 'description', 'author'];
   for (const field of requiredStrings) {
     if (!m[field] || typeof m[field] !== 'string' || (m[field] as string).trim() === '') {
       errors.push(`Missing required field: ${field}`);
@@ -88,9 +83,7 @@ export function validateManifest(manifest: unknown): ValidationResult {
   } else {
     const invalid = (m['types'] as string[]).filter((t) => !VALID_TYPES.has(t));
     if (invalid.length > 0) {
-      errors.push(
-        `Invalid type value(s): ${invalid.join(', ')}. Valid: skill, hook, agent, command, plugin`,
-      );
+      errors.push(`Invalid type value(s): ${invalid.join(', ')}. Valid: skill, hook, agent, command, plugin`);
     }
   }
 
@@ -146,10 +139,7 @@ const realValidateFsPort: ValidateFsPort = {
 // Command
 // ---------------------------------------------------------------------------
 
-export async function runValidate(
-  args: ValidateArgs,
-  deps: ValidateDeps,
-): Promise<CommandResult> {
+export async function runValidate(args: ValidateArgs, deps: ValidateDeps): Promise<CommandResult> {
   const { pluginPath } = args;
   const { fs: fsPort = realValidateFsPort, cwd = process.cwd() } = deps;
 
@@ -161,10 +151,9 @@ export async function runValidate(
   if (!exists) {
     return {
       exitCode: 2,
-      output: [
-        `plugin.json not found in ${dir}`,
-        `Run \`claude plugin scaffold\` to generate a plugin template.`,
-      ].join('\n'),
+      output: [`plugin.json not found in ${dir}`, `Run \`claude plugin scaffold\` to generate a plugin template.`].join(
+        '\n',
+      ),
     };
   }
 

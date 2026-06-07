@@ -49,21 +49,10 @@ interface TableRow {
 
 function formatTable(rows: TableRow[]): string {
   const header =
-    padEnd('Name', COL_NAME) +
-    padEnd('Version', COL_VERSION) +
-    padEnd('Installed Date', COL_DATE) +
-    'Status';
-  const separator =
-    '-'.repeat(COL_NAME) +
-    '-'.repeat(COL_VERSION) +
-    '-'.repeat(COL_DATE) +
-    '-'.repeat(COL_STATUS);
+    padEnd('Name', COL_NAME) + padEnd('Version', COL_VERSION) + padEnd('Installed Date', COL_DATE) + 'Status';
+  const separator = '-'.repeat(COL_NAME) + '-'.repeat(COL_VERSION) + '-'.repeat(COL_DATE) + '-'.repeat(COL_STATUS);
   const rowLines = rows.map(
-    (r) =>
-      padEnd(r.name, COL_NAME) +
-      padEnd(r.version, COL_VERSION) +
-      padEnd(r.installedAt, COL_DATE) +
-      r.status,
+    (r) => padEnd(r.name, COL_NAME) + padEnd(r.version, COL_VERSION) + padEnd(r.installedAt, COL_DATE) + r.status,
   );
   return [header, separator, ...rowLines].join('\n');
 }

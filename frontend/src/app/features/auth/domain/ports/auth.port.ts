@@ -10,11 +10,7 @@ import type { AuthProvider, AuthToken, CurrentUser } from '../models/auth.models
 export abstract class AuthPort {
   abstract getAuthorizeUrl(provider: AuthProvider): Observable<string>;
 
-  abstract exchangeToken(
-    code: string,
-    state: string,
-    codeVerifier: string,
-  ): Observable<AuthToken>;
+  abstract exchangeToken(code: string, state: string, codeVerifier: string): Observable<AuthToken>;
 
   abstract refreshToken(): Observable<AuthToken>;
 

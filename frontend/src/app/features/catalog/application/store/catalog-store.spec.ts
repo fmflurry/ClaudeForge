@@ -165,11 +165,7 @@ class ErrorCatalogPort extends CatalogPort {
 
 function setupWithFakePort(): { store: CatalogStore; facade: CatalogFacade } {
   TestBed.configureTestingModule({
-    providers: [
-      CatalogStore,
-      CatalogFacade,
-      { provide: CatalogPort, useClass: FakeCatalogPort },
-    ],
+    providers: [CatalogStore, CatalogFacade, { provide: CatalogPort, useClass: FakeCatalogPort }],
   });
   return {
     store: TestBed.inject(CatalogStore),
@@ -179,11 +175,7 @@ function setupWithFakePort(): { store: CatalogStore; facade: CatalogFacade } {
 
 function setupWithErrorPort(): { store: CatalogStore; facade: CatalogFacade } {
   TestBed.configureTestingModule({
-    providers: [
-      CatalogStore,
-      CatalogFacade,
-      { provide: CatalogPort, useClass: ErrorCatalogPort },
-    ],
+    providers: [CatalogStore, CatalogFacade, { provide: CatalogPort, useClass: ErrorCatalogPort }],
   });
   return {
     store: TestBed.inject(CatalogStore),

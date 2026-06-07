@@ -77,7 +77,9 @@ class StubApiClient {
     return of(SEARCH_ENVELOPE);
   }
 
-  discoverPlugins(params: Parameters<ApiClient['discoverPlugins']>[0]): Observable<PaginatedEnvelope<DiscoveryResultDto>> {
+  discoverPlugins(
+    params: Parameters<ApiClient['discoverPlugins']>[0],
+  ): Observable<PaginatedEnvelope<DiscoveryResultDto>> {
     this.discoverPluginsCalls.push([params ?? {}]);
     return of(DISCOVERY_ENVELOPE);
   }

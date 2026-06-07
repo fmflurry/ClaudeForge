@@ -49,12 +49,14 @@ function makeFakeFs(overrides?: Partial<RemoveFsPort>): RemoveFsPort {
 
 function registryWith(name: string, version: string): InstalledRegistry {
   return {
-    plugins: [{
-      name,
-      version,
-      installedAt: '2024-01-01T00:00:00.000Z',
-      path: `/tmp/plugins/${name}`,
-    }],
+    plugins: [
+      {
+        name,
+        version,
+        installedAt: '2024-01-01T00:00:00.000Z',
+        path: `/tmp/plugins/${name}`,
+      },
+    ],
   };
 }
 
@@ -76,28 +78,19 @@ describe('runRemove – happy path', () => {
 
   it('returns exitCode 0 on successful removal', async () => {
     const fakeFs = makeFakeFs();
-    const result: CommandResult = await runRemove(
-      { pluginName: '@namespace/plugin-name' },
-      { homeDir, fs: fakeFs },
-    );
+    const result: CommandResult = await runRemove({ pluginName: '@namespace/plugin-name' }, { homeDir, fs: fakeFs });
     expect(result.exitCode).toBe(0);
   });
 
   it('output says "Removed @namespace/plugin-name v1.2.3"', async () => {
     const fakeFs = makeFakeFs();
-    const result = await runRemove(
-      { pluginName: '@namespace/plugin-name' },
-      { homeDir, fs: fakeFs },
-    );
+    const result = await runRemove({ pluginName: '@namespace/plugin-name' }, { homeDir, fs: fakeFs });
     expect(result.output).toContain('Removed @namespace/plugin-name v1.2.3');
   });
 
   it('removes the entry from the installed registry', async () => {
     const fakeFs = makeFakeFs();
-    await runRemove(
-      { pluginName: '@namespace/plugin-name' },
-      { homeDir, fs: fakeFs },
-    );
+    await runRemove({ pluginName: '@namespace/plugin-name' }, { homeDir, fs: fakeFs });
     const registry = await readRegistry(homeDir);
     expect(registry.plugins).toHaveLength(0);
   });
@@ -105,10 +98,7 @@ describe('runRemove – happy path', () => {
   it('calls fs.rm to delete the plugin from disk', async () => {
     const rmFn = vi.fn().mockResolvedValue(undefined);
     const fakeFs = makeFakeFs({ rm: rmFn });
-    await runRemove(
-      { pluginName: '@namespace/plugin-name' },
-      { homeDir, fs: fakeFs },
-    );
+    await runRemove({ pluginName: '@namespace/plugin-name' }, { homeDir, fs: fakeFs });
     expect(rmFn).toHaveBeenCalled();
   });
 });
@@ -131,38 +121,26 @@ describe('runRemove – plugin not installed', () => {
 
   it('returns non-zero exitCode when plugin is not in registry', async () => {
     const fakeFs = makeFakeFs();
-    const result: CommandResult = await runRemove(
-      { pluginName: '@namespace/nonexistent' },
-      { homeDir, fs: fakeFs },
-    );
+    const result: CommandResult = await runRemove({ pluginName: '@namespace/nonexistent' }, { homeDir, fs: fakeFs });
     expect(result.exitCode).toBeGreaterThan(0);
   });
 
   it('output says "Plugin @namespace/nonexistent is not installed"', async () => {
     const fakeFs = makeFakeFs();
-    const result = await runRemove(
-      { pluginName: '@namespace/nonexistent' },
-      { homeDir, fs: fakeFs },
-    );
+    const result = await runRemove({ pluginName: '@namespace/nonexistent' }, { homeDir, fs: fakeFs });
     expect(result.output).toContain('Plugin @namespace/nonexistent is not installed');
   });
 
   it('suggests "claude plugin list" when plugin not found', async () => {
     const fakeFs = makeFakeFs();
-    const result = await runRemove(
-      { pluginName: '@namespace/nonexistent' },
-      { homeDir, fs: fakeFs },
-    );
+    const result = await runRemove({ pluginName: '@namespace/nonexistent' }, { homeDir, fs: fakeFs });
     expect(result.output).toContain('claude plugin list');
   });
 
   it('does not call fs.rm when plugin is not installed', async () => {
     const rmFn = vi.fn();
     const fakeFs = makeFakeFs({ rm: rmFn });
-    await runRemove(
-      { pluginName: '@namespace/nonexistent' },
-      { homeDir, fs: fakeFs },
-    );
+    await runRemove({ pluginName: '@namespace/nonexistent' }, { homeDir, fs: fakeFs });
     expect(rmFn).not.toHaveBeenCalled();
   });
 });
@@ -187,10 +165,7 @@ describe('runRemove – disk delete failure', () => {
     const fakeFs = makeFakeFs({
       rm: vi.fn().mockRejectedValue(new Error('EACCES: permission denied')),
     });
-    const result = await runRemove(
-      { pluginName: '@namespace/plugin-name' },
-      { homeDir, fs: fakeFs },
-    );
+    const result = await runRemove({ pluginName: '@namespace/plugin-name' }, { homeDir, fs: fakeFs });
     expect(result.exitCode).toBeGreaterThan(0);
   });
 });

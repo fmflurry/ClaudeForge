@@ -71,15 +71,33 @@ class StubCatalogFacade {
   }
 
   // Facade signal getters
-  get plugins(): Signal<PluginSummary[]> { return this._plugins; }
-  get paginationMeta(): Signal<PaginationMeta | undefined> { return this._paginationMeta; }
-  get categories(): Signal<Categories | undefined> { return this._categories; }
-  get selectedPlugin(): Signal<PluginDetail | undefined> { return this._selectedPlugin; }
-  get isLoadingPlugins(): Signal<boolean> { return this._isLoadingPlugins; }
-  get isLoadingDetail(): Signal<boolean> { return this._isLoadingDetail; }
-  get isLoadingCategories(): Signal<boolean> { return this._isLoadingCategories; }
-  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> { return this._pluginsError; }
-  get detailError(): Signal<{ code: string; message: string }[] | undefined> { return this._detailError; }
+  get plugins(): Signal<PluginSummary[]> {
+    return this._plugins;
+  }
+  get paginationMeta(): Signal<PaginationMeta | undefined> {
+    return this._paginationMeta;
+  }
+  get categories(): Signal<Categories | undefined> {
+    return this._categories;
+  }
+  get selectedPlugin(): Signal<PluginDetail | undefined> {
+    return this._selectedPlugin;
+  }
+  get isLoadingPlugins(): Signal<boolean> {
+    return this._isLoadingPlugins;
+  }
+  get isLoadingDetail(): Signal<boolean> {
+    return this._isLoadingDetail;
+  }
+  get isLoadingCategories(): Signal<boolean> {
+    return this._isLoadingCategories;
+  }
+  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._pluginsError;
+  }
+  get detailError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._detailError;
+  }
 
   // Recorded calls for assertion
   loadPluginsCalls: Partial<CatalogFilterQuery>[] = [];
@@ -269,9 +287,7 @@ describe('PluginListComponent — error state', () => {
     stub.setError([{ code: 'HTTP_500', message: 'Server error' }]);
     fixture.detectChanges();
     // An error element should be visible
-    const errorEl = fixture.debugElement.query(
-      By.css('[data-testid="error-message"], [role="alert"], .error'),
-    );
+    const errorEl = fixture.debugElement.query(By.css('[data-testid="error-message"], [role="alert"], .error'));
     expect(errorEl).not.toBeNull();
   });
 });

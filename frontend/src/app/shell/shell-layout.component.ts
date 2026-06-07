@@ -43,15 +43,11 @@ import { CatalogFacade } from '../features/catalog/application/facades/catalog.f
           <a routerLink="/catalog" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
             Catalog
           </a>
-          <a routerLink="/search" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
-            Search
-          </a>
+          <a routerLink="/search" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link"> Search </a>
           <a routerLink="/dashboard" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
             Dashboard
           </a>
-          <a routerLink="/docs" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
-            Docs
-          </a>
+          <a routerLink="/docs" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link"> Docs </a>
         </nav>
         <div class="cf-shell__team">
           <cf-team-switcher />
@@ -65,18 +61,11 @@ import { CatalogFacade } from '../features/catalog/application/facades/catalog.f
         <div class="cf-shell__auth" aria-label="User account">
           @if (currentUser()) {
             <span class="cf-shell__user-email">{{ currentUser()!.email }}</span>
-            <button
-              type="button"
-              class="cf-shell__sign-out"
-              (click)="onSignOut()"
-              aria-label="Sign out"
-            >
+            <button type="button" class="cf-shell__sign-out" (click)="onSignOut()" aria-label="Sign out">
               Sign out
             </button>
           } @else {
-            <a routerLink="/login" class="cf-shell__sign-in" aria-label="Sign in">
-              Sign in
-            </a>
+            <a routerLink="/login" class="cf-shell__sign-in" aria-label="Sign in"> Sign in </a>
           }
         </div>
       </header>
@@ -196,12 +185,9 @@ export class ShellLayoutComponent implements OnInit, OnDestroy {
 
     // Subscribe to org-switch events via the contextRegistry singleton.
     // No cross-domain facade injection — catalog reload is triggered by the event.
-    this.unsubscribeOrgSwitch = contextRegistry.subscribe<ActiveOrgSwitchedPayload>(
-      ORG_ACTIVE_ORG_SWITCHED,
-      () => {
-        this.catalogFacade.loadPlugins();
-      },
-    );
+    this.unsubscribeOrgSwitch = contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, () => {
+      this.catalogFacade.loadPlugins();
+    });
   }
 
   ngOnDestroy(): void {

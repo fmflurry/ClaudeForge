@@ -91,10 +91,7 @@ function setupHarness(): TestHarness {
   TestBed.resetTestingModule();
   const port = new FakeDeviceActivationPort();
   TestBed.configureTestingModule({
-    providers: [
-      DeviceActivationFacade,
-      { provide: DeviceActivationPort, useValue: port },
-    ],
+    providers: [DeviceActivationFacade, { provide: DeviceActivationPort, useValue: port }],
   });
   return {
     facade: TestBed.inject(DeviceActivationFacade),
@@ -378,17 +375,13 @@ describe('DeviceActivationFacade — architecture boundary', () => {
 
   it('should NOT expose DeviceActivationPort as a public property', () => {
     const { facade } = setupHarness();
-    const proto = Object.getOwnPropertyNames(Object.getPrototypeOf(facade)).filter(
-      (k) => k !== 'constructor',
-    );
+    const proto = Object.getOwnPropertyNames(Object.getPrototypeOf(facade)).filter((k) => k !== 'constructor');
     expect(proto).not.toContain('port');
   });
 
   it('should expose status and errorReason as the documented public signals', () => {
     const { facade } = setupHarness();
-    const protoKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(facade)).filter(
-      (k) => k !== 'constructor',
-    );
+    const protoKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(facade)).filter((k) => k !== 'constructor');
     expect(protoKeys).toContain('status');
     expect(protoKeys).toContain('errorReason');
     expect(protoKeys).toContain('approve');

@@ -33,10 +33,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // These imports WILL FAIL until src/api/client.ts is created (RED state).
-import {
-  createMarketplaceClient,
-  MarketplaceApiError,
-} from '../api/client.js';
+import { createMarketplaceClient, MarketplaceApiError } from '../api/client.js';
 import type {
   IMarketplaceClient,
   PaginatedResponse,
@@ -230,9 +227,7 @@ describe('createMarketplaceClient – error mapping', () => {
   });
 
   it('throws MarketplaceApiError when server is unreachable (network error)', async () => {
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
-      new TypeError('fetch failed'),
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('fetch failed'));
 
     const client = createMarketplaceClient('https://unreachable.example.com');
     await expect(client.searchPlugins('test', 10)).rejects.toThrow();

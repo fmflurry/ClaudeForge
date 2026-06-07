@@ -5,7 +5,14 @@
  * - searchPlugins, getPlugin, getLatestVersion, checkVersionExists: pass-through (no auth)
  */
 
-import type { IMarketplaceClient, PaginatedResponse, SearchResult, PluginDetail, VersionSummary, UploadResponse } from '../api/client.js';
+import type {
+  IMarketplaceClient,
+  PaginatedResponse,
+  SearchResult,
+  PluginDetail,
+  VersionSummary,
+  UploadResponse,
+} from '../api/client.js';
 import { MarketplaceApiError } from '../api/client.js';
 import type { Credentials } from './credentials-store.js';
 
@@ -25,10 +32,7 @@ export class SessionExpiredError extends Error {
 // isTokenExpired
 // ---------------------------------------------------------------------------
 
-export function isTokenExpired(
-  expiresAt: string,
-  clock: { now(): Date } = { now: () => new Date() },
-): boolean {
+export function isTokenExpired(expiresAt: string, clock: { now(): Date } = { now: () => new Date() }): boolean {
   const expiryTime = new Date(expiresAt).getTime();
   const nowTime = clock.now().getTime();
   return nowTime >= expiryTime;

@@ -11,10 +11,7 @@ export interface TeamContextState {
 }
 
 @Injectable()
-export class TeamContextStore extends BaseStore<
-  typeof TeamContextStoreEnum,
-  TeamContextState
-> {
+export class TeamContextStore extends BaseStore<typeof TeamContextStoreEnum, TeamContextState> {
   constructor() {
     super(TeamContextStoreEnum);
   }

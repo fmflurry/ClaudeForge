@@ -107,22 +107,42 @@ class StubDocsFacade {
   }
 
   // Facade signal getters
-  get searchResults(): Signal<DocSearchResult[]> { return this._searchResults; }
-  get categoryTree(): Signal<readonly DocCategoryNode[]> { return this._categoryTree; }
-  get currentDoc(): Signal<DocPage | undefined> { return this._currentDoc; }
-  get isLoadingSearch(): Signal<boolean> { return this._isLoadingSearch; }
-  get isLoadingDoc(): Signal<boolean> { return this._isLoadingDoc; }
-  get searchError(): Signal<{ code: string; message: string }[] | undefined> { return this._searchError; }
-  get docError(): Signal<{ code: string; message: string }[] | undefined> { return this._docError; }
+  get searchResults(): Signal<DocSearchResult[]> {
+    return this._searchResults;
+  }
+  get categoryTree(): Signal<readonly DocCategoryNode[]> {
+    return this._categoryTree;
+  }
+  get currentDoc(): Signal<DocPage | undefined> {
+    return this._currentDoc;
+  }
+  get isLoadingSearch(): Signal<boolean> {
+    return this._isLoadingSearch;
+  }
+  get isLoadingDoc(): Signal<boolean> {
+    return this._isLoadingDoc;
+  }
+  get searchError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._searchError;
+  }
+  get docError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._docError;
+  }
 
   // Recorded calls
   searchCalls: string[] = [];
   openDocCalls: string[] = [];
   openPluginDocCalls: string[] = [];
 
-  search(query: string): void { this.searchCalls.push(query); }
-  openDoc(slug: string): void { this.openDocCalls.push(slug); }
-  openPluginDoc(pluginSlug: string): void { this.openPluginDocCalls.push(pluginSlug); }
+  search(query: string): void {
+    this.searchCalls.push(query);
+  }
+  openDoc(slug: string): void {
+    this.openDocCalls.push(slug);
+  }
+  openPluginDoc(pluginSlug: string): void {
+    this.openPluginDocCalls.push(pluginSlug);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -281,9 +301,7 @@ describe('DocsTreeComponent — category rendering', () => {
     const { fixture, stub } = setupDocsTree();
     stub.setSearchResults([GETTING_STARTED_RESULT, INSTALL_CLI_RESULT, API_REF_RESULT]);
     fixture.detectChanges();
-    const links = fixture.debugElement.queryAll(
-      By.css('a, button, [role="link"], [data-testid^="doc-link"]'),
-    );
+    const links = fixture.debugElement.queryAll(By.css('a, button, [role="link"], [data-testid^="doc-link"]'));
     expect(links.length).toBeGreaterThan(0);
   });
 });
@@ -429,9 +447,7 @@ describe('DocViewerComponent — error state', () => {
     const { fixture, stub } = setupDocViewer();
     stub.setDocError([{ code: 'HTTP_500', message: 'Server error' }]);
     fixture.detectChanges();
-    const errorEl = fixture.debugElement.query(
-      By.css('[data-testid="error-message"], [role="alert"], .error'),
-    );
+    const errorEl = fixture.debugElement.query(By.css('[data-testid="error-message"], [role="alert"], .error'));
     expect(errorEl).not.toBeNull();
   });
 });
@@ -523,7 +539,8 @@ describe('DocsSearchComponent — results rendering', () => {
     fixture.detectChanges();
     // Either numeric score OR a visual badge/indicator element
     const text = fixture.nativeElement.textContent as string;
-    const hasScore = text.includes('0.9') ||
+    const hasScore =
+      text.includes('0.9') ||
       fixture.debugElement.query(By.css('[data-testid="relevance-score"], .relevance, cf-badge')) !== null;
     expect(hasScore).toBe(true);
   });
@@ -553,9 +570,7 @@ describe('DocsSearchComponent — error state', () => {
     const { fixture, stub } = setupDocsSearch();
     stub.setSearchError([{ code: 'SEARCH_ERROR', message: 'Search failed' }]);
     fixture.detectChanges();
-    const errorEl = fixture.debugElement.query(
-      By.css('[data-testid="error-message"], [role="alert"], .error'),
-    );
+    const errorEl = fixture.debugElement.query(By.css('[data-testid="error-message"], [role="alert"], .error'));
     expect(errorEl).not.toBeNull();
   });
 });
@@ -657,9 +672,7 @@ describe('PluginDocsTabComponent — error state', () => {
     const { fixture, stub } = setupPluginDocsTab();
     stub.setDocError([{ code: 'HTTP_500', message: 'Failed to load plugin docs' }]);
     fixture.detectChanges();
-    const errorEl = fixture.debugElement.query(
-      By.css('[data-testid="error-message"], [role="alert"], .error'),
-    );
+    const errorEl = fixture.debugElement.query(By.css('[data-testid="error-message"], [role="alert"], .error'));
     expect(errorEl).not.toBeNull();
   });
 

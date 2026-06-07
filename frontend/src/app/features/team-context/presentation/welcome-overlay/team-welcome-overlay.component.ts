@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  Signal,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, Signal, inject, signal } from '@angular/core';
 import { TeamContextFacade } from '../../application/facades/team-context.facade';
 
 /**
@@ -21,9 +15,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
   template: `
     <div data-testid="team-welcome-overlay" class="team-welcome-overlay">
       <h2 class="team-welcome-overlay__title">Welcome to ClaudeForge</h2>
-      <p class="team-welcome-overlay__subtitle">
-        Select your team or enter a custom name to get started.
-      </p>
+      <p class="team-welcome-overlay__subtitle">Select your team or enter a custom name to get started.</p>
 
       <!-- Preset buttons -->
       <div class="team-welcome-overlay__presets">
@@ -49,34 +41,20 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
           [value]="customInput()"
           (input)="onInput($event)"
         />
-        <button
-          type="button"
-          data-testid="submit-button"
-          class="team-welcome-overlay__submit"
-          (click)="submitCustom()"
-        >
+        <button type="button" data-testid="submit-button" class="team-welcome-overlay__submit" (click)="submitCustom()">
           Use Custom Team
         </button>
       </div>
 
       <!-- Validation error -->
       @if (validationError()) {
-        <p
-          data-testid="validation-error"
-          role="alert"
-          class="validation-error"
-        >
+        <p data-testid="validation-error" role="alert" class="validation-error">
           {{ validationError() }}
         </p>
       }
 
       <!-- Skip button -->
-      <button
-        type="button"
-        data-testid="skip-button"
-        class="team-welcome-overlay__skip skip-btn"
-        (click)="skip()"
-      >
+      <button type="button" data-testid="skip-button" class="team-welcome-overlay__skip skip-btn" (click)="skip()">
         Skip for now
       </button>
     </div>

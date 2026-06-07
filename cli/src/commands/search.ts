@@ -41,15 +41,8 @@ function formatTable(
   results: { name: string; latestVersion?: string | null; description: string; downloadCount: number }[],
 ): string {
   const header =
-    padEnd('Name', COL_NAME) +
-    padEnd('Version', COL_VERSION) +
-    padEnd('Description', COL_DESC) +
-    'Downloads';
-  const separator =
-    '-'.repeat(COL_NAME) +
-    '-'.repeat(COL_VERSION) +
-    '-'.repeat(COL_DESC) +
-    '-'.repeat(COL_DL);
+    padEnd('Name', COL_NAME) + padEnd('Version', COL_VERSION) + padEnd('Description', COL_DESC) + 'Downloads';
+  const separator = '-'.repeat(COL_NAME) + '-'.repeat(COL_VERSION) + '-'.repeat(COL_DESC) + '-'.repeat(COL_DL);
   const rows = results.map(
     (r) =>
       padEnd(r.name, COL_NAME) +
@@ -66,10 +59,7 @@ function formatTable(
 
 const DEFAULT_LIMIT = 10;
 
-export async function runSearch(
-  args: SearchArgs,
-  deps: SearchDeps,
-): Promise<CommandResult> {
+export async function runSearch(args: SearchArgs, deps: SearchDeps): Promise<CommandResult> {
   const { query, limit = DEFAULT_LIMIT } = args;
   const { client } = deps;
 
@@ -102,8 +92,7 @@ export async function runSearch(
 
     return { exitCode: 0, output };
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : String(err);
+    const message = err instanceof Error ? err.message : String(err);
     return {
       exitCode: 1,
       output: `Could not reach marketplace: ${message}\nCheck your API URL or network connection.`,

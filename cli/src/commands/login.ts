@@ -28,11 +28,7 @@ export interface LoginArgs {
 }
 
 export interface LoginApiPort {
-  exchangeToken(
-    code: string,
-    verifier: string,
-    redirectUri: string,
-  ): Promise<TokenExchangeResponse>;
+  exchangeToken(code: string, verifier: string, redirectUri: string): Promise<TokenExchangeResponse>;
   requestDeviceCode: DeviceCodeApiPort['requestDeviceCode'];
   pollDeviceToken: DeviceCodeApiPort['pollDeviceToken'];
   getActiveOrg?(token: string): Promise<string | null>;
@@ -102,8 +98,7 @@ export async function runLogin(args: LoginArgs, deps: LoginDeps): Promise<Comman
     loopbackServer: createLoopbackServer(),
     tokenExchange: {
       exchange: deps.api?.exchangeToken
-        ? (code, verifier, redirectUri) =>
-            deps.api!.exchangeToken(code, verifier, redirectUri)
+        ? (code, verifier, redirectUri) => deps.api!.exchangeToken(code, verifier, redirectUri)
         : buildNoopTokenExchange(),
     },
     storeCredentials,

@@ -67,12 +67,14 @@ function makeFakeFs(overrides?: Partial<UpdateFsPort>): UpdateFsPort {
 
 function registryWithPlugin(name: string, version: string): InstalledRegistry {
   return {
-    plugins: [{
-      name,
-      version,
-      installedAt: '2024-01-01T00:00:00.000Z',
-      path: `/tmp/plugins/${name}`,
-    }],
+    plugins: [
+      {
+        name,
+        version,
+        installedAt: '2024-01-01T00:00:00.000Z',
+        path: `/tmp/plugins/${name}`,
+      },
+    ],
   };
 }
 
@@ -99,10 +101,7 @@ describe('runUpdate – plugin dir does not exist (no backup)', () => {
       copyDir: copyDirFn,
     });
     const client = makeFakeClient();
-    await runUpdate(
-      { pluginName: 'safe-plugin' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runUpdate({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs });
     expect(copyDirFn).not.toHaveBeenCalled();
   });
 
@@ -111,10 +110,7 @@ describe('runUpdate – plugin dir does not exist (no backup)', () => {
       exists: vi.fn().mockResolvedValue(false),
     });
     const client = makeFakeClient();
-    const result = await runUpdate(
-      { pluginName: 'safe-plugin' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runUpdate({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs });
     expect(result.exitCode).toBe(0);
   });
 });
@@ -140,9 +136,9 @@ describe('runUpdate – getLatestVersion throws', () => {
       getLatestVersion: vi.fn().mockRejectedValue(new Error('Network error')),
     });
     const fakeFs = makeFakeFs();
-    await expect(
-      runUpdate({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs }),
-    ).rejects.toThrow('Network error');
+    await expect(runUpdate({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs })).rejects.toThrow(
+      'Network error',
+    );
   });
 });
 
@@ -167,9 +163,9 @@ describe('runUpdate – downloadPlugin throws', () => {
       downloadPlugin: vi.fn().mockRejectedValue(new Error('Download failed')),
     });
     const fakeFs = makeFakeFs();
-    await expect(
-      runUpdate({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs }),
-    ).rejects.toThrow('Download failed');
+    await expect(runUpdate({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs })).rejects.toThrow(
+      'Download failed',
+    );
   });
 });
 
@@ -196,10 +192,7 @@ describe('runUpdate – backup path uses escaped plugin name', () => {
       getLatestVersion: vi.fn().mockResolvedValue(makeVersion('2.0.0')),
     });
 
-    await runUpdate(
-      { pluginName: '@namespace/plugin' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runUpdate({ pluginName: '@namespace/plugin' }, { client, homeDir, fs: fakeFs });
 
     expect(copyDirFn).toHaveBeenCalled();
     const [, destPath] = copyDirFn.mock.calls[0] as [string, string];
@@ -230,10 +223,7 @@ describe('runUpdate – mkdir called for backups dir', () => {
     const fakeFs = makeFakeFs({ mkdir: mkdirFn });
     const client = makeFakeClient();
 
-    await runUpdate(
-      { pluginName: 'safe-plugin' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runUpdate({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs });
 
     expect(mkdirFn).toHaveBeenCalled();
   });

@@ -92,15 +92,17 @@ function buildFakeAuthFacade(isAuthenticated: boolean): Partial<AuthFacade> {
 // Setup
 // ---------------------------------------------------------------------------
 
-function setup(opts: {
-  isAuthenticated?: boolean;
-  invitations?: OrgInvitation[];
-  activeOrg?: OrgSummary;
-  orgId?: string;
-  inviteSpy?: (orgId: string, email: string, role: string) => void;
-  acceptSpy?: (orgId: string, invId: string) => void;
-  revokeSpy?: (orgId: string, invId: string) => void;
-} = {}): ComponentFixture<OrgInvitationsComponent> {
+function setup(
+  opts: {
+    isAuthenticated?: boolean;
+    invitations?: OrgInvitation[];
+    activeOrg?: OrgSummary;
+    orgId?: string;
+    inviteSpy?: (orgId: string, email: string, role: string) => void;
+    acceptSpy?: (orgId: string, invId: string) => void;
+    revokeSpy?: (orgId: string, invId: string) => void;
+  } = {},
+): ComponentFixture<OrgInvitationsComponent> {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [OrgInvitationsComponent],

@@ -32,10 +32,7 @@ export function resolveHome(env?: NodeJS.ProcessEnv): string {
   return env?.[ENV_KEY_HOME] ?? path.join(os.homedir(), '.claude-plugins');
 }
 
-export function resolveApiUrl(
-  explicit: string | undefined,
-  env?: NodeJS.ProcessEnv,
-): string {
+export function resolveApiUrl(explicit: string | undefined, env?: NodeJS.ProcessEnv): string {
   if (explicit && explicit.length > 0) {
     return explicit;
   }
@@ -91,9 +88,5 @@ export async function readConfig(homeDir: string): Promise<CliConfig> {
 export async function writeConfig(homeDir: string, config: CliConfig): Promise<void> {
   await fs.mkdir(homeDir, { recursive: true });
   const snapshot: CliConfig = { ...config };
-  await fs.writeFile(
-    path.join(homeDir, CONFIG_FILENAME),
-    JSON.stringify(snapshot, null, 2),
-    'utf-8',
-  );
+  await fs.writeFile(path.join(homeDir, CONFIG_FILENAME), JSON.stringify(snapshot, null, 2), 'utf-8');
 }

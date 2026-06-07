@@ -6,14 +6,7 @@
 import * as nodeFsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import type { IMarketplaceClient } from '../api/client.js';
-import {
-  readRegistry,
-  writeRegistry,
-  findRecord,
-  removeRecord,
-  addRecord,
-  backupsDir,
-} from '../registry/registry.js';
+import { readRegistry, writeRegistry, findRecord, removeRecord, addRecord, backupsDir } from '../registry/registry.js';
 
 // ---------------------------------------------------------------------------
 // Types

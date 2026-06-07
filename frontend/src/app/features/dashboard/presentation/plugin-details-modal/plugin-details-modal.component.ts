@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  output,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import type { InstalledPlugin } from '../../domain/models/dashboard.models';
 
 @Component({
@@ -16,12 +11,7 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
       <div class="modal-content" role="dialog" aria-modal="true">
         <div class="modal-header">
           <h2 data-testid="modal-title" class="modal-title">{{ pluginName() }}</h2>
-          <button
-            data-testid="modal-close-btn"
-            class="modal-close"
-            aria-label="Close modal"
-            (click)="onClose()"
-          >
+          <button data-testid="modal-close-btn" class="modal-close" aria-label="Close modal" (click)="onClose()">
             &times;
           </button>
         </div>
@@ -36,12 +26,7 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
             @if (plugin()!.status === 'update-available') {
               <div data-testid="update-section" class="update-section">
                 <strong>Update available: {{ plugin()!.latestVersion }}</strong>
-                <button
-                  data-testid="modal-update-btn"
-                  (click)="onConfirmUpdate()"
-                >
-                  Update now
-                </button>
+                <button data-testid="modal-update-btn" (click)="onConfirmUpdate()">Update now</button>
               </div>
             }
 
@@ -58,13 +43,7 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
           }
 
           <div class="docs-section">
-            <a
-              data-testid="docs-placeholder"
-              href="#docs"
-              class="docs-link"
-            >
-              View Documentation
-            </a>
+            <a data-testid="docs-placeholder" href="#docs" class="docs-link"> View Documentation </a>
           </div>
         </div>
 

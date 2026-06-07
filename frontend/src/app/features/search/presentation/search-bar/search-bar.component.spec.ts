@@ -11,10 +11,12 @@ import { SearchBarComponent } from './search-bar.component';
 // Setup
 // ---------------------------------------------------------------------------
 
-function setup(opts: {
-  initialKeyword?: string;
-  isLoading?: boolean;
-} = {}): ComponentFixture<SearchBarComponent> {
+function setup(
+  opts: {
+    initialKeyword?: string;
+    isLoading?: boolean;
+  } = {},
+): ComponentFixture<SearchBarComponent> {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [SearchBarComponent],

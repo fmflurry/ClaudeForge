@@ -56,24 +56,10 @@
  *   function buildSnippetFromContent(content: string, maxLength?: number): string
  */
 
-import {
-  mapDocPageDtoToDocSearchResult,
-  mapDocPageDtoToDocPage,
-} from './docs-mapper';
-import {
-  buildCategoryTree,
-  groupDocsByCategory,
-} from '../rules/docs-category-tree.rules';
-import {
-  highlightSnippet,
-  buildSnippetFromContent,
-} from '../rules/docs-highlight.rules';
-import type {
-  DocSearchResult,
-  DocPage,
-  DocCategoryNode,
-  DocHighlight,
-} from '../models/docs.models';
+import { mapDocPageDtoToDocSearchResult, mapDocPageDtoToDocPage } from './docs-mapper';
+import { buildCategoryTree, groupDocsByCategory } from '../rules/docs-category-tree.rules';
+import { highlightSnippet, buildSnippetFromContent } from '../rules/docs-highlight.rules';
+import type { DocSearchResult, DocPage, DocCategoryNode, DocHighlight } from '../models/docs.models';
 import type { DocPageDto } from '../../../../shared/infrastructure/http/api-client.types';
 
 // ---------------------------------------------------------------------------
@@ -270,7 +256,9 @@ describe('buildCategoryTree', () => {
 
   it('should include all docs within each category node', () => {
     const tree: readonly DocCategoryNode[] = buildCategoryTree(SEARCH_RESULTS);
-    const gettingStartedNode: DocCategoryNode | undefined = tree.find((n: DocCategoryNode) => n.category === 'Getting Started');
+    const gettingStartedNode: DocCategoryNode | undefined = tree.find(
+      (n: DocCategoryNode) => n.category === 'Getting Started',
+    );
     expect(gettingStartedNode).toBeDefined();
     expect(gettingStartedNode!.docs.length).toBe(2);
   });
@@ -358,36 +346,24 @@ describe('groupDocsByCategory', () => {
 
 describe('highlightSnippet', () => {
   it('should return a DocHighlight object with before/match/after', () => {
-    const result: DocHighlight = highlightSnippet(
-      'Welcome to ClaudeForge. Install plugins easily.',
-      'Install',
-    );
+    const result: DocHighlight = highlightSnippet('Welcome to ClaudeForge. Install plugins easily.', 'Install');
     expect(typeof result.before).toBe('string');
     expect(typeof result.match).toBe('string');
     expect(typeof result.after).toBe('string');
   });
 
   it('should capture the matching term in the match field (case-insensitive)', () => {
-    const result = highlightSnippet(
-      'Welcome to ClaudeForge. Install plugins easily.',
-      'install',
-    );
+    const result = highlightSnippet('Welcome to ClaudeForge. Install plugins easily.', 'install');
     expect(result.match.toLowerCase()).toBe('install');
   });
 
   it('should include text before the match in the before field', () => {
-    const result = highlightSnippet(
-      'Welcome to ClaudeForge. Install plugins easily.',
-      'install',
-    );
+    const result = highlightSnippet('Welcome to ClaudeForge. Install plugins easily.', 'install');
     expect(result.before.toLowerCase()).toContain('welcome');
   });
 
   it('should include text after the match in the after field', () => {
-    const result = highlightSnippet(
-      'Welcome to ClaudeForge. Install plugins easily.',
-      'install',
-    );
+    const result = highlightSnippet('Welcome to ClaudeForge. Install plugins easily.', 'install');
     expect(result.after.toLowerCase()).toContain('plugins');
   });
 

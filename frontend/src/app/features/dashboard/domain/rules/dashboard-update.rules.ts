@@ -30,10 +30,7 @@ export function compareSemVer(a: string, b: string): number {
  * Derives update status by comparing installed version against the latest catalog version.
  * Returns 'up-to-date' when latestVersion is null, empty, or not strictly greater.
  */
-export function computeUpdateStatus(
-  installedVersion: string,
-  latestVersion: string | null,
-): PluginUpdateStatus {
+export function computeUpdateStatus(installedVersion: string, latestVersion: string | null): PluginUpdateStatus {
   if (!latestVersion) {
     return 'up-to-date';
   }
@@ -46,10 +43,7 @@ export function computeUpdateStatus(
  * enriching it with the computed update status.
  * Pure function — no side-effects, returns a new object every call.
  */
-export function enrichInstalledPlugin(
-  record: InstalledPluginRecord,
-  latestVersion: string | null,
-): InstalledPlugin {
+export function enrichInstalledPlugin(record: InstalledPluginRecord, latestVersion: string | null): InstalledPlugin {
   return {
     name: record.name,
     version: record.version,

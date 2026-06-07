@@ -76,21 +76,39 @@ class StubDashboardFacade {
     this._hasUpdates.set(hasUpdates);
   }
 
-  get installedPlugins(): Signal<InstalledPlugin[]> { return this._installed; }
-  get isLoading(): Signal<boolean> { return this._isLoading; }
-  get error(): Signal<{ code: string; message: string }[] | undefined> { return this._error; }
-  get hasUpdates(): Signal<boolean> { return this._hasUpdates; }
-  get groupsByTeam(): Signal<DashboardGroup> { return this._groupsByTeam; }
-  get recommendedPlugins(): Signal<readonly RecommendedPlugin[]> { return this._recommended; }
+  get installedPlugins(): Signal<InstalledPlugin[]> {
+    return this._installed;
+  }
+  get isLoading(): Signal<boolean> {
+    return this._isLoading;
+  }
+  get error(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._error;
+  }
+  get hasUpdates(): Signal<boolean> {
+    return this._hasUpdates;
+  }
+  get groupsByTeam(): Signal<DashboardGroup> {
+    return this._groupsByTeam;
+  }
+  get recommendedPlugins(): Signal<readonly RecommendedPlugin[]> {
+    return this._recommended;
+  }
 
   loadInstalledCalls = 0;
   removeInstalledCalls: string[] = [];
   checkForUpdatesCalls = 0;
   recordIntentCalls: { name: string; version: string }[] = [];
 
-  loadInstalled(): void { this.loadInstalledCalls++; }
-  removeInstalled(name: string): void { this.removeInstalledCalls.push(name); }
-  checkForUpdates(): void { this.checkForUpdatesCalls++; }
+  loadInstalled(): void {
+    this.loadInstalledCalls++;
+  }
+  removeInstalled(name: string): void {
+    this.removeInstalledCalls.push(name);
+  }
+  checkForUpdates(): void {
+    this.checkForUpdatesCalls++;
+  }
   recordInstallIntent(name: string, version: string): void {
     this.recordIntentCalls.push({ name, version });
   }
@@ -155,9 +173,7 @@ describe('InstalledPluginsTableComponent — loading state', () => {
     const { fixture, stub } = setupComponent();
     stub.setLoading(true);
     fixture.detectChanges();
-    const el = fixture.debugElement.query(
-      By.css('[data-testid="loading"], [aria-busy="true"], .loading'),
-    );
+    const el = fixture.debugElement.query(By.css('[data-testid="loading"], [aria-busy="true"], .loading'));
     expect(el).not.toBeNull();
   });
 
@@ -180,9 +196,7 @@ describe('InstalledPluginsTableComponent — error state', () => {
     const { fixture, stub } = setupComponent();
     stub.setError([{ code: 'LOAD_ERROR', message: 'Failed to load' }]);
     fixture.detectChanges();
-    const el = fixture.debugElement.query(
-      By.css('[data-testid="error-message"], [role="alert"], .error'),
-    );
+    const el = fixture.debugElement.query(By.css('[data-testid="error-message"], [role="alert"], .error'));
     expect(el).not.toBeNull();
   });
 });
@@ -197,9 +211,7 @@ describe('InstalledPluginsTableComponent — empty state', () => {
     stub.setInstalled([]);
     stub.setLoading(false);
     fixture.detectChanges();
-    const el = fixture.debugElement.query(
-      By.css('[data-testid="empty-state"], cf-empty-state, [role="status"]'),
-    );
+    const el = fixture.debugElement.query(By.css('[data-testid="empty-state"], cf-empty-state, [role="status"]'));
     expect(el).not.toBeNull();
   });
 
@@ -207,9 +219,7 @@ describe('InstalledPluginsTableComponent — empty state', () => {
     const { fixture, stub } = setupComponent();
     stub.setInstalled([PLUGIN_UP_TO_DATE]);
     fixture.detectChanges();
-    const table = fixture.debugElement.query(
-      By.css('[data-testid="plugins-table"], table, cf-table'),
-    );
+    const table = fixture.debugElement.query(By.css('[data-testid="plugins-table"], table, cf-table'));
     expect(table).not.toBeNull();
   });
 });
@@ -240,9 +250,7 @@ describe('InstalledPluginsTableComponent — plugin list rendering', () => {
     const { fixture, stub } = setupComponent();
     stub.setInstalled([PLUGIN_UPDATE_AVAILABLE]);
     fixture.detectChanges();
-    const badge = fixture.debugElement.query(
-      By.css('[data-testid="update-badge"], .update-badge, cf-badge'),
-    );
+    const badge = fixture.debugElement.query(By.css('[data-testid="update-badge"], .update-badge, cf-badge'));
     expect(badge).not.toBeNull();
   });
 

@@ -98,10 +98,7 @@ export function combineSearchFilters(
  * Builds a display state for empty search results.
  * Returns a NEW object each call.
  */
-export function buildNoResultsState(
-  keyword: string,
-  suggestions: readonly string[],
-): SearchNoResultsState {
+export function buildNoResultsState(keyword: string, suggestions: readonly string[]): SearchNoResultsState {
   return {
     isEmpty: true,
     keyword,

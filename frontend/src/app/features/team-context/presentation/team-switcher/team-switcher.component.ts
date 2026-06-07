@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  Signal,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, Signal, inject, signal } from '@angular/core';
 import { TeamContextFacade } from '../../application/facades/team-context.facade';
 
 /**
@@ -27,32 +21,15 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
             <span class="team-switcher__current-team" data-testid="current-team">
               {{ currentTeam() }}
             </span>
-            <button
-              type="button"
-              data-testid="edit-button"
-              class="team-switcher__edit-btn"
-              (click)="openEdit()"
-            >
+            <button type="button" data-testid="edit-button" class="team-switcher__edit-btn" (click)="openEdit()">
               Change
             </button>
-            <button
-              type="button"
-              data-testid="clear-button"
-              class="team-switcher__clear-btn"
-              (click)="clearTeam()"
-            >
+            <button type="button" data-testid="clear-button" class="team-switcher__clear-btn" (click)="clearTeam()">
               Clear
             </button>
           } @else {
-            <span class="team-switcher__no-team" data-testid="no-team-label">
-              No team selected
-            </span>
-            <button
-              type="button"
-              data-testid="set-team-button"
-              class="team-switcher__set-btn"
-              (click)="openEdit()"
-            >
+            <span class="team-switcher__no-team" data-testid="no-team-label"> No team selected </span>
+            <button type="button" data-testid="set-team-button" class="team-switcher__set-btn" (click)="openEdit()">
               Set Team
             </button>
           }
@@ -67,20 +44,10 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
             placeholder="Enter team name"
             (input)="onInput($event)"
           />
-          <button
-            type="button"
-            data-testid="confirm-button"
-            class="team-switcher__confirm-btn"
-            (click)="confirmEdit()"
-          >
+          <button type="button" data-testid="confirm-button" class="team-switcher__confirm-btn" (click)="confirmEdit()">
             Confirm
           </button>
-          <button
-            type="button"
-            data-testid="cancel-button"
-            class="team-switcher__cancel-btn"
-            (click)="cancelEdit()"
-          >
+          <button type="button" data-testid="cancel-button" class="team-switcher__cancel-btn" (click)="cancelEdit()">
             Cancel
           </button>
 
@@ -103,11 +70,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
 
       <!-- Validation error -->
       @if (validationError()) {
-        <p
-          data-testid="validation-error"
-          role="alert"
-          class="validation-error"
-        >
+        <p data-testid="validation-error" role="alert" class="validation-error">
           {{ validationError() }}
         </p>
       }

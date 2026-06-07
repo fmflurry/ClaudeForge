@@ -11,11 +11,13 @@ import { FilterChipsComponent } from './filter-chips.component';
 // Setup
 // ---------------------------------------------------------------------------
 
-function setup(opts: {
-  activeTypes?: string[];
-  activeLanguages?: string[];
-  activeUseCases?: string[];
-} = {}): ComponentFixture<FilterChipsComponent> {
+function setup(
+  opts: {
+    activeTypes?: string[];
+    activeLanguages?: string[];
+    activeUseCases?: string[];
+  } = {},
+): ComponentFixture<FilterChipsComponent> {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [FilterChipsComponent],

@@ -70,11 +70,7 @@ import { SearchResultsComponent } from './search-results.component';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { FilterChipsComponent } from '../filter-chips/filter-chips.component';
 import { SearchFacade } from '../../application/facades/search.facade';
-import type {
-  DiscoveryCriteria,
-  DiscoveryResult,
-  SearchResult,
-} from '../../domain/models/search.models';
+import type { DiscoveryCriteria, DiscoveryResult, SearchResult } from '../../domain/models/search.models';
 import type { SearchFilterQuery } from '../../domain/rules/search-filter.rules';
 
 // ---------------------------------------------------------------------------
@@ -125,15 +121,33 @@ class StubSearchFacade {
   }
 
   // Facade signals
-  get results(): Signal<SearchResult[]> { return this._results; }
-  get paginationMeta(): Signal<SearchPaginationMeta | undefined> { return this._paginationMeta; }
-  get categorySuggestions(): Signal<readonly string[]> { return this._categorySuggestions; }
-  get discoveryResults(): Signal<DiscoveryResult[]> { return this._discoveryResults; }
-  get criteriaEchoed(): Signal<DiscoveryCriteria | undefined> { return this._criteriaEchoed; }
-  get isLoadingSearch(): Signal<boolean> { return this._isLoadingSearch; }
-  get isLoadingDiscovery(): Signal<boolean> { return this._isLoadingDiscovery; }
-  get searchError(): Signal<{ code: string; message: string }[] | undefined> { return this._searchError; }
-  get discoveryError(): Signal<{ code: string; message: string }[] | undefined> { return this._discoveryError; }
+  get results(): Signal<SearchResult[]> {
+    return this._results;
+  }
+  get paginationMeta(): Signal<SearchPaginationMeta | undefined> {
+    return this._paginationMeta;
+  }
+  get categorySuggestions(): Signal<readonly string[]> {
+    return this._categorySuggestions;
+  }
+  get discoveryResults(): Signal<DiscoveryResult[]> {
+    return this._discoveryResults;
+  }
+  get criteriaEchoed(): Signal<DiscoveryCriteria | undefined> {
+    return this._criteriaEchoed;
+  }
+  get isLoadingSearch(): Signal<boolean> {
+    return this._isLoadingSearch;
+  }
+  get isLoadingDiscovery(): Signal<boolean> {
+    return this._isLoadingDiscovery;
+  }
+  get searchError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._searchError;
+  }
+  get discoveryError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._discoveryError;
+  }
 
   // Recorded calls
   searchCalls: { keyword: string; filters?: Partial<SearchFilterQuery> }[] = [];
@@ -374,9 +388,7 @@ describe('SearchResultsComponent — error state', () => {
     const { fixture, stub } = setupSearchResults();
     stub.setSearchError([{ code: 'HTTP_500', message: 'Server error' }]);
     fixture.detectChanges();
-    const errorEl = fixture.debugElement.query(
-      By.css('[data-testid="error-message"], [role="alert"], .error'),
-    );
+    const errorEl = fixture.debugElement.query(By.css('[data-testid="error-message"], [role="alert"], .error'));
     expect(errorEl).not.toBeNull();
   });
 });
@@ -404,9 +416,7 @@ describe('SearchResultsComponent — onSearch delegates to facade', () => {
     const { fixture, stub } = setupSearchResults();
     fixture.detectChanges();
     fixture.componentInstance.onSearch('typescript');
-    expect(stub.searchCalls).toContainEqual(
-      expect.objectContaining({ keyword: 'typescript' }),
-    );
+    expect(stub.searchCalls).toContainEqual(expect.objectContaining({ keyword: 'typescript' }));
   });
 
   it('should call facade.search with empty string without throwing', () => {
@@ -484,9 +494,7 @@ describe('SearchBarComponent — rendering', () => {
   it('should render a search button or submit mechanism', () => {
     const { fixture } = setupSearchBar();
     fixture.detectChanges();
-    const btn = fixture.debugElement.query(
-      By.css('button[type="submit"], button, [data-testid="search-button"]'),
-    );
+    const btn = fixture.debugElement.query(By.css('button[type="submit"], button, [data-testid="search-button"]'));
     expect(btn).not.toBeNull();
   });
 });

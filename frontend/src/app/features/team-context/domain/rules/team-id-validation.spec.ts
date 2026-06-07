@@ -31,12 +31,7 @@
  *     - each preset MUST itself pass validateTeamId
  */
 
-import {
-  validateTeamId,
-  MIN_TEAM_ID_LENGTH,
-  MAX_TEAM_ID_LENGTH,
-  PRESET_TEAMS,
-} from './team-id-validation.rules';
+import { validateTeamId, MIN_TEAM_ID_LENGTH, MAX_TEAM_ID_LENGTH, PRESET_TEAMS } from './team-id-validation.rules';
 import type { TeamIdValidationResult } from './team-id-validation.rules';
 
 // ---------------------------------------------------------------------------

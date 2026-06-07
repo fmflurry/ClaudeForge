@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  output,
-  Signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
 import { DashboardFacade } from '../../application/facades/dashboard.facade';
 import type { InstalledPlugin } from '../../domain/models/dashboard.models';
 
@@ -16,17 +9,11 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
   imports: [],
   template: `
     @if (isLoading()) {
-      <div data-testid="loading" aria-busy="true" class="loading">
-        Loading plugins…
-      </div>
+      <div data-testid="loading" aria-busy="true" class="loading">Loading plugins…</div>
     } @else if (hasError()) {
-      <div data-testid="error-message" role="alert" class="error">
-        Failed to load plugins. Please try again.
-      </div>
+      <div data-testid="error-message" role="alert" class="error">Failed to load plugins. Please try again.</div>
     } @else if (plugins().length === 0) {
-      <div data-testid="empty-state" role="status" class="empty-state">
-        No plugins installed yet.
-      </div>
+      <div data-testid="empty-state" role="status" class="empty-state">No plugins installed yet.</div>
     } @else {
       <table data-testid="plugins-table" class="plugins-table">
         <thead>

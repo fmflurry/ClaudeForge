@@ -37,10 +37,7 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { API_BASE_URL } from '../../../../core/config/api-config';
 import { DeviceActivationPort } from '../../domain/ports/device-activation.port';

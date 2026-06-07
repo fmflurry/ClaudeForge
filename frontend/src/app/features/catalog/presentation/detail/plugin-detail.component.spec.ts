@@ -65,26 +65,56 @@ class StubCatalogFacadeForDetail {
   }
 
   // Signals
-  get plugins(): Signal<PluginSummary[]> { return this._plugins; }
-  get paginationMeta(): Signal<PaginationMeta | undefined> { return this._paginationMeta; }
-  get categories(): Signal<Categories | undefined> { return this._categories; }
-  get selectedPlugin(): Signal<PluginDetail | undefined> { return this._selectedPlugin; }
-  get isLoadingPlugins(): Signal<boolean> { return this._isLoadingPlugins; }
-  get isLoadingDetail(): Signal<boolean> { return this._isLoadingDetail; }
-  get isLoadingCategories(): Signal<boolean> { return this._isLoadingCategories; }
-  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> { return this._pluginsError; }
-  get detailError(): Signal<{ code: string; message: string }[] | undefined> { return this._detailError; }
+  get plugins(): Signal<PluginSummary[]> {
+    return this._plugins;
+  }
+  get paginationMeta(): Signal<PaginationMeta | undefined> {
+    return this._paginationMeta;
+  }
+  get categories(): Signal<Categories | undefined> {
+    return this._categories;
+  }
+  get selectedPlugin(): Signal<PluginDetail | undefined> {
+    return this._selectedPlugin;
+  }
+  get isLoadingPlugins(): Signal<boolean> {
+    return this._isLoadingPlugins;
+  }
+  get isLoadingDetail(): Signal<boolean> {
+    return this._isLoadingDetail;
+  }
+  get isLoadingCategories(): Signal<boolean> {
+    return this._isLoadingCategories;
+  }
+  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._pluginsError;
+  }
+  get detailError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._detailError;
+  }
 
   // Recorded calls
   loadDetailCalls: string[] = [];
   loadCategoriesCalls = 0;
 
-  loadPlugins(_query?: Partial<CatalogFilterQuery>): void { /* no-op */ }
-  setPage(_page: number): void { /* no-op */ }
-  setSort(_sort: string, _order?: 'asc' | 'desc'): void { /* no-op */ }
-  setFilters(_filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>): void { /* no-op */ }
-  loadDetail(pluginId: string): void { this.loadDetailCalls.push(pluginId); }
-  loadCategories(): void { this.loadCategoriesCalls++; }
+  loadPlugins(_query?: Partial<CatalogFilterQuery>): void {
+    /* no-op */
+  }
+  setPage(_page: number): void {
+    /* no-op */
+  }
+  setSort(_sort: string, _order?: 'asc' | 'desc'): void {
+    /* no-op */
+  }
+  setFilters(_filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>): void {
+    /* no-op */
+  }
+  loadDetail(pluginId: string): void {
+    this.loadDetailCalls.push(pluginId);
+  }
+  loadCategories(): void {
+    this.loadCategoriesCalls++;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -295,9 +325,7 @@ describe('PluginDetailComponent — error state', () => {
     const { fixture, stub } = setupDetailComponent();
     stub.setDetailError([{ code: 'HTTP_404', message: 'Plugin not found' }]);
     fixture.detectChanges();
-    const errorEl = fixture.debugElement.query(
-      By.css('[data-testid="error-message"], [role="alert"], .error'),
-    );
+    const errorEl = fixture.debugElement.query(By.css('[data-testid="error-message"], [role="alert"], .error'));
     expect(errorEl).not.toBeNull();
   });
 

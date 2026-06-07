@@ -59,27 +59,53 @@ class StubTeamContextFacade {
   private readonly _validationError = signal<string | undefined>(undefined);
 
   // Test helpers
-  setNeedsInit(v: boolean): void { this._needsInit.set(v); }
-  setValidationError(err: string | undefined): void { this._validationError.set(err); }
-  setHasTeam(v: boolean): void { this._hasTeam.set(v); }
-  setCurrentTeam(id: string | undefined): void { this._currentTeam.set(id); }
+  setNeedsInit(v: boolean): void {
+    this._needsInit.set(v);
+  }
+  setValidationError(err: string | undefined): void {
+    this._validationError.set(err);
+  }
+  setHasTeam(v: boolean): void {
+    this._hasTeam.set(v);
+  }
+  setCurrentTeam(id: string | undefined): void {
+    this._currentTeam.set(id);
+  }
 
   // Signal getters
-  get currentTeam(): Signal<string | undefined> { return this._currentTeam; }
-  get teamId(): Signal<string | undefined> { return this._teamId; }
-  get hasTeam(): Signal<boolean> { return this._hasTeam; }
-  get presets(): Signal<readonly string[]> { return this._presets; }
-  get needsInit(): Signal<boolean> { return this._needsInit; }
-  get validationError(): Signal<string | undefined> { return this._validationError; }
+  get currentTeam(): Signal<string | undefined> {
+    return this._currentTeam;
+  }
+  get teamId(): Signal<string | undefined> {
+    return this._teamId;
+  }
+  get hasTeam(): Signal<boolean> {
+    return this._hasTeam;
+  }
+  get presets(): Signal<readonly string[]> {
+    return this._presets;
+  }
+  get needsInit(): Signal<boolean> {
+    return this._needsInit;
+  }
+  get validationError(): Signal<string | undefined> {
+    return this._validationError;
+  }
 
   // Recorded calls
   initCalls = 0;
   setTeamCalls: string[] = [];
   clearTeamCalls = 0;
 
-  init(): void { this.initCalls++; }
-  setTeam(id: string): void { this.setTeamCalls.push(id); }
-  clearTeam(): void { this.clearTeamCalls++; }
+  init(): void {
+    this.initCalls++;
+  }
+  setTeam(id: string): void {
+    this.setTeamCalls.push(id);
+  }
+  clearTeam(): void {
+    this.clearTeamCalls++;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -300,9 +326,7 @@ describe('TeamWelcomeOverlayComponent — validation error display', () => {
     const { fixture, stub } = setupComponent();
     stub.setValidationError(undefined);
     fixture.detectChanges();
-    const errorEl = fixture.debugElement.query(
-      By.css('[data-testid="validation-error"]'),
-    );
+    const errorEl = fixture.debugElement.query(By.css('[data-testid="validation-error"]'));
     // Either null (not rendered) or hidden — we prefer it absent from DOM
     if (errorEl !== null) {
       const el = errorEl.nativeElement as HTMLElement;

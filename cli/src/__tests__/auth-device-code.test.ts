@@ -92,7 +92,7 @@ function makeDeps(overrides: Partial<DeviceCodeDeps> = {}): DeviceCodeDeps {
     api: makeApi([{ status: 'approved', tokens: SAMPLE_TOKENS }]),
     storeCredentials: vi.fn().mockResolvedValue(undefined),
     displayInstructions: vi.fn(),
-    pollIntervalMs: 0,    // instant for tests
+    pollIntervalMs: 0, // instant for tests
     maxAttempts: 5,
     clock: fastClock,
     ...overrides,
@@ -166,10 +166,7 @@ describe('runDeviceCodeLogin – polling: pending → approved', () => {
   });
 
   it('stores credentials after polling delay', async () => {
-    const pollResults: DeviceTokenPollResult[] = [
-      { status: 'pending' },
-      { status: 'approved', tokens: SAMPLE_TOKENS },
-    ];
+    const pollResults: DeviceTokenPollResult[] = [{ status: 'pending' }, { status: 'approved', tokens: SAMPLE_TOKENS }];
     const storeFn = vi.fn().mockResolvedValue(undefined);
     const deps = makeDeps({
       api: makeApi(pollResults),

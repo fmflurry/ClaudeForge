@@ -61,16 +61,14 @@
  */
 
 import type { InstalledPluginRecord } from '../../../../shared/domain/ports/installed-plugins-storage.port';
-import type { InstalledPlugin, DashboardGroup, PluginUpdateStatus, RecommendedPlugin } from '../models/dashboard.models';
-import {
-  compareSemVer,
-  computeUpdateStatus,
-  enrichInstalledPlugin,
-} from '../rules/dashboard-update.rules';
-import {
-  groupPluginsByTeam,
-  deriveRecommended,
-} from '../rules/dashboard-grouping.rules';
+import type {
+  InstalledPlugin,
+  DashboardGroup,
+  PluginUpdateStatus,
+  RecommendedPlugin,
+} from '../models/dashboard.models';
+import { compareSemVer, computeUpdateStatus, enrichInstalledPlugin } from '../rules/dashboard-update.rules';
+import { groupPluginsByTeam, deriveRecommended } from '../rules/dashboard-grouping.rules';
 
 // ---------------------------------------------------------------------------
 // Fixtures

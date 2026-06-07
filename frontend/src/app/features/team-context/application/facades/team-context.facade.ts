@@ -3,10 +3,7 @@ import { inject } from '@angular/core';
 import { TeamContextStore, TeamContextStoreEnum } from '../store/team-context.store';
 import { TeamContextStoragePort } from '../../../../shared/domain/ports/team-context-storage.port';
 import { contextRegistry } from '../../../../core/context/context-registry';
-import {
-  validateTeamId,
-  PRESET_TEAMS,
-} from '../../domain/rules/team-id-validation.rules';
+import { validateTeamId, PRESET_TEAMS } from '../../domain/rules/team-id-validation.rules';
 
 @Injectable()
 export class TeamContextFacade {

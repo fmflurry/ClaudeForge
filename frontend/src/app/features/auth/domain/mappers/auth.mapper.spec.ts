@@ -93,9 +93,7 @@ describe('mapCurrentUserDtoToCurrentUser', () => {
     user_id: 'u-1',
     email: 'alice@example.com',
     display_name: 'Alice',
-    org_memberships: [
-      { org_id: 'org-1', org_name: 'Acme', role: 'owner' },
-    ],
+    org_memberships: [{ org_id: 'org-1', org_name: 'Acme', role: 'owner' }],
   };
 
   it('should map user_id to userId', () => {

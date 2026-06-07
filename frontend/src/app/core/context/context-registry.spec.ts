@@ -75,7 +75,10 @@ describe('ContextRegistry — publish / subscribe', () => {
   });
 
   it('should deliver a typed payload object to a subscriber', () => {
-    interface TeamPayload { teamId: string; teamName: string }
+    interface TeamPayload {
+      teamId: string;
+      teamName: string;
+    }
     let captured: TeamPayload | undefined;
 
     contextRegistry.subscribe<TeamPayload>('team:changed', (p: TeamPayload) => {
@@ -255,9 +258,7 @@ describe('contextProvidersFor', () => {
 
   it('should handle unknown/unregistered contexts gracefully (return [])', () => {
     // Casting to bypass type check — simulates future contexts not yet in CONTEXT_REGISTRY
-    expect(() =>
-      contextProvidersFor(['unknown-context' as AppContext]),
-    ).not.toThrow();
+    expect(() => contextProvidersFor(['unknown-context' as AppContext])).not.toThrow();
   });
 });
 
@@ -272,7 +273,9 @@ describe('Cross-domain isolation via ContextRegistry', () => {
 
   it('domain A can publish events that domain B receives without direct import', () => {
     // Simulates CatalogDomain publishing and TeamContextDomain subscribing
-    interface PluginSelectedEvent { pluginId: string }
+    interface PluginSelectedEvent {
+      pluginId: string;
+    }
 
     const received: PluginSelectedEvent[] = [];
     // Domain B subscribes

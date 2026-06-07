@@ -83,11 +83,7 @@ describe('readRegistry', () => {
   it('returns the stored registry when installed.json is valid', async () => {
     const record = makeRecord();
     const expected: InstalledRegistry = { plugins: [record] };
-    await fs.writeFile(
-      path.join(tmpDir, 'installed.json'),
-      JSON.stringify(expected),
-      'utf-8',
-    );
+    await fs.writeFile(path.join(tmpDir, 'installed.json'), JSON.stringify(expected), 'utf-8');
     const reg = await readRegistry(tmpDir);
     expect(reg).toEqual(expected);
   });
@@ -257,9 +253,7 @@ describe('findRecord', () => {
 
 describe('backupsDir', () => {
   it('returns homeDir/backups', () => {
-    expect(backupsDir('/home/user/.claude-plugins')).toBe(
-      '/home/user/.claude-plugins/backups',
-    );
+    expect(backupsDir('/home/user/.claude-plugins')).toBe('/home/user/.claude-plugins/backups');
   });
 });
 

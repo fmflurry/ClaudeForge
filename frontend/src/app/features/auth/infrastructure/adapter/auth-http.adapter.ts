@@ -17,10 +17,7 @@ import { API_BASE_URL } from '../../../../core/config/api-config';
 import { AuthPort } from '../../domain/ports/auth.port';
 import type { AuthProvider, AuthToken, CurrentUser } from '../../domain/models/auth.models';
 import type { CurrentUserDto, TokenResponseDto } from '../../domain/mappers/auth.mapper';
-import {
-  mapCurrentUserDtoToCurrentUser,
-  mapTokenResponseToAuthToken,
-} from '../../domain/mappers/auth.mapper';
+import { mapCurrentUserDtoToCurrentUser, mapTokenResponseToAuthToken } from '../../domain/mappers/auth.mapper';
 
 interface AuthorizeUrlResponse {
   authorize_url: string;
@@ -60,21 +57,27 @@ export class AuthHttpAdapter extends AuthPort {
 
   refreshToken(): Observable<AuthToken> {
     return this.http
-      .post<TokenResponseDto>(`${this.baseUrl}/auth/refresh`, {}, {
-        withCredentials: true,
-      })
+      .post<TokenResponseDto>(
+        `${this.baseUrl}/auth/refresh`,
+        {},
+        {
+          withCredentials: true,
+        },
+      )
       .pipe(map(mapTokenResponseToAuthToken));
   }
 
   getCurrentUser(): Observable<CurrentUser> {
-    return this.http
-      .get<CurrentUserDto>(`${this.baseUrl}/auth/me`)
-      .pipe(map(mapCurrentUserDtoToCurrentUser));
+    return this.http.get<CurrentUserDto>(`${this.baseUrl}/auth/me`).pipe(map(mapCurrentUserDtoToCurrentUser));
   }
 
   signOut(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/auth/signout`, {}, {
-      withCredentials: true,
-    });
+    return this.http.post<void>(
+      `${this.baseUrl}/auth/signout`,
+      {},
+      {
+        withCredentials: true,
+      },
+    );
   }
 }

@@ -8,20 +8,11 @@
  * Route: /activate (auth-guarded — see app.routes.ts)
  */
 
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  OnInit,
-  Signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, Signal } from '@angular/core';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { DeviceActivationFacade } from '../application/facades/device-activation.facade';
-import type {
-  DeviceActivationErrorReason,
-  DeviceActivationStatus,
-} from '../domain/ports/device-activation.port';
+import type { DeviceActivationErrorReason, DeviceActivationStatus } from '../domain/ports/device-activation.port';
 
 @Component({
   selector: 'cf-activate-page',
@@ -32,9 +23,7 @@ import type {
     <div class="cf-activate">
       <div class="cf-activate__card">
         <h1 class="cf-activate__title">Approve Device</h1>
-        <p class="cf-activate__subtitle">
-          Enter the user code displayed on your device to authorize it.
-        </p>
+        <p class="cf-activate__subtitle">Enter the user code displayed on your device to authorize it.</p>
 
         @if (status() === 'approved') {
           <div class="cf-activate__approved" role="status">
@@ -60,11 +49,7 @@ import type {
               autocomplete="off"
             />
 
-            <button
-              type="submit"
-              class="cf-activate__btn"
-              [disabled]="status() === 'submitting'"
-            >
+            <button type="submit" class="cf-activate__btn" [disabled]="status() === 'submitting'">
               @if (status() === 'submitting') {
                 Approving…
               } @else {

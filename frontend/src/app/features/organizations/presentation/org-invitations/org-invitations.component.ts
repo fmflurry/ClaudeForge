@@ -41,13 +41,7 @@ import type { OrgRole } from '../../domain/models/organizations.models';
               <option value="member">Member</option>
               <option value="admin">Admin</option>
             </select>
-            <button
-              type="submit"
-              class="cf-org-inv__send-btn"
-              [disabled]="!inviteEmail()"
-            >
-              Send Invite
-            </button>
+            <button type="submit" class="cf-org-inv__send-btn" [disabled]="!inviteEmail()">Send Invite</button>
           </form>
         }
 

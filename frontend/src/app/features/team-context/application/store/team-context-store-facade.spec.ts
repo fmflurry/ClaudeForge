@@ -65,11 +65,7 @@ function setup(): { store: TeamContextStore; facade: TeamContextFacade; port: In
   TestBed.resetTestingModule();
   const port = new InMemoryTeamContextAdapter();
   TestBed.configureTestingModule({
-    providers: [
-      TeamContextStore,
-      TeamContextFacade,
-      { provide: TeamContextStoragePort, useValue: port },
-    ],
+    providers: [TeamContextStore, TeamContextFacade, { provide: TeamContextStoragePort, useValue: port }],
   });
   return {
     store: TestBed.inject(TeamContextStore),
@@ -88,11 +84,7 @@ function setupWithStoredTeam(storedId: string): {
   const port = new InMemoryTeamContextAdapter();
   port.setTeamId(storedId);
   TestBed.configureTestingModule({
-    providers: [
-      TeamContextStore,
-      TeamContextFacade,
-      { provide: TeamContextStoragePort, useValue: port },
-    ],
+    providers: [TeamContextStore, TeamContextFacade, { provide: TeamContextStoragePort, useValue: port }],
   });
   return {
     store: TestBed.inject(TeamContextStore),

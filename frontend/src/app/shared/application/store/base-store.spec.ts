@@ -39,7 +39,10 @@ enum TestStoreEnum {
   DETAIL = 'DETAIL',
 }
 
-interface TestItem { id: string; name: string }
+interface TestItem {
+  id: string;
+  name: string;
+}
 
 interface TestState {
   [TestStoreEnum.ITEMS]: ResourceState<TestItem[]>;

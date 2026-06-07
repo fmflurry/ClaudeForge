@@ -24,17 +24,37 @@ class StubDocsFacade {
 
   openDocCalls: string[] = [];
 
-  get searchResults(): Signal<DocSearchResult[]> { return this._searchResults; }
-  get categoryTree(): Signal<readonly DocCategoryNode[]> { return this._categoryTree; }
-  get currentDoc(): Signal<DocPage | undefined> { return this._currentDoc; }
-  get isLoadingSearch(): Signal<boolean> { return this._isLoadingSearch; }
-  get isLoadingDoc(): Signal<boolean> { return this._isLoadingDoc; }
-  get searchError(): Signal<{ code: string; message: string }[] | undefined> { return this._searchError; }
-  get docError(): Signal<{ code: string; message: string }[] | undefined> { return this._docError; }
+  get searchResults(): Signal<DocSearchResult[]> {
+    return this._searchResults;
+  }
+  get categoryTree(): Signal<readonly DocCategoryNode[]> {
+    return this._categoryTree;
+  }
+  get currentDoc(): Signal<DocPage | undefined> {
+    return this._currentDoc;
+  }
+  get isLoadingSearch(): Signal<boolean> {
+    return this._isLoadingSearch;
+  }
+  get isLoadingDoc(): Signal<boolean> {
+    return this._isLoadingDoc;
+  }
+  get searchError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._searchError;
+  }
+  get docError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._docError;
+  }
 
-  search(_q: string): void { /* no-op */ }
-  openDoc(slug: string): void { this.openDocCalls.push(slug); }
-  openPluginDoc(_slug: string): void { /* no-op */ }
+  search(_q: string): void {
+    /* no-op */
+  }
+  openDoc(slug: string): void {
+    this.openDocCalls.push(slug);
+  }
+  openPluginDoc(_slug: string): void {
+    /* no-op */
+  }
 }
 
 // ---------------------------------------------------------------------------

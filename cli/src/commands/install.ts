@@ -84,10 +84,7 @@ const realFsPort: FsPort = {
 // Command
 // ---------------------------------------------------------------------------
 
-export async function runInstall(
-  args: InstallArgs,
-  deps: InstallDeps,
-): Promise<CommandResult> {
+export async function runInstall(args: InstallArgs, deps: InstallDeps): Promise<CommandResult> {
   const { pluginName, version } = args;
   const { client, homeDir, fs: fsPort = realFsPort } = deps;
 
@@ -175,11 +172,7 @@ export async function runInstall(
 
   // ── 5. Build success output ──────────────────────────────────────────────
   const lines = [`Installed ${pluginName} v${targetVersion}`];
-  if (
-    version &&
-    pluginDetail.latestVersion &&
-    pluginDetail.latestVersion !== version
-  ) {
+  if (version && pluginDetail.latestVersion && pluginDetail.latestVersion !== version) {
     lines.push(`A newer version v${pluginDetail.latestVersion} is available`);
   }
 

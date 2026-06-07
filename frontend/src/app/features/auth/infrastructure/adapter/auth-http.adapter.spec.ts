@@ -5,15 +5,12 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { AuthHttpAdapter } from './auth-http.adapter';
 import { API_BASE_URL } from '../../../../core/config/api-config';
 import { AuthPort } from '../../domain/ports/auth.port';
-import type { AuthProvider, AuthToken, CurrentUser } from '../../domain/models/auth.models';
+import type { AuthToken, CurrentUser } from '../../domain/models/auth.models';
 import type { TokenResponseDto, CurrentUserDto } from '../../domain/mappers/auth.mapper';
 
 const BASE = 'https://api.test';
@@ -44,9 +41,7 @@ describe('AuthHttpAdapter — getAuthorizeUrl', () => {
     let result: string | undefined;
     adapter.getAuthorizeUrl('google').subscribe((url) => (result = url));
 
-    const req = http.expectOne(
-      (r) => r.url === `${BASE}/auth/authorize` && r.method === 'GET',
-    );
+    const req = http.expectOne((r) => r.url === `${BASE}/auth/authorize` && r.method === 'GET');
     expect(req.request.params.get('provider')).toBe('google');
     req.flush({ authorize_url: 'https://accounts.google.com/oauth' });
 
@@ -58,9 +53,7 @@ describe('AuthHttpAdapter — getAuthorizeUrl', () => {
     const { adapter, http } = setup();
     adapter.getAuthorizeUrl('microsoft').subscribe();
 
-    const req = http.expectOne(
-      (r) => r.url === `${BASE}/auth/authorize` && r.method === 'GET',
-    );
+    const req = http.expectOne((r) => r.url === `${BASE}/auth/authorize` && r.method === 'GET');
     expect(req.request.params.get('provider')).toBe('microsoft');
     req.flush({ authorize_url: 'https://login.microsoftonline.com/oauth2/v2.0/authorize' });
     http.verify();
@@ -240,9 +233,7 @@ describe('AuthHttpAdapter — getCurrentUser', () => {
       user_id: 'u-1',
       email: 'a@b.com',
       display_name: 'Alice',
-      org_memberships: [
-        { org_id: 'org-1', org_name: 'Acme', role: 'owner' },
-      ],
+      org_memberships: [{ org_id: 'org-1', org_name: 'Acme', role: 'owner' }],
     });
 
     expect(user?.orgMemberships).toHaveLength(1);

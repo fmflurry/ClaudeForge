@@ -9,10 +9,7 @@ import type { DashboardGroup, InstalledPlugin, RecommendedPlugin } from '../mode
  * Groups an array of installed plugins under a single DashboardGroup for the given team.
  * Returns a new object every call (immutable).
  */
-export function groupPluginsByTeam(
-  plugins: readonly InstalledPlugin[],
-  teamId: string,
-): DashboardGroup {
+export function groupPluginsByTeam(plugins: readonly InstalledPlugin[], teamId: string): DashboardGroup {
   return {
     teamId,
     plugins: [...plugins],

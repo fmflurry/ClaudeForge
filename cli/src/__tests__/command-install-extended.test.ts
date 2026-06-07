@@ -82,10 +82,7 @@ describe('runInstall – path traversal rejection', () => {
   it('rejects absolute plugin names (unix-style)', async () => {
     const client = makeFakeClient();
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: '/etc/passwd' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: '/etc/passwd' }, { client, homeDir, fs: fakeFs });
     expect(result.exitCode).toBe(1);
     expect(result.output.toLowerCase()).toMatch(/invalid plugin name|unsafe/i);
   });
@@ -93,10 +90,7 @@ describe('runInstall – path traversal rejection', () => {
   it('rejects plugin names containing ".." segments', async () => {
     const client = makeFakeClient();
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: '../../../etc/shadow' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: '../../../etc/shadow' }, { client, homeDir, fs: fakeFs });
     expect(result.exitCode).toBe(1);
     expect(result.output.toLowerCase()).toMatch(/invalid plugin name|unsafe/i);
   });
@@ -104,10 +98,7 @@ describe('runInstall – path traversal rejection', () => {
   it('rejects plugin names containing null bytes', async () => {
     const client = makeFakeClient();
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: 'safe\x00evil' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: 'safe\x00evil' }, { client, homeDir, fs: fakeFs });
     expect(result.exitCode).toBe(1);
     expect(result.output.toLowerCase()).toMatch(/invalid plugin name|unsafe/i);
   });
@@ -116,10 +107,7 @@ describe('runInstall – path traversal rejection', () => {
     const mkdirFn = vi.fn().mockResolvedValue(undefined);
     const client = makeFakeClient();
     const fakeFs = makeFakeFs({ mkdir: mkdirFn });
-    await runInstall(
-      { pluginName: '../escape' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runInstall({ pluginName: '../escape' }, { client, homeDir, fs: fakeFs });
     expect(mkdirFn).not.toHaveBeenCalled();
   });
 
@@ -127,10 +115,7 @@ describe('runInstall – path traversal rejection', () => {
     const { readRegistry } = await import('../registry/registry.js');
     const client = makeFakeClient();
     const fakeFs = makeFakeFs();
-    await runInstall(
-      { pluginName: '../escape' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runInstall({ pluginName: '../escape' }, { client, homeDir, fs: fakeFs });
     const registry = await readRegistry(homeDir);
     expect(registry.plugins).toHaveLength(0);
   });
@@ -158,10 +143,7 @@ describe('runInstall – latestVersion null fallback', () => {
       downloadPlugin: vi.fn().mockResolvedValue(new ReadableStream()),
     });
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: 'safe-plugin' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs });
     expect(result.exitCode).toBe(0);
     expect(result.output).toContain('0.0.0');
   });
@@ -189,10 +171,7 @@ describe('runInstall – version matches latest, no notice', () => {
       downloadPlugin: vi.fn().mockResolvedValue(new ReadableStream()),
     });
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: 'safe-plugin', version: '1.0.0' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: 'safe-plugin', version: '1.0.0' }, { client, homeDir, fs: fakeFs });
     expect(result.output).not.toContain('A newer version');
   });
 
@@ -203,10 +182,7 @@ describe('runInstall – version matches latest, no notice', () => {
       downloadPlugin: vi.fn().mockResolvedValue(new ReadableStream()),
     });
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: 'safe-plugin' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs });
     // No `version` arg → installs latest; no "newer version" notice
     expect(result.output).not.toContain('A newer version');
   });
@@ -235,10 +211,7 @@ describe('runInstall – path escapes plugins directory', () => {
     // so pluginDir.startsWith(pluginsRoot + sep) is false → rejected
     const client = makeFakeClient();
     const fakeFs = makeFakeFs();
-    const result = await runInstall(
-      { pluginName: '.' },
-      { client, homeDir, fs: fakeFs },
-    );
+    const result = await runInstall({ pluginName: '.' }, { client, homeDir, fs: fakeFs });
     // Either rejected by the explicit checks or the startsWith check
     expect(result.exitCode).toBe(1);
   });
@@ -263,10 +236,7 @@ describe('runInstall – fs port called with correct paths', () => {
     const mkdirFn = vi.fn().mockResolvedValue(undefined);
     const client = makeFakeClient();
     const fakeFs = makeFakeFs({ mkdir: mkdirFn });
-    await runInstall(
-      { pluginName: 'safe-plugin' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runInstall({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs });
     expect(mkdirFn).toHaveBeenCalled();
     const [dirArg] = mkdirFn.mock.calls[0] as [string];
     expect(dirArg).toContain('plugins');
@@ -277,10 +247,7 @@ describe('runInstall – fs port called with correct paths', () => {
     const writeStreamFn = vi.fn().mockResolvedValue(undefined);
     const client = makeFakeClient();
     const fakeFs = makeFakeFs({ writeStream: writeStreamFn });
-    await runInstall(
-      { pluginName: 'safe-plugin' },
-      { client, homeDir, fs: fakeFs },
-    );
+    await runInstall({ pluginName: 'safe-plugin' }, { client, homeDir, fs: fakeFs });
     expect(writeStreamFn).toHaveBeenCalled();
     const [destArg] = writeStreamFn.mock.calls[0] as [string, ReadableStream<Uint8Array>];
     expect(destArg).toContain('package.tar.gz');

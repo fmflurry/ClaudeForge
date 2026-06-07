@@ -135,10 +135,7 @@ export function createMarketplaceClient(apiUrl: string): IMarketplaceClient {
       const response = await fetch(url);
       const paged = await handleResponse<PaginatedResponse<PluginDetail>>(response);
       if (paged.data.length === 0) {
-        throw new MarketplaceApiError(
-          { title: 'Not Found', status: 404, detail: `Plugin ${name} not found` },
-          404,
-        );
+        throw new MarketplaceApiError({ title: 'Not Found', status: 404, detail: `Plugin ${name} not found` }, 404);
       }
       return paged.data[0];
     },
@@ -157,10 +154,7 @@ export function createMarketplaceClient(apiUrl: string): IMarketplaceClient {
         throw new MarketplaceApiError(problemDetails, response.status);
       }
       if (!response.body) {
-        throw new MarketplaceApiError(
-          { title: 'Empty Response', status: 500, detail: 'No response body' },
-          500,
-        );
+        throw new MarketplaceApiError({ title: 'Empty Response', status: 500, detail: 'No response body' }, 500);
       }
       return response.body as ReadableStream<Uint8Array>;
     },

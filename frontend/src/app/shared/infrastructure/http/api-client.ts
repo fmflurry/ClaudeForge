@@ -55,29 +55,23 @@ export class ApiClient {
 
   searchPlugins(params: SearchPluginsParams = {}): Observable<PaginatedEnvelope<SearchResultDto>> {
     const httpParams = this.buildParams(params as Record<string, unknown>);
-    return this.http.get<PaginatedEnvelope<SearchResultDto>>(
-      `${this.baseUrl}/api/v1/plugins/search`,
-      { params: httpParams },
-    );
+    return this.http.get<PaginatedEnvelope<SearchResultDto>>(`${this.baseUrl}/api/v1/plugins/search`, {
+      params: httpParams,
+    });
   }
 
-  searchPluginsAlias(
-    params: SearchPluginsParams = {},
-  ): Observable<PaginatedEnvelope<SearchResultDto>> {
+  searchPluginsAlias(params: SearchPluginsParams = {}): Observable<PaginatedEnvelope<SearchResultDto>> {
     const httpParams = this.buildParams(params as Record<string, unknown>);
     return this.http.get<PaginatedEnvelope<SearchResultDto>>(`${this.baseUrl}/api/v1/search`, {
       params: httpParams,
     });
   }
 
-  discoverPlugins(
-    params: DiscoverPluginsParams = {},
-  ): Observable<PaginatedEnvelope<DiscoveryResultDto>> {
+  discoverPlugins(params: DiscoverPluginsParams = {}): Observable<PaginatedEnvelope<DiscoveryResultDto>> {
     const httpParams = this.buildParams(params as Record<string, unknown>);
-    return this.http.get<PaginatedEnvelope<DiscoveryResultDto>>(
-      `${this.baseUrl}/api/v1/discovery`,
-      { params: httpParams },
-    );
+    return this.http.get<PaginatedEnvelope<DiscoveryResultDto>>(`${this.baseUrl}/api/v1/discovery`, {
+      params: httpParams,
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -85,17 +79,11 @@ export class ApiClient {
   // ---------------------------------------------------------------------------
 
   uploadPlugin(formData: FormData): Observable<UploadPluginResponseDto> {
-    return this.http.post<UploadPluginResponseDto>(
-      `${this.baseUrl}/api/v1/plugins/upload`,
-      formData,
-    );
+    return this.http.post<UploadPluginResponseDto>(`${this.baseUrl}/api/v1/plugins/upload`, formData);
   }
 
   publishPluginVersion(pluginId: string, formData: FormData): Observable<PluginVersionDto> {
-    return this.http.post<PluginVersionDto>(
-      `${this.baseUrl}/api/v1/plugins/${pluginId}/versions`,
-      formData,
-    );
+    return this.http.post<PluginVersionDto>(`${this.baseUrl}/api/v1/plugins/${pluginId}/versions`, formData);
   }
 
   getVersionHistory(
@@ -103,16 +91,13 @@ export class ApiClient {
     params: GetVersionHistoryParams = {},
   ): Observable<PaginatedEnvelope<PluginVersionDto>> {
     const httpParams = this.buildParams(params as Record<string, unknown>);
-    return this.http.get<PaginatedEnvelope<PluginVersionDto>>(
-      `${this.baseUrl}/api/v1/plugins/${pluginId}/versions`,
-      { params: httpParams },
-    );
+    return this.http.get<PaginatedEnvelope<PluginVersionDto>>(`${this.baseUrl}/api/v1/plugins/${pluginId}/versions`, {
+      params: httpParams,
+    });
   }
 
   getVersion(pluginId: string, version: string): Observable<PluginVersionDto> {
-    return this.http.get<PluginVersionDto>(
-      `${this.baseUrl}/api/v1/plugins/${pluginId}/versions/${version}`,
-    );
+    return this.http.get<PluginVersionDto>(`${this.baseUrl}/api/v1/plugins/${pluginId}/versions/${version}`);
   }
 
   // ---------------------------------------------------------------------------
@@ -136,9 +121,7 @@ export class ApiClient {
   }
 
   getTelemetrySummary(pluginId: string): Observable<TelemetrySummaryDto> {
-    return this.http.get<TelemetrySummaryDto>(
-      `${this.baseUrl}/api/v1/plugins/${pluginId}/telemetry/summary`,
-    );
+    return this.http.get<TelemetrySummaryDto>(`${this.baseUrl}/api/v1/plugins/${pluginId}/telemetry/summary`);
   }
 
   // ---------------------------------------------------------------------------

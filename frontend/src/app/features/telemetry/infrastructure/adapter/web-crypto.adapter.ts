@@ -12,12 +12,10 @@ export class WebCryptoAdapter extends CryptoPort {
   }
 
   sha256Hex(input: string): Promise<string> {
-    return globalThis.crypto.subtle
-      .digest('SHA-256', new TextEncoder().encode(input))
-      .then((buf) =>
-        Array.from(new Uint8Array(buf))
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join(''),
-      );
+    return globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(input)).then((buf) =>
+      Array.from(new Uint8Array(buf))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join(''),
+    );
   }
 }

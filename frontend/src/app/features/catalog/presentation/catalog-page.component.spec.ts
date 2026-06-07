@@ -28,22 +28,52 @@ class StubCatalogFacade {
   loadPluginsCalls = 0;
   loadCategoriesCalls = 0;
 
-  get plugins(): Signal<PluginSummary[]> { return this._plugins; }
-  get paginationMeta(): Signal<PaginationMeta | undefined> { return this._paginationMeta; }
-  get categories(): Signal<Categories | undefined> { return this._categories; }
-  get selectedPlugin(): Signal<PluginDetail | undefined> { return this._selectedPlugin; }
-  get isLoadingPlugins(): Signal<boolean> { return this._isLoadingPlugins; }
-  get isLoadingDetail(): Signal<boolean> { return this._isLoadingDetail; }
-  get isLoadingCategories(): Signal<boolean> { return this._isLoadingCategories; }
-  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> { return this._pluginsError; }
-  get detailError(): Signal<{ code: string; message: string }[] | undefined> { return this._detailError; }
+  get plugins(): Signal<PluginSummary[]> {
+    return this._plugins;
+  }
+  get paginationMeta(): Signal<PaginationMeta | undefined> {
+    return this._paginationMeta;
+  }
+  get categories(): Signal<Categories | undefined> {
+    return this._categories;
+  }
+  get selectedPlugin(): Signal<PluginDetail | undefined> {
+    return this._selectedPlugin;
+  }
+  get isLoadingPlugins(): Signal<boolean> {
+    return this._isLoadingPlugins;
+  }
+  get isLoadingDetail(): Signal<boolean> {
+    return this._isLoadingDetail;
+  }
+  get isLoadingCategories(): Signal<boolean> {
+    return this._isLoadingCategories;
+  }
+  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._pluginsError;
+  }
+  get detailError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._detailError;
+  }
 
-  loadPlugins(_query?: Partial<CatalogFilterQuery>): void { this.loadPluginsCalls++; }
-  loadCategories(): void { this.loadCategoriesCalls++; }
-  setPage(_page: number): void { /* no-op */ }
-  setSort(_sort: string, _order?: 'asc' | 'desc'): void { /* no-op */ }
-  setFilters(_filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>): void { /* no-op */ }
-  loadDetail(_pluginId: string): void { /* no-op */ }
+  loadPlugins(_query?: Partial<CatalogFilterQuery>): void {
+    this.loadPluginsCalls++;
+  }
+  loadCategories(): void {
+    this.loadCategoriesCalls++;
+  }
+  setPage(_page: number): void {
+    /* no-op */
+  }
+  setSort(_sort: string, _order?: 'asc' | 'desc'): void {
+    /* no-op */
+  }
+  setFilters(_filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>): void {
+    /* no-op */
+  }
+  loadDetail(_pluginId: string): void {
+    /* no-op */
+  }
 }
 
 // ---------------------------------------------------------------------------

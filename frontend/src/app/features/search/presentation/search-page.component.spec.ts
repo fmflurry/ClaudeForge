@@ -27,19 +27,37 @@ class StubSearchFacade {
   searchCalls: string[] = [];
   setFiltersCalls: Partial<Pick<SearchFilterQuery, 'types' | 'languages' | 'useCases'>>[] = [];
 
-  get results(): Signal<SearchResult[]> { return this._results; }
-  get discoveryResults(): Signal<DiscoveryResult[]> { return this._discoveryResults; }
-  get isLoadingSearch(): Signal<boolean> { return this._isLoadingSearch; }
-  get isLoadingDiscovery(): Signal<boolean> { return this._isLoadingDiscovery; }
-  get searchError(): Signal<{ code: string; message: string }[] | undefined> { return this._searchError; }
-  get paginationMeta(): Signal<SearchPaginationMeta | undefined> { return this._paginationMeta; }
-  get categorySuggestions(): Signal<readonly string[]> { return this._categorySuggestions; }
+  get results(): Signal<SearchResult[]> {
+    return this._results;
+  }
+  get discoveryResults(): Signal<DiscoveryResult[]> {
+    return this._discoveryResults;
+  }
+  get isLoadingSearch(): Signal<boolean> {
+    return this._isLoadingSearch;
+  }
+  get isLoadingDiscovery(): Signal<boolean> {
+    return this._isLoadingDiscovery;
+  }
+  get searchError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._searchError;
+  }
+  get paginationMeta(): Signal<SearchPaginationMeta | undefined> {
+    return this._paginationMeta;
+  }
+  get categorySuggestions(): Signal<readonly string[]> {
+    return this._categorySuggestions;
+  }
 
-  search(keyword: string): void { this.searchCalls.push(keyword); }
+  search(keyword: string): void {
+    this.searchCalls.push(keyword);
+  }
   setFilters(filters: Partial<Pick<SearchFilterQuery, 'types' | 'languages' | 'useCases'>>): void {
     this.setFiltersCalls.push(filters);
   }
-  discover(_criteria: unknown): void { /* no-op */ }
+  discover(_criteria: unknown): void {
+    /* no-op */
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -132,8 +150,6 @@ describe('SearchPageComponent — onFiltersChanged', () => {
   it('should not throw when onFiltersChanged is called with empty arrays', () => {
     const { fixture } = setup();
     fixture.detectChanges();
-    expect(() =>
-      fixture.componentInstance.onFiltersChanged({ types: [], languages: [], useCases: [] }),
-    ).not.toThrow();
+    expect(() => fixture.componentInstance.onFiltersChanged({ types: [], languages: [], useCases: [] })).not.toThrow();
   });
 });

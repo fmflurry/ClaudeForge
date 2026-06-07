@@ -17,12 +17,7 @@ import { OrgInvitationsComponent } from '../org-invitations/org-invitations.comp
   selector: 'cf-orgs-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    RouterLink,
-    CreateOrgComponent,
-    OrgMembersComponent,
-    OrgInvitationsComponent,
-  ],
+  imports: [RouterLink, CreateOrgComponent, OrgMembersComponent, OrgInvitationsComponent],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-orgs-page">
@@ -38,10 +33,7 @@ import { OrgInvitationsComponent } from '../org-invitations/org-invitations.comp
           <ul class="cf-orgs-page__list" aria-label="Your organisations">
             @for (org of orgsFacade.organizations(); track org.orgId) {
               <li class="cf-orgs-page__item">
-                <a
-                  [routerLink]="['/orgs', org.orgId]"
-                  class="cf-orgs-page__link"
-                >
+                <a [routerLink]="['/orgs', org.orgId]" class="cf-orgs-page__link">
                   {{ org.name }}
                 </a>
                 <span class="cf-orgs-page__role">{{ org.role }}</span>

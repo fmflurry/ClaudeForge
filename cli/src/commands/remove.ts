@@ -61,10 +61,9 @@ export async function runRemove(args: RemoveArgs, deps: RemoveDeps): Promise<Com
   if (!record) {
     return {
       exitCode: 1,
-      output: [
-        `Plugin ${pluginName} is not installed`,
-        `Run \`claude plugin list\` to see installed plugins.`,
-      ].join('\n'),
+      output: [`Plugin ${pluginName} is not installed`, `Run \`claude plugin list\` to see installed plugins.`].join(
+        '\n',
+      ),
     };
   }
 

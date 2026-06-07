@@ -45,12 +45,7 @@ export interface ScaffoldDeps {
 // Constants
 // ---------------------------------------------------------------------------
 
-const VALID_LANGUAGES: ReadonlySet<string> = new Set([
-  'typescript',
-  'python',
-  'go',
-  'rust',
-]);
+const VALID_LANGUAGES: ReadonlySet<string> = new Set(['typescript', 'python', 'go', 'rust']);
 
 const DEFAULT_ENTRYPOINTS: Record<ScaffoldLanguage, string[]> = {
   typescript: ['src/index.ts'],
@@ -112,21 +107,9 @@ function buildManifest(args: ManifestArgs): object {
 // Command
 // ---------------------------------------------------------------------------
 
-export async function runScaffold(
-  args: ScaffoldArgs,
-  deps: ScaffoldDeps,
-): Promise<CommandResult> {
-  const {
-    name: nameArg,
-    language: languageArg,
-    interactive = false,
-    targetDir,
-  } = args;
-  const {
-    fs: fsPort = realScaffoldFsPort,
-    cwd = process.cwd(),
-    prompter,
-  } = deps;
+export async function runScaffold(args: ScaffoldArgs, deps: ScaffoldDeps): Promise<CommandResult> {
+  const { name: nameArg, language: languageArg, interactive = false, targetDir } = args;
+  const { fs: fsPort = realScaffoldFsPort, cwd = process.cwd(), prompter } = deps;
 
   const dir = targetDir ?? cwd;
 
@@ -171,10 +154,7 @@ export async function runScaffold(
     author: pluginAuthor,
     language: lang,
   });
-  await fsPort.writeFile(
-    path.join(dir, 'plugin.json'),
-    JSON.stringify(manifest, null, 2),
-  );
+  await fsPort.writeFile(path.join(dir, 'plugin.json'), JSON.stringify(manifest, null, 2));
 
   // ── 5. Write minimal entrypoint ──────────────────────────────────────────
   const entrypoints = DEFAULT_ENTRYPOINTS[lang];

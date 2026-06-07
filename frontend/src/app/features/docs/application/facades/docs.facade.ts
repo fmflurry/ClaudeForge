@@ -55,54 +55,60 @@ export class DocsFacade {
   search(query: string): void {
     this.store.startLoading(DocsStoreEnum.SEARCH_RESULTS);
 
-    this.port.search(query).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: ({ items }) => {
-        const tree = buildCategoryTree(items);
-        this.store.update(DocsStoreEnum.SEARCH_RESULTS, {
-          data: items,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-        this.store.update(DocsStoreEnum.CATEGORY_TREE, {
-          data: [...tree],
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(DocsStoreEnum.SEARCH_RESULTS, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'SEARCH_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .search(query)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ items }) => {
+          const tree = buildCategoryTree(items);
+          this.store.update(DocsStoreEnum.SEARCH_RESULTS, {
+            data: items,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+          this.store.update(DocsStoreEnum.CATEGORY_TREE, {
+            data: [...tree],
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(DocsStoreEnum.SEARCH_RESULTS, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'SEARCH_ERROR', message }],
+          });
+        },
+      });
   }
 
   openDoc(slug: string): void {
     this.store.startLoading(DocsStoreEnum.CURRENT_DOC);
 
-    this.port.getPage(slug).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (doc) => {
-        this.store.update(DocsStoreEnum.CURRENT_DOC, {
-          data: doc,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(DocsStoreEnum.CURRENT_DOC, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'DOC_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getPage(slug)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (doc) => {
+          this.store.update(DocsStoreEnum.CURRENT_DOC, {
+            data: doc,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(DocsStoreEnum.CURRENT_DOC, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'DOC_ERROR', message }],
+          });
+        },
+      });
   }
 
   openPluginDoc(pluginSlug: string): void {

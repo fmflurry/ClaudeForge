@@ -41,18 +41,10 @@ function configFilePath(homeDir: string): string {
 }
 
 function isEnoent(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'code' in err &&
-    (err as { code: string }).code === 'ENOENT'
-  );
+  return typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === 'ENOENT';
 }
 
-async function readRawConfig(
-  homeDir: string,
-  fsPort: ActiveOrgFsPort,
-): Promise<Record<string, unknown>> {
+async function readRawConfig(homeDir: string, fsPort: ActiveOrgFsPort): Promise<Record<string, unknown>> {
   try {
     const raw = await fsPort.readFile(configFilePath(homeDir));
     if (!raw || raw.trim().length === 0) {
@@ -76,10 +68,7 @@ async function readRawConfig(
 // Public API
 // ---------------------------------------------------------------------------
 
-export async function readActiveOrg(
-  homeDir: string,
-  fsPort: ActiveOrgFsPort = realFsPort,
-): Promise<string | null> {
+export async function readActiveOrg(homeDir: string, fsPort: ActiveOrgFsPort = realFsPort): Promise<string | null> {
   const config = await readRawConfig(homeDir, fsPort);
   const activeOrg = config['activeOrg'];
   if (typeof activeOrg === 'string') {

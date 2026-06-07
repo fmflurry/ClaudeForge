@@ -7,9 +7,7 @@ import type { DocCategoryNode, DocSearchResult } from '../models/docs.models';
 /**
  * Groups docs by category, returning a ReadonlyMap.
  */
-export function groupDocsByCategory(
-  docs: readonly DocSearchResult[],
-): ReadonlyMap<string, readonly DocSearchResult[]> {
+export function groupDocsByCategory(docs: readonly DocSearchResult[]): ReadonlyMap<string, readonly DocSearchResult[]> {
   const map = new Map<string, DocSearchResult[]>();
 
   for (const doc of docs) {
@@ -24,9 +22,7 @@ export function groupDocsByCategory(
  * Builds a category tree (array of DocCategoryNode) from docs.
  * Each unique category produces exactly one node.
  */
-export function buildCategoryTree(
-  docs: readonly DocSearchResult[],
-): readonly DocCategoryNode[] {
+export function buildCategoryTree(docs: readonly DocSearchResult[]): readonly DocCategoryNode[] {
   const grouped = groupDocsByCategory(docs);
 
   return Array.from(grouped.entries()).map(([category, categoryDocs]) => ({

@@ -62,25 +62,47 @@ class StubTeamContextFacade {
     this._teamId.set(id);
     this._hasTeam.set(id !== undefined);
   }
-  setValidationError(err: string | undefined): void { this._validationError.set(err); }
-  setNeedsInit(v: boolean): void { this._needsInit.set(v); }
+  setValidationError(err: string | undefined): void {
+    this._validationError.set(err);
+  }
+  setNeedsInit(v: boolean): void {
+    this._needsInit.set(v);
+  }
 
   // Signal getters
-  get currentTeam(): Signal<string | undefined> { return this._currentTeam; }
-  get teamId(): Signal<string | undefined> { return this._teamId; }
-  get hasTeam(): Signal<boolean> { return this._hasTeam; }
-  get presets(): Signal<readonly string[]> { return this._presets; }
-  get needsInit(): Signal<boolean> { return this._needsInit; }
-  get validationError(): Signal<string | undefined> { return this._validationError; }
+  get currentTeam(): Signal<string | undefined> {
+    return this._currentTeam;
+  }
+  get teamId(): Signal<string | undefined> {
+    return this._teamId;
+  }
+  get hasTeam(): Signal<boolean> {
+    return this._hasTeam;
+  }
+  get presets(): Signal<readonly string[]> {
+    return this._presets;
+  }
+  get needsInit(): Signal<boolean> {
+    return this._needsInit;
+  }
+  get validationError(): Signal<string | undefined> {
+    return this._validationError;
+  }
 
   // Recorded calls
   initCalls = 0;
   setTeamCalls: string[] = [];
   clearTeamCalls = 0;
 
-  init(): void { this.initCalls++; }
-  setTeam(id: string): void { this.setTeamCalls.push(id); }
-  clearTeam(): void { this.clearTeamCalls++; }
+  init(): void {
+    this.initCalls++;
+  }
+  setTeam(id: string): void {
+    this.setTeamCalls.push(id);
+  }
+  clearTeam(): void {
+    this.clearTeamCalls++;
+  }
 }
 
 // ---------------------------------------------------------------------------

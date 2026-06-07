@@ -9,39 +9,30 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./features/auth/presentation/login/login-page.component').then(
-        (m) => m.LoginPageComponent,
-      ),
+      import('./features/auth/presentation/login/login-page.component').then((m) => m.LoginPageComponent),
   },
   {
     path: 'auth/callback',
     loadComponent: () =>
-      import('./features/auth/presentation/callback/auth-callback.component').then(
-        (m) => m.AuthCallbackComponent,
-      ),
+      import('./features/auth/presentation/callback/auth-callback.component').then((m) => m.AuthCallbackComponent),
   },
   {
     path: 'activate',
     canActivate: [FunctionalAuthGuard],
     loadComponent: () =>
-      import(
-        './features/device-activation/presentation/activate-page.component'
-      ).then((m) => m.ActivatePageComponent),
+      import('./features/device-activation/presentation/activate-page.component').then((m) => m.ActivatePageComponent),
   },
   // ---------------------------------------------------------------------------
   // Shell routes (with navigation header)
   // ---------------------------------------------------------------------------
   {
     path: '',
-    loadComponent: () =>
-      import('./shell/shell-layout.component').then((m) => m.ShellLayoutComponent),
+    loadComponent: () => import('./shell/shell-layout.component').then((m) => m.ShellLayoutComponent),
     children: [
       {
         path: 'catalog',
         loadComponent: () =>
-          import('./features/catalog/presentation/catalog-page.component').then(
-            (m) => m.CatalogPageComponent,
-          ),
+          import('./features/catalog/presentation/catalog-page.component').then((m) => m.CatalogPageComponent),
       },
       {
         path: 'search',
@@ -53,23 +44,17 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./features/dashboard/presentation/dashboard-page.component').then(
-            (m) => m.DashboardPageComponent,
-          ),
+          import('./features/dashboard/presentation/dashboard-page.component').then((m) => m.DashboardPageComponent),
       },
       {
         path: 'docs',
         loadComponent: () =>
-          import('./features/docs/presentation/docs-page.component').then(
-            (m) => m.DocsPageComponent,
-          ),
+          import('./features/docs/presentation/docs-page.component').then((m) => m.DocsPageComponent),
       },
       {
         path: '',
         loadComponent: () =>
-          import('./features/home/presentation/landing-page.component').then(
-            (m) => m.LandingPageComponent,
-          ),
+          import('./features/home/presentation/landing-page.component').then((m) => m.LandingPageComponent),
         pathMatch: 'full',
       },
       // -----------------------------------------------------------------------
@@ -79,17 +64,17 @@ export const routes: Routes = [
         path: 'orgs',
         canActivate: [FunctionalAuthGuard],
         loadComponent: () =>
-          import(
-            './features/organizations/presentation/orgs-page/orgs-page.component'
-          ).then((m) => m.OrgsPageComponent),
+          import('./features/organizations/presentation/orgs-page/orgs-page.component').then(
+            (m) => m.OrgsPageComponent,
+          ),
       },
       {
         path: 'orgs/:orgId',
         canActivate: [FunctionalAuthGuard, OrgMemberGuard],
         loadComponent: () =>
-          import(
-            './features/organizations/presentation/org-detail/org-detail.component'
-          ).then((m) => m.OrgDetailComponent),
+          import('./features/organizations/presentation/org-detail/org-detail.component').then(
+            (m) => m.OrgDetailComponent,
+          ),
       },
     ],
   },

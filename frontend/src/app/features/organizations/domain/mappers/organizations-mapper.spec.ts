@@ -56,19 +56,8 @@ import {
   mapOrgMemberDtoToOrgMember,
   mapOrgSummaryDtoToOrgSummary,
 } from './organizations-mapper';
-import type {
-  OrgDto,
-  OrgInvitationDto,
-  OrgMemberDto,
-  OrgSummaryDto,
-} from './organizations-mapper';
-import type {
-  OrgInvitation,
-  OrgMember,
-  OrgRole,
-  OrgSummary,
-  Organization,
-} from '../models/organizations.models';
+import type { OrgDto, OrgInvitationDto, OrgMemberDto, OrgSummaryDto } from './organizations-mapper';
+import type { OrgInvitation, OrgMember, OrgRole, OrgSummary, Organization } from '../models/organizations.models';
 
 // ---------------------------------------------------------------------------
 // DTO fixtures

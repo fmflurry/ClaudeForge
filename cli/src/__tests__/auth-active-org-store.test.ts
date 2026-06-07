@@ -31,10 +31,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // These imports WILL FAIL until src/auth/active-org-store.ts is created (RED state).
-import {
-  readActiveOrg,
-  writeActiveOrg,
-} from '../auth/active-org-store.js';
+import { readActiveOrg, writeActiveOrg } from '../auth/active-org-store.js';
 import type { ActiveOrgFsPort } from '../auth/active-org-store.js';
 
 // ---------------------------------------------------------------------------

@@ -12,10 +12,7 @@ import { readActiveOrg } from './auth/active-org-store.js';
 import { createAuthenticatedClient } from './auth/token-attachment.js';
 
 import type { CommandResult } from './commands/config.js';
-import {
-  runConfigSet as defaultRunConfigSet,
-  runConfigShow as defaultRunConfigShow,
-} from './commands/config.js';
+import { runConfigSet as defaultRunConfigSet, runConfigShow as defaultRunConfigShow } from './commands/config.js';
 import { runSearch as defaultRunSearch } from './commands/search.js';
 import { runInstall as defaultRunInstall } from './commands/install.js';
 import { runList as defaultRunList } from './commands/list.js';
@@ -101,9 +98,7 @@ async function getAuthenticatedPublishClient(
  * (enabling private pulls). If credentials are absent the client falls
  * back to anonymous downloads — preserving the public-pull guarantee.
  */
-async function getInstallClient(
-  env?: NodeJS.ProcessEnv,
-): Promise<ReturnType<typeof createAuthenticatedClient>> {
+async function getInstallClient(env?: NodeJS.ProcessEnv): Promise<ReturnType<typeof createAuthenticatedClient>> {
   const homeDir = resolveHome(env);
   const config = await readConfig(homeDir);
   const apiUrl = resolveApiUrl(config.apiUrl, env);
@@ -118,11 +113,7 @@ async function getInstallClient(
 
 export function createProgram(deps: DispatcherDeps = {}): Command {
   const program = new Command();
-  program
-    .name('claude-plugin')
-    .description('Claude Code plugin marketplace CLI')
-    .version('0.1.0')
-    .exitOverride();
+  program.name('claude-plugin').description('Claude Code plugin marketplace CLI').version('0.1.0').exitOverride();
 
   const {
     runInstall: injectedInstall = defaultRunInstall,
@@ -320,10 +311,7 @@ export function createProgram(deps: DispatcherDeps = {}): Command {
     .option('--org <orgId>', 'Override active org')
     .action(async (options: { org?: string }) => {
       const homeDir = resolveHome();
-      const result = await injectedWhoami(
-        { ...(options.org !== undefined ? { org: options.org } : {}) },
-        { homeDir },
-      );
+      const result = await injectedWhoami({ ...(options.org !== undefined ? { org: options.org } : {}) }, { homeDir });
       printResult(result);
     });
 
@@ -331,10 +319,7 @@ export function createProgram(deps: DispatcherDeps = {}): Command {
   // Tests call parseAsync(['node', 'claude-plugin', 'install', ...], { from: 'user' })
   // which is equivalent to from: 'node' semantics. Normalize here so both work.
   const originalParseAsync = program.parseAsync.bind(program);
-  program.parseAsync = (
-    argv?: readonly string[],
-    options?: ParseOptions,
-  ): Promise<Command> => {
+  program.parseAsync = (argv?: readonly string[], options?: ParseOptions): Promise<Command> => {
     if (options?.from === 'user' && Array.isArray(argv) && argv[0] === 'node') {
       return originalParseAsync(argv, { ...options, from: 'node' });
     }

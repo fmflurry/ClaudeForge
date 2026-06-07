@@ -10,16 +10,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import {
-  createMarketplaceClient,
-  MarketplaceApiError,
-} from '../api/client.js';
-import type {
-  PaginatedResponse,
-  VersionSummary,
-  ProblemDetails,
-  UploadResponse,
-} from '../api/client.js';
+import { createMarketplaceClient, MarketplaceApiError } from '../api/client.js';
+import type { PaginatedResponse, VersionSummary, ProblemDetails, UploadResponse } from '../api/client.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -138,9 +130,7 @@ describe('createMarketplaceClient – checkVersionExists catch path', () => {
   });
 
   it('returns false when fetch throws (network error)', async () => {
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
-      new TypeError('fetch failed'),
-    );
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('fetch failed'));
 
     const client = createMarketplaceClient('https://unreachable.example.com');
     const result = await client.checkVersionExists('plugin-id', '1.0.0');
@@ -205,7 +195,10 @@ describe('createMarketplaceClient – downloadPlugin optional headers', () => {
     const client = createMarketplaceClient('https://api.example.com');
     await client.downloadPlugin('plugin-id');
 
-    const [, fetchOptions] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit | undefined];
+    const [, fetchOptions] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [
+      string,
+      RequestInit | undefined,
+    ];
     // Without headers, fetch is called with undefined options (no { headers } key)
     expect(fetchOptions).toBeUndefined();
   });
@@ -220,7 +213,10 @@ describe('createMarketplaceClient – downloadPlugin optional headers', () => {
     const client = createMarketplaceClient('https://api.example.com');
     await client.downloadPlugin('plugin-id', undefined, { Authorization: 'Bearer token123' });
 
-    const [, fetchOptions] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit | undefined];
+    const [, fetchOptions] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [
+      string,
+      RequestInit | undefined,
+    ];
     expect(fetchOptions).toBeDefined();
     expect((fetchOptions as RequestInit).headers).toMatchObject({ Authorization: 'Bearer token123' });
   });
@@ -269,7 +265,9 @@ describe('createMarketplaceClient – downloadPlugin optional headers', () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 503,
-      json: async () => { throw new Error('not json'); },
+      json: async () => {
+        throw new Error('not json');
+      },
     });
 
     const client = createMarketplaceClient('https://api.example.com');
@@ -386,7 +384,9 @@ describe('createMarketplaceClient – handleResponse non-JSON fallback', () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 502,
-      json: async () => { throw new Error('invalid json'); },
+      json: async () => {
+        throw new Error('invalid json');
+      },
     });
 
     const client = createMarketplaceClient('https://api.example.com');

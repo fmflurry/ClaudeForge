@@ -22,9 +22,7 @@ import type { DocSearchResult } from '../../domain/models/docs.models';
       />
 
       @if (facade.isLoadingSearch()) {
-        <div aria-busy="true" data-testid="loading" class="loading">
-          Searching…
-        </div>
+        <div aria-busy="true" data-testid="loading" class="loading">Searching…</div>
       }
 
       @if (facade.searchError(); as errors) {
@@ -36,10 +34,7 @@ import type { DocSearchResult } from '../../domain/models/docs.models';
       <ul>
         @for (result of facade.searchResults(); track result.slug) {
           <li>
-            <button
-              type="button"
-              (click)="selectResult(result.slug)"
-            >
+            <button type="button" (click)="selectResult(result.slug)">
               <span class="result-title">{{ result.title }}</span>
               <span class="result-category">{{ result.category }}</span>
               <span data-testid="relevance-score" class="relevance">{{ result.relevanceScore }}</span>

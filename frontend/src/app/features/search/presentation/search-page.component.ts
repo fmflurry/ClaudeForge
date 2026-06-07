@@ -12,10 +12,7 @@ import type { SearchFilterQuery } from '../domain/rules/search-filter.rules';
   imports: [SearchBarComponent, FilterChipsComponent, SearchResultsComponent],
   template: `
     <div class="cf-search-page" data-testid="search-page">
-      <cf-search-bar
-        [isLoading]="isLoading()"
-        (searchSubmitted)="onSearch($event)"
-      />
+      <cf-search-bar [isLoading]="isLoading()" (searchSubmitted)="onSearch($event)" />
 
       <cf-filter-chips
         [activeTypes]="activeTypes()"

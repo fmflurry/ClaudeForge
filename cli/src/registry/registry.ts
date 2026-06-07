@@ -55,41 +55,25 @@ export async function readRegistry(homeDir: string): Promise<InstalledRegistry> 
   }
 }
 
-export async function writeRegistry(
-  homeDir: string,
-  registry: InstalledRegistry,
-): Promise<void> {
+export async function writeRegistry(homeDir: string, registry: InstalledRegistry): Promise<void> {
   await fs.mkdir(homeDir, { recursive: true });
   const snapshot: InstalledRegistry = { plugins: [...registry.plugins] };
-  await fs.writeFile(
-    path.join(homeDir, REGISTRY_FILENAME),
-    JSON.stringify(snapshot, null, 2),
-    'utf-8',
-  );
+  await fs.writeFile(path.join(homeDir, REGISTRY_FILENAME), JSON.stringify(snapshot, null, 2), 'utf-8');
 }
 
 // ---------------------------------------------------------------------------
 // Pure record operations (immutable)
 // ---------------------------------------------------------------------------
 
-export function addRecord(
-  registry: InstalledRegistry,
-  record: InstalledRecord,
-): InstalledRegistry {
+export function addRecord(registry: InstalledRegistry, record: InstalledRecord): InstalledRegistry {
   return { plugins: [...registry.plugins, record] };
 }
 
-export function removeRecord(
-  registry: InstalledRegistry,
-  name: string,
-): InstalledRegistry {
+export function removeRecord(registry: InstalledRegistry, name: string): InstalledRegistry {
   return { plugins: registry.plugins.filter((p) => p.name !== name) };
 }
 
-export function findRecord(
-  registry: InstalledRegistry,
-  name: string,
-): InstalledRecord | undefined {
+export function findRecord(registry: InstalledRegistry, name: string): InstalledRecord | undefined {
   return registry.plugins.find((p) => p.name === name);
 }
 

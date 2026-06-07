@@ -73,7 +73,14 @@ import {
   mapPluginDtoToPluginSummary,
   mapPluginVersionDtoToPluginVersion,
 } from './catalog-mapper';
-import type { Categories, CategoryValue, PaginationMeta, PluginDetail, PluginSummary, PluginVersion } from '../models/catalog.models';
+import type {
+  Categories,
+  CategoryValue,
+  PaginationMeta,
+  PluginDetail,
+  PluginSummary,
+  PluginVersion,
+} from '../models/catalog.models';
 import type {
   CategoriesDto,
   CategoryValueDto,

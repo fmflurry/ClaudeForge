@@ -57,9 +57,15 @@ class StubTelemetryFacade {
   }
 
   // Signal getters
-  get isEnabled(): Signal<boolean> { return this._isEnabled; }
-  get isDisabled(): Signal<boolean> { return this._isDisabled; }
-  get anonId(): Signal<string | undefined> { return this._anonId; }
+  get isEnabled(): Signal<boolean> {
+    return this._isEnabled;
+  }
+  get isDisabled(): Signal<boolean> {
+    return this._isDisabled;
+  }
+  get anonId(): Signal<string | undefined> {
+    return this._anonId;
+  }
 
   // Recorded calls
   initCalls = 0;
@@ -67,9 +73,17 @@ class StubTelemetryFacade {
   disableCalls = 0;
   recordEventCalls: { eventType: string; pluginId: string }[] = [];
 
-  init(): Promise<void> { this.initCalls++; return Promise.resolve(); }
-  enable(): Promise<void> { this.enableCalls++; return Promise.resolve(); }
-  disable(): void { this.disableCalls++; }
+  init(): Promise<void> {
+    this.initCalls++;
+    return Promise.resolve();
+  }
+  enable(): Promise<void> {
+    this.enableCalls++;
+    return Promise.resolve();
+  }
+  disable(): void {
+    this.disableCalls++;
+  }
   recordEvent(eventType: string, pluginId: string, _version?: string): void {
     this.recordEventCalls.push({ eventType, pluginId });
   }

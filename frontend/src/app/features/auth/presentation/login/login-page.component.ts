@@ -16,9 +16,7 @@ import type { AuthProvider, AuthStatus } from '../../domain/models/auth.models';
     <div class="cf-login">
       <div class="cf-login__card">
         <h1 class="cf-login__title">Sign in to ClaudeForge</h1>
-        <p class="cf-login__subtitle">
-          Access your plugin marketplace account
-        </p>
+        <p class="cf-login__subtitle">Access your plugin marketplace account</p>
 
         @if (authError()) {
           <div class="cf-login__error" role="alert">
@@ -51,9 +49,7 @@ import type { AuthProvider, AuthStatus } from '../../domain/models/auth.models';
         </div>
 
         @if (isAuthenticating()) {
-          <p class="cf-login__loading" role="status" aria-live="polite">
-            Redirecting to provider…
-          </p>
+          <p class="cf-login__loading" role="status" aria-live="polite">Redirecting to provider…</p>
         }
       </div>
     </div>
@@ -122,7 +118,9 @@ import type { AuthProvider, AuthStatus } from '../../domain/models/auth.models';
         font-weight: 600;
         cursor: pointer;
         border: 2px solid transparent;
-        transition: background-color 0.2s ease, border-color 0.2s ease;
+        transition:
+          background-color 0.2s ease,
+          border-color 0.2s ease;
       }
 
       .cf-login__btn:disabled {

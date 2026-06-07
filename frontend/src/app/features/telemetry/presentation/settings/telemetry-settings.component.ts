@@ -23,10 +23,9 @@ import { TelemetryFacade } from '../../application/facades/telemetry.facade';
         Enable anonymous telemetry
       </label>
       <p class="cf-telemetry-settings__privacy" data-testid="privacy-text">
-        We collect anonymous usage data to improve ClaudeForge. No personally
-        identifiable information is ever sent — only an anonymous identifier and
-        the event type (e.g. plugin install). You can opt out at any time.
-        Your privacy matters.
+        We collect anonymous usage data to improve ClaudeForge. No personally identifiable information is ever sent —
+        only an anonymous identifier and the event type (e.g. plugin install). You can opt out at any time. Your privacy
+        matters.
       </p>
     </div>
   `,

@@ -95,7 +95,13 @@ import type { OrganizationsState, OrganizationsStoreData } from './organizations
 import { OrganizationsFacade } from '../facades/organizations.facade';
 import { OrgContextFacade } from '../facades/org-context.facade';
 import { OrgPort } from '../../domain/ports/org.port';
-import type { OrgInvitation, OrgMember, OrgRole, OrgSummary, Organization } from '../../domain/models/organizations.models';
+import type {
+  OrgInvitation,
+  OrgMember,
+  OrgRole,
+  OrgSummary,
+  Organization,
+} from '../../domain/models/organizations.models';
 import { ResourceState } from '../../../../shared/application/store/resource-state.model';
 
 // ---------------------------------------------------------------------------
@@ -184,11 +190,7 @@ class FakeOrgPort extends OrgPort {
     return of(this.membersToReturn);
   }
 
-  invite(
-    _orgId: string,
-    _email: string,
-    _role: OrgRole,
-  ): Observable<OrgInvitation> {
+  invite(_orgId: string, _email: string, _role: OrgRole): Observable<OrgInvitation> {
     if (this.shouldErrorOnInvite) {
       return throwError(() => new Error('Already a member'));
     }
@@ -249,12 +251,7 @@ function setupFacadeHarness(): FacadeHarness {
   TestBed.resetTestingModule();
   const port = new FakeOrgPort();
   TestBed.configureTestingModule({
-    providers: [
-      OrganizationsStore,
-      OrganizationsFacade,
-      OrgContextFacade,
-      { provide: OrgPort, useValue: port },
-    ],
+    providers: [OrganizationsStore, OrganizationsFacade, OrgContextFacade, { provide: OrgPort, useValue: port }],
   });
   return {
     store: TestBed.inject(OrganizationsStore),
@@ -285,8 +282,7 @@ describe('OrganizationsStore — enum keys', () => {
 describe('OrganizationsStore — initial state', () => {
   it('should initialise ORGANIZATIONS with an empty non-loading state', () => {
     const { store } = setupStoreOnly();
-    const state: ResourceState<OrganizationsStoreData> =
-      store.get(OrganizationsStoreEnum.ORGANIZATIONS)();
+    const state: ResourceState<OrganizationsStoreData> = store.get(OrganizationsStoreEnum.ORGANIZATIONS)();
     expect(state.isLoading).toBeFalsy();
     expect(state.data).toBeUndefined();
   });
@@ -540,9 +536,7 @@ describe('OrganizationsFacade — invite()', () => {
   it('should not throw when invite() errors', () => {
     const { orgsFacade, port } = setupFacadeHarness();
     port.shouldErrorOnInvite = true;
-    expect(() =>
-      orgsFacade.invite('org-uuid-1', 'existing@example.com', 'member'),
-    ).not.toThrow();
+    expect(() => orgsFacade.invite('org-uuid-1', 'existing@example.com', 'member')).not.toThrow();
   });
 
   it('should set orgsError when invite() errors', () => {
@@ -646,9 +640,7 @@ describe('OrganizationsFacade — changeMemberRole()', () => {
   it('should not throw when changeMemberRole() errors', () => {
     const { orgsFacade, port } = setupFacadeHarness();
     port.shouldErrorOnChangeRole = true;
-    expect(() =>
-      orgsFacade.changeMemberRole('org-uuid-1', 'user-uuid-2', 'member'),
-    ).not.toThrow();
+    expect(() => orgsFacade.changeMemberRole('org-uuid-1', 'user-uuid-2', 'member')).not.toThrow();
   });
 
   it('should set orgsError when changeMemberRole() errors', () => {
@@ -671,18 +663,14 @@ describe('OrganizationsFacade — changeMemberRole()', () => {
 describe('OrganizationsFacade — architecture boundary', () => {
   it('should not expose OrgPort directly to consumers', () => {
     const { orgsFacade } = setupFacadeHarness();
-    const protoKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(orgsFacade)).filter(
-      (k) => k !== 'constructor',
-    );
+    const protoKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(orgsFacade)).filter((k) => k !== 'constructor');
     // The port must not appear as a named property on the prototype
     expect(protoKeys).not.toContain('port');
   });
 
   it('should expose all documented public methods on the prototype', () => {
     const { orgsFacade } = setupFacadeHarness();
-    const protoKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(orgsFacade)).filter(
-      (k) => k !== 'constructor',
-    );
+    const protoKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(orgsFacade)).filter((k) => k !== 'constructor');
     const expectedMembers = [
       'organizations',
       'members',
@@ -724,13 +712,7 @@ describe('OrgContextFacade — architecture boundary', () => {
     const protoKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(contextFacade)).filter(
       (k) => k !== 'constructor',
     );
-    const expectedMembers = [
-      'organizations',
-      'activeOrg',
-      'activeOrgId',
-      'setActiveOrg',
-      'loadOrganizations',
-    ];
+    const expectedMembers = ['organizations', 'activeOrg', 'activeOrgId', 'setActiveOrg', 'loadOrganizations'];
     for (const member of expectedMembers) {
       expect(protoKeys).toContain(member);
     }

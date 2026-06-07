@@ -190,11 +190,7 @@ class ErrorSearchPort extends SearchPort {
 
 function setupWithFakePort(): { store: SearchStore; facade: SearchFacade } {
   TestBed.configureTestingModule({
-    providers: [
-      SearchStore,
-      SearchFacade,
-      { provide: SearchPort, useClass: FakeSearchPort },
-    ],
+    providers: [SearchStore, SearchFacade, { provide: SearchPort, useClass: FakeSearchPort }],
   });
   return {
     store: TestBed.inject(SearchStore),
@@ -204,11 +200,7 @@ function setupWithFakePort(): { store: SearchStore; facade: SearchFacade } {
 
 function setupWithEmptyPort(): { store: SearchStore; facade: SearchFacade } {
   TestBed.configureTestingModule({
-    providers: [
-      SearchStore,
-      SearchFacade,
-      { provide: SearchPort, useClass: EmptySearchPort },
-    ],
+    providers: [SearchStore, SearchFacade, { provide: SearchPort, useClass: EmptySearchPort }],
   });
   return {
     store: TestBed.inject(SearchStore),
@@ -218,11 +210,7 @@ function setupWithEmptyPort(): { store: SearchStore; facade: SearchFacade } {
 
 function setupWithErrorPort(): { store: SearchStore; facade: SearchFacade } {
   TestBed.configureTestingModule({
-    providers: [
-      SearchStore,
-      SearchFacade,
-      { provide: SearchPort, useClass: ErrorSearchPort },
-    ],
+    providers: [SearchStore, SearchFacade, { provide: SearchPort, useClass: ErrorSearchPort }],
   });
   return {
     store: TestBed.inject(SearchStore),

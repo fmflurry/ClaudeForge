@@ -13,10 +13,7 @@ import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot } from '@angular/router';
 import { AuthFacade } from '../../application/facades/auth.facade';
 
-export const FunctionalAuthGuard: (
-  route: ActivatedRouteSnapshot,
-  state: RouterStateSnapshot,
-) => boolean = (
+export const FunctionalAuthGuard: (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => boolean = (
   _route: ActivatedRouteSnapshot,
   _state: RouterStateSnapshot,
 ): boolean => {

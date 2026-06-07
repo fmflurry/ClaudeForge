@@ -75,25 +75,28 @@ export class CatalogFacade {
 
     this.store.startLoading(CatalogStoreEnum.PLUGINS);
 
-    this.port.loadPlugins(fullQuery).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: ({ plugins, meta }) => {
-        this._paginationMeta.set(meta);
-        this.store.update(CatalogStoreEnum.PLUGINS, {
-          data: plugins,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(CatalogStoreEnum.PLUGINS, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .loadPlugins(fullQuery)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ plugins, meta }) => {
+          this._paginationMeta.set(meta);
+          this.store.update(CatalogStoreEnum.PLUGINS, {
+            data: plugins,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(CatalogStoreEnum.PLUGINS, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 
   setPage(page: number): void {
@@ -104,55 +107,59 @@ export class CatalogFacade {
     this.loadPlugins({ sort, order });
   }
 
-  setFilters(
-    filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>,
-  ): void {
+  setFilters(filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>): void {
     this.loadPlugins({ ...filters, page: 1 });
   }
 
   loadDetail(pluginId: string): void {
     this.store.startLoading(CatalogStoreEnum.PLUGIN_DETAIL);
 
-    this.port.getPlugin(pluginId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (plugin) => {
-        this.store.update(CatalogStoreEnum.PLUGIN_DETAIL, {
-          data: plugin,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(CatalogStoreEnum.PLUGIN_DETAIL, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getPlugin(pluginId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (plugin) => {
+          this.store.update(CatalogStoreEnum.PLUGIN_DETAIL, {
+            data: plugin,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(CatalogStoreEnum.PLUGIN_DETAIL, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 
   loadCategories(): void {
     this.store.startLoading(CatalogStoreEnum.CATEGORIES);
 
-    this.port.getCategories().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (categories) => {
-        this.store.update(CatalogStoreEnum.CATEGORIES, {
-          data: categories,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(CatalogStoreEnum.CATEGORIES, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getCategories()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (categories) => {
+          this.store.update(CatalogStoreEnum.CATEGORIES, {
+            data: categories,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(CatalogStoreEnum.CATEGORIES, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 }
