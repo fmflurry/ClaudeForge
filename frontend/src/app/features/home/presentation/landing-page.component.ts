@@ -561,6 +561,16 @@ export class LandingPageComponent implements OnInit {
       title: 'ClaudeForge — The Plugin Marketplace for Claude Code',
       description:
         'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+      ogTitle: 'ClaudeForge — The Plugin Marketplace for Claude Code',
+      ogDescription:
+        'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+      ogType: 'website',
+      ogUrl: 'https://claudeforge.dev/',
+      ogImage: 'https://claudeforge.dev/assets/og-image.png',
+      twitterCard: 'summary_large_image',
+      twitterTitle: 'ClaudeForge — The Plugin Marketplace for Claude Code',
+      twitterDescription:
+        'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
     });
 
     this.structuredData.injectOrganizationAndWebSite({

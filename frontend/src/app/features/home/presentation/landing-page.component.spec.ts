@@ -379,12 +379,22 @@ describe('LandingPageComponent', () => {
   // SEO metadata on init
   // -------------------------------------------------------------------------
 
-  it('calls SeoMetadataService.setMetadata on init with title and description', () => {
+  it('calls SeoMetadataService.setMetadata on init with title, description, and Open Graph fields', () => {
     const { seoMetadataSpy } = setup();
     expect(seoMetadataSpy.setMetadata).toHaveBeenCalledOnce();
     const config = seoMetadataSpy.setMetadata.mock.calls[0][0] as SeoConfig;
     expect(config.title).toBeTruthy();
     expect(config.description).toBeTruthy();
+    // Open Graph — required for social-media unfurls
+    expect(config.ogTitle).toBeTruthy();
+    expect(config.ogDescription).toBeTruthy();
+    expect(config.ogType).toBe('website');
+    expect(config.ogUrl).toBeTruthy();
+    expect(config.ogImage).toBeTruthy();
+    // Twitter card
+    expect(config.twitterCard).toBe('summary_large_image');
+    expect(config.twitterTitle).toBeTruthy();
+    expect(config.twitterDescription).toBeTruthy();
   });
 
   it('passes a landing-page title containing "ClaudeForge" to SeoMetadataService.setMetadata', () => {
