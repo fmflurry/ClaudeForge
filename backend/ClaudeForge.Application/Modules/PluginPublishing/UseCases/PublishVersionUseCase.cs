@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using ClaudeForge.Application.Modules.PluginPublishing.Ports;
+using ClaudeForge.Core.Domain.Packaging;
 using ClaudeForge.Core.Domain.Plugins;
 using ClaudeForge.Core.Ports;
 
@@ -10,9 +11,11 @@ namespace ClaudeForge.Application.Modules.PluginPublishing.UseCases;
 /// 1. Verifies the plugin exists (404 if not).
 /// 2. Validates the version format via SemVer.Parse.
 /// 3. Checks for duplicate (pluginId, version).
-/// 4. Reads the package archive.
-/// 5. Stores the package artifact (with locally-computed SHA-256 + size).
-/// 6. Persists the new version (atomically flips is_latest).
+/// 4. Buffers stream + validates magic bytes against declared extension (H3).
+/// 5. Reads the package archive.
+/// 6. Stores the package artifact (with locally-computed SHA-256 + size).
+/// 7. Persists the new version (atomically flips is_latest).
+///    If persistence fails, best-effort deletes the stored artifact (HIGH-3).
 /// </summary>
 public sealed class PublishVersionUseCase
 {
@@ -47,9 +50,10 @@ public sealed class PublishVersionUseCase
         if (versionExists)
             throw new DuplicateVersionException(command.Version);
 
-        // Step 4: buffer stream + compute metadata before reading archive
+        // Step 4: buffer stream + validate magic bytes before reading archive
         // (IPackageReader consumes the stream; we need bytes for both operations)
         byte[] packageBytes = await BufferStreamAsync(command.PackageStream, ct);
+        string ext = GetExtensionOrThrow(command.FileName, packageBytes);
         string sha256 = ComputeSha256(packageBytes);
         long sizeBytes = packageBytes.LongLength;
 
@@ -57,12 +61,12 @@ public sealed class PublishVersionUseCase
         await _packageReader.ReadAsync(new MemoryStream(packageBytes), command.FileName, ct);
 
         // Step 6: store package
-        string ext = GetExtension(command.FileName);
         string packageKey = $"plugins/{command.PluginId}/{command.Version}/package.{ext}";
 
         await _storage.PutAsync(packageKey, new MemoryStream(packageBytes), ct);
 
-        // Step 7: persist new version (is_latest flip handled atomically in adapter)
+        // Step 7: persist new version (is_latest flip handled atomically in adapter).
+        // If persistence fails, best-effort delete the orphaned storage object (HIGH-3).
         AddVersionCommand addCommand = new(
             Version: command.Version,
             VersionSort: semVer.ToVersionSort(),
@@ -72,7 +76,16 @@ public sealed class PublishVersionUseCase
             Sha256: sha256,
             ReleaseNotes: command.ReleaseNotes);
 
-        return await _repository.AddVersionAsync(command.PluginId, addCommand, ct);
+        try
+        {
+            return await _repository.AddVersionAsync(command.PluginId, addCommand, ct);
+        }
+        catch
+        {
+            // Best-effort cleanup of the orphaned storage object — do not suppress the original exception.
+            try { await _storage.DeleteAsync(packageKey, ct); } catch { /* ignore cleanup errors */ }
+            throw;
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -91,14 +104,40 @@ public sealed class PublishVersionUseCase
         }
     }
 
-    private static string GetExtension(string fileName)
+    /// <summary>
+    /// Returns the canonical extension ("tar.gz" or "zip") for the file, validated against
+    /// actual magic bytes.
+    /// Throws <see cref="UnsupportedPackageFormatException"/> for unknown extensions (H3).
+    /// Throws <see cref="CorruptedArchiveException"/> when magic bytes don't match the declared
+    /// extension (content/format mismatch — the file is not what it claims to be) (H3).
+    /// </summary>
+    private static string GetExtensionOrThrow(string fileName, byte[] packageBytes)
     {
         if (fileName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!IsGzipMagic(packageBytes))
+                throw new CorruptedArchiveException();
             return "tar.gz";
+        }
+
         if (fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!IsZipMagic(packageBytes))
+                throw new CorruptedArchiveException();
             return "zip";
-        return "tar.gz";
+        }
+
+        // Unknown extension — reject instead of defaulting.
+        throw new UnsupportedPackageFormatException();
     }
+
+    private static bool IsGzipMagic(byte[] bytes) =>
+        bytes.Length >= 2 && bytes[0] == 0x1F && bytes[1] == 0x8B;
+
+    private static bool IsZipMagic(byte[] bytes) =>
+        bytes.Length >= 4 &&
+        bytes[0] == 0x50 && bytes[1] == 0x4B &&
+        bytes[2] == 0x03 && bytes[3] == 0x04;
 
     private static async Task<byte[]> BufferStreamAsync(Stream stream, CancellationToken ct)
     {

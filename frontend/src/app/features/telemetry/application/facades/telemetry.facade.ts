@@ -1,4 +1,5 @@
-import { computed, inject, Injectable, Signal } from '@angular/core';
+import { computed, DestroyRef, inject, Injectable, Signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, EMPTY } from 'rxjs';
 import { TelemetryStore, TelemetryStoreEnum } from '../store/telemetry.store';
 import { TelemetryPreferencePort } from '../../../../shared/domain/ports/telemetry-preference.port';
@@ -21,6 +22,7 @@ export class TelemetryFacade {
   private readonly preferencePort = inject(TelemetryPreferencePort);
   private readonly anonIdPort = inject(AnonIdPort);
   private readonly apiClient = inject(ApiClient);
+  private readonly destroyRef = inject(DestroyRef);
 
   // ---------------------------------------------------------------------------
   // Signal getters
@@ -134,7 +136,7 @@ export class TelemetryFacade {
 
     this.apiClient
       .postTelemetryEvent(payload)
-      .pipe(catchError(() => EMPTY))
+      .pipe(takeUntilDestroyed(this.destroyRef), catchError(() => EMPTY))
       .subscribe();
   }
 }

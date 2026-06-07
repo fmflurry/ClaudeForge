@@ -17,7 +17,7 @@ public sealed class PluginDistributionModule : IModule
 {
     private const string DownloadRateLimitPolicy = "plugin-download-limit";
 
-    public IServiceCollection RegisterModule(IServiceCollection services)
+    public IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration)
     {
         // Repository adapter
         services.AddScoped<IPluginDistributionRepositoryPort>(sp =>

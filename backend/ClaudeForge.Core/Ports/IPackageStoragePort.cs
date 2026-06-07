@@ -30,4 +30,11 @@ public interface IPackageStoragePort
     /// Returns metadata (SHA-256 hex + size in bytes) for the package at <paramref name="key"/>.
     /// </summary>
     Task<PackageMetadata> GetMetadataAsync(string key, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes the package stored at <paramref name="key"/> if it exists.
+    /// This is a best-effort cleanup operation; callers must not rely on it for consistency guarantees.
+    /// Implementations should suppress "not found" errors and only rethrow on genuine infrastructure failures.
+    /// </summary>
+    Task DeleteAsync(string key, CancellationToken ct = default);
 }

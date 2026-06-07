@@ -5,7 +5,8 @@
  * the use-case classes exist for reuse in other application flows.
  */
 
-import { computed, inject, Injectable, Signal, signal } from '@angular/core';
+import { computed, DestroyRef, inject, Injectable, Signal, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CatalogPort } from '../../domain/ports/catalog.port';
 import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '../../domain/models/catalog.models';
 import { buildFilterQuery } from '../../domain/rules/catalog-filter.rules';
@@ -16,6 +17,7 @@ import { CatalogStore, CatalogStoreEnum } from '../store/catalog.store';
 export class CatalogFacade {
   private readonly store = inject(CatalogStore);
   private readonly port = inject(CatalogPort);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Holds the current active filter query (mutable via setPage/setSort/setFilters). */
   private readonly _currentQuery = signal<CatalogFilterQuery>(buildFilterQuery({}));
@@ -73,7 +75,7 @@ export class CatalogFacade {
 
     this.store.startLoading(CatalogStoreEnum.PLUGINS);
 
-    this.port.loadPlugins(fullQuery).subscribe({
+    this.port.loadPlugins(fullQuery).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ plugins, meta }) => {
         this._paginationMeta.set(meta);
         this.store.update(CatalogStoreEnum.PLUGINS, {
@@ -111,7 +113,7 @@ export class CatalogFacade {
   loadDetail(pluginId: string): void {
     this.store.startLoading(CatalogStoreEnum.PLUGIN_DETAIL);
 
-    this.port.getPlugin(pluginId).subscribe({
+    this.port.getPlugin(pluginId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (plugin) => {
         this.store.update(CatalogStoreEnum.PLUGIN_DETAIL, {
           data: plugin,
@@ -134,7 +136,7 @@ export class CatalogFacade {
   loadCategories(): void {
     this.store.startLoading(CatalogStoreEnum.CATEGORIES);
 
-    this.port.getCategories().subscribe({
+    this.port.getCategories().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (categories) => {
         this.store.update(CatalogStoreEnum.CATEGORIES, {
           data: categories,

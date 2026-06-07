@@ -32,7 +32,9 @@ public sealed class TelemetryRetentionJob : BackgroundService
     {
         if (!_enabled)
         {
-            _logger.LogInformation("TelemetryRetentionJob is disabled (Features:TelemetryRetention=false). Skipping.");
+            _logger.LogInformation(
+                "TelemetryRetentionJob is disabled (Features:TelemetryRetention not set or zero). Retention window: {Days} days. Skipping.",
+                RetentionDays);
             return;
         }
 

@@ -1,7 +1,9 @@
 using ClaudeForge.Application.Modules.PluginSearch.Ports;
 using ClaudeForge.Application.Modules.PluginSearch.UseCases;
 using ClaudeForge.Core.Shared.Model;
+using ClaudeForge.Infrastructure.Persistence;
 using ClaudeForge.Infrastructure.PluginSearch;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -57,14 +59,15 @@ public sealed class QdrantSeamTests
             .Build();
 
         ServiceCollection services = new();
-
-        // Minimal dependencies for the test context
         services.AddLogging();
+
+        // Register an in-memory DbContext so GetRequiredService<MarketplaceDbContext> succeeds.
+        services.AddDbContext<MarketplaceDbContext>(opts =>
+            opts.UseInMemoryDatabase("qdrant-seam-test-disabled"));
 
         // Act — register adapters with Qdrant disabled
         services.AddPluginSearchAdapters(config);
 
-        // We need a context; use a fake/placeholder (the selector itself has no DB call)
         ServiceProvider provider = services.BuildServiceProvider();
         ISearchIndexPort adapter = provider.GetRequiredService<ISearchIndexPort>();
 
@@ -85,6 +88,10 @@ public sealed class QdrantSeamTests
 
         ServiceCollection services = new();
         services.AddLogging();
+
+        // Register an in-memory DbContext so GetRequiredService<MarketplaceDbContext> succeeds.
+        services.AddDbContext<MarketplaceDbContext>(opts =>
+            opts.UseInMemoryDatabase("qdrant-seam-test-enabled"));
 
         // Act
         services.AddPluginSearchAdapters(config);

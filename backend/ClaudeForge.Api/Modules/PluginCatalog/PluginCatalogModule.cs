@@ -15,7 +15,7 @@ namespace ClaudeForge.Api.Modules.PluginCatalog;
 /// </summary>
 public sealed class PluginCatalogModule : IModule
 {
-    public IServiceCollection RegisterModule(IServiceCollection services)
+    public IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IPluginRepositoryPort>(sp =>
             new PluginRepositoryAdapter(sp.GetRequiredService<MarketplaceDbContext>()));

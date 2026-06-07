@@ -8,11 +8,13 @@ namespace ClaudeForge.Api.Module;
 /// </summary>
 public static class ModuleExtensions
 {
-    public static IServiceCollection RegisterModules(this IServiceCollection services)
+    public static IServiceCollection RegisterModules(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
         foreach (IModule module in DiscoverModules())
         {
-            module.RegisterModule(services);
+            module.RegisterModule(services, configuration);
         }
 
         return services;

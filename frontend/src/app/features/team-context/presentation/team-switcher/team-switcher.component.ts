@@ -5,7 +5,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { TeamContextFacade } from '../../application/facades/team-context.facade';
 
 /**
@@ -17,7 +16,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
 @Component({
   selector: 'cf-team-switcher',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="team-switcher" data-testid="team-switcher">
@@ -66,7 +65,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
             data-testid="edit-input"
             [value]="editInput()"
             placeholder="Enter team name"
-            (input)="onEditInputChange($any($event.target).value)"
+            (input)="onInput($event)"
           />
           <button
             type="button"
@@ -199,7 +198,8 @@ export class TeamSwitcherComponent {
     this.facade.clearTeam();
   }
 
-  onEditInputChange(value: string): void {
+  onInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
     this.editInput.set(value);
   }
 }

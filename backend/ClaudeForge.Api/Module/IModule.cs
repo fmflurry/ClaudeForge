@@ -8,6 +8,6 @@ namespace ClaudeForge.Api.Module;
 /// </summary>
 public interface IModule
 {
-    IServiceCollection RegisterModule(IServiceCollection services);
+    IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration);
     IEndpointRouteBuilder MapEndpoints(IEndpointRouteBuilder endpoints);
 }

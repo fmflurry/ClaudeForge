@@ -15,11 +15,8 @@ namespace ClaudeForge.Api.Modules.PluginSearch;
 /// </summary>
 public sealed class PluginSearchModule : IModule
 {
-    public IServiceCollection RegisterModule(IServiceCollection services)
+    public IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration)
     {
-        IConfiguration configuration = services.BuildServiceProvider()
-            .GetRequiredService<IConfiguration>();
-
         services.AddPluginSearchAdapters(configuration);
         services.AddScoped<SearchPluginsUseCase>();
         services.AddScoped<DiscoverPluginsUseCase>();

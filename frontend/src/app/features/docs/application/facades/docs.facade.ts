@@ -3,7 +3,8 @@
  * Components interact with this facade only — no direct store or adapter access.
  */
 
-import { computed, inject, Injectable, Signal } from '@angular/core';
+import { computed, DestroyRef, inject, Injectable, Signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DocsPort } from '../../domain/ports/docs.port';
 import type { DocCategoryNode, DocPage, DocSearchResult } from '../../domain/models/docs.models';
 import { buildCategoryTree } from '../../domain/rules/docs-category-tree.rules';
@@ -13,6 +14,7 @@ import { DocsStore, DocsStoreEnum } from '../store/docs.store';
 export class DocsFacade {
   private readonly store = inject(DocsStore);
   private readonly port = inject(DocsPort);
+  private readonly destroyRef = inject(DestroyRef);
 
   // ---------------------------------------------------------------------------
   // Signal getters
@@ -53,7 +55,7 @@ export class DocsFacade {
   search(query: string): void {
     this.store.startLoading(DocsStoreEnum.SEARCH_RESULTS);
 
-    this.port.search(query).subscribe({
+    this.port.search(query).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ items }) => {
         const tree = buildCategoryTree(items);
         this.store.update(DocsStoreEnum.SEARCH_RESULTS, {
@@ -83,7 +85,7 @@ export class DocsFacade {
   openDoc(slug: string): void {
     this.store.startLoading(DocsStoreEnum.CURRENT_DOC);
 
-    this.port.getPage(slug).subscribe({
+    this.port.getPage(slug).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (doc) => {
         this.store.update(DocsStoreEnum.CURRENT_DOC, {
           data: doc,

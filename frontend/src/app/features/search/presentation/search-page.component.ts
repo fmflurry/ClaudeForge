@@ -1,9 +1,57 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Signal, signal } from '@angular/core';
+import { SearchFacade } from '../application/facades/search.facade';
+import { SearchBarComponent } from './search-bar/search-bar.component';
+import { FilterChipsComponent, FilterChipsOutput } from './filter-chips/filter-chips.component';
+import { SearchResultsComponent } from './search-results/search-results.component';
+import type { SearchFilterQuery } from '../domain/rules/search-filter.rules';
 
 @Component({
   selector: 'cf-search-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<h2>Search</h2>`,
+  imports: [SearchBarComponent, FilterChipsComponent, SearchResultsComponent],
+  template: `
+    <div class="cf-search-page" data-testid="search-page">
+      <cf-search-bar
+        [isLoading]="isLoading()"
+        (searchSubmitted)="onSearch($event)"
+      />
+
+      <cf-filter-chips
+        [activeTypes]="activeTypes()"
+        [activeLanguages]="activeLanguages()"
+        [activeUseCases]="activeUseCases()"
+        (filtersChanged)="onFiltersChanged($event)"
+      />
+
+      <cf-search-results />
+    </div>
+  `,
 })
-export class SearchPageComponent {}
+export class SearchPageComponent {
+  private readonly facade = inject(SearchFacade);
+
+  readonly isLoading: Signal<boolean> = this.facade.isLoadingSearch;
+
+  /**
+   * Active filter chips bound to FilterChipsComponent.
+   * types mirrors category suggestions from the last search response.
+   * languages and useCases are not yet surfaced by the search port.
+   */
+  readonly activeTypes: Signal<readonly string[]> = this.facade.categorySuggestions;
+  readonly activeLanguages: Signal<readonly string[]> = signal<readonly string[]>([]).asReadonly();
+  readonly activeUseCases: Signal<readonly string[]> = signal<readonly string[]>([]).asReadonly();
+
+  onSearch(keyword: string): void {
+    this.facade.search(keyword);
+  }
+
+  onFiltersChanged(filters: FilterChipsOutput): void {
+    const partial: Partial<Pick<SearchFilterQuery, 'types' | 'languages' | 'useCases'>> = {
+      types: [...filters.types],
+      languages: [...filters.languages],
+      useCases: [...filters.useCases],
+    };
+    this.facade.setFilters(partial);
+  }
+}

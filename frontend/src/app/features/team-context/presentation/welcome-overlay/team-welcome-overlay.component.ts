@@ -5,7 +5,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { TeamContextFacade } from '../../application/facades/team-context.facade';
 
 /**
@@ -17,7 +16,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
 @Component({
   selector: 'cf-team-welcome',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div data-testid="team-welcome-overlay" class="team-welcome-overlay">
@@ -48,7 +47,7 @@ import { TeamContextFacade } from '../../application/facades/team-context.facade
           data-testid="custom-team-input"
           placeholder="Enter custom team name"
           [value]="customInput()"
-          (input)="onCustomInputChange($any($event.target).value)"
+          (input)="onInput($event)"
         />
         <button
           type="button"
@@ -153,7 +152,8 @@ export class TeamWelcomeOverlayComponent {
     this.facade.clearTeam();
   }
 
-  onCustomInputChange(value: string): void {
+  onInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
     this.customInput.set(value);
   }
 }

@@ -4,14 +4,13 @@ import {
   input,
   output,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import type { InstalledPlugin } from '../../domain/models/dashboard.models';
 
 @Component({
   selector: 'cf-plugin-details-modal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="modal-overlay">
       <div class="modal-content" role="dialog" aria-modal="true">

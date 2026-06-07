@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using ClaudeForge.Application.Modules.PluginPublishing.Ports;
+using ClaudeForge.Core.Domain.Packaging;
 using ClaudeForge.Core.Domain.Plugins;
 using ClaudeForge.Core.Ports;
 
@@ -10,12 +11,14 @@ namespace ClaudeForge.Application.Modules.PluginPublishing.UseCases;
 /// <summary>
 /// Orchestrates the upload of a new plugin:
 /// 1. Validates the package stream is non-empty.
-/// 2. Reads and extracts the archive (manifest + README).
-/// 3. Validates the manifest fields.
-/// 4. Validates the initial version is a valid semver.
-/// 5. Checks for duplicate plugin name (case-insensitive).
-/// 6. Stores the package artifact via IPackageStoragePort.
-/// 7. Persists the plugin and initial version.
+/// 2. Validates magic bytes against declared extension (H3).
+/// 3. Reads and extracts the archive (manifest + README).
+/// 4. Validates the manifest fields.
+/// 5. Validates the initial version is a valid semver.
+/// 6. Checks for duplicate plugin name (case-insensitive).
+/// 7. Stores the package artifact via IPackageStoragePort.
+/// 8. Persists the plugin and initial version.
+///    If persistence fails, best-effort deletes the stored artifact (HIGH-3).
 /// </summary>
 public sealed class UploadPluginUseCase
 {
@@ -44,35 +47,37 @@ public sealed class UploadPluginUseCase
         if (packageBytes.Length == 0)
             throw new MissingPackageFileException();
 
+        // Step 2: validate magic bytes match declared extension (H3)
+        string ext = GetExtensionOrThrow(command.FileName, packageBytes);
+
         string sha256 = ComputeSha256(packageBytes);
         long sizeBytes = packageBytes.LongLength;
 
-        // Step 2: read archive from buffered bytes — may throw UnsupportedPackageFormatException,
+        // Step 3: read archive from buffered bytes — may throw UnsupportedPackageFormatException,
         //         CorruptedArchiveException, or MissingManifestException (all bubble up)
         PackageContents contents = await _packageReader.ReadAsync(
             new MemoryStream(packageBytes), command.FileName, ct);
 
-        // Step 3: parse + validate manifest
+        // Step 4: parse + validate manifest
         ParsedManifest manifest = ParseManifest(contents.ManifestBytes);
         ValidateManifest(manifest);
 
-        // Step 4: validate semver on command.InitialVersion
+        // Step 5: validate semver on command.InitialVersion
         SemVer semVer = ParseSemVerOrThrow(command.InitialVersion);
 
-        // Step 5: duplicate name check (case-insensitive)
+        // Step 6: duplicate name check (case-insensitive)
         string nameNormalized = command.Name.ToLowerInvariant();
         bool nameExists = await _repository.ExistsByNameNormalizedAsync(nameNormalized, ct);
         if (nameExists)
             throw new DuplicatePluginNameException(command.Name);
 
-        // Step 6: store package — key convention: plugins/{pluginId}/{version}/package.{ext}
+        // Step 7: store package — key convention: plugins/{pluginId}/{version}/package.{ext}
         Guid pluginId = Guid.NewGuid();
-        string ext = GetExtension(command.FileName);
         string packageKey = $"plugins/{pluginId}/{command.InitialVersion}/package.{ext}";
 
         await _storage.PutAsync(packageKey, new MemoryStream(packageBytes), ct);
 
-        // Step 7: persist
+        // Step 8: persist — if this throws, best-effort delete the orphaned artifact (HIGH-3)
         string slug = BuildSlug(nameNormalized);
         CreatePluginCommand createCommand = new(
             Name: command.Name,
@@ -89,7 +94,16 @@ public sealed class UploadPluginUseCase
             ReleaseNotes: command.ReleaseNotes,
             ReadmeText: contents.ReadmeText);
 
-        return await _repository.CreatePluginWithInitialVersionAsync(createCommand, ct);
+        try
+        {
+            return await _repository.CreatePluginWithInitialVersionAsync(createCommand, ct);
+        }
+        catch
+        {
+            // Best-effort cleanup of the orphaned storage object — do not suppress the original exception.
+            try { await _storage.DeleteAsync(packageKey, ct); } catch { /* ignore cleanup errors */ }
+            throw;
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -101,7 +115,9 @@ public sealed class UploadPluginUseCase
     private static ParsedManifest ParseManifest(byte[] manifestBytes)
     {
         string json = Encoding.UTF8.GetString(manifestBytes);
-        JsonDocument doc = JsonDocument.Parse(json);
+
+        // HIGH-5: use `using` to ensure JsonDocument is disposed; bound depth to limit parsing risk.
+        using JsonDocument doc = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 32 });
         JsonElement root = doc.RootElement;
 
         string? name = root.TryGetProperty("name", out JsonElement nameProp)
@@ -116,6 +132,7 @@ public sealed class UploadPluginUseCase
             ? authorProp.GetString()
             : null;
 
+        // Extract values before JsonDocument is disposed (strings are already copied out of the doc).
         return new ParsedManifest(
             Name: name ?? string.Empty,
             Description: description ?? string.Empty,
@@ -146,14 +163,40 @@ public sealed class UploadPluginUseCase
         }
     }
 
-    private static string GetExtension(string fileName)
+    /// <summary>
+    /// Returns the canonical extension ("tar.gz" or "zip") for the file, validated against
+    /// actual magic bytes.
+    /// Throws <see cref="UnsupportedPackageFormatException"/> for unknown extensions (H3).
+    /// Throws <see cref="CorruptedArchiveException"/> when magic bytes don't match the declared
+    /// extension (content/format mismatch — the file is not what it claims to be) (H3).
+    /// </summary>
+    private static string GetExtensionOrThrow(string fileName, byte[] packageBytes)
     {
         if (fileName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!IsGzipMagic(packageBytes))
+                throw new CorruptedArchiveException();
             return "tar.gz";
+        }
+
         if (fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!IsZipMagic(packageBytes))
+                throw new CorruptedArchiveException();
             return "zip";
-        return "tar.gz";
+        }
+
+        // Unknown extension — reject instead of defaulting.
+        throw new UnsupportedPackageFormatException();
     }
+
+    private static bool IsGzipMagic(byte[] bytes) =>
+        bytes.Length >= 2 && bytes[0] == 0x1F && bytes[1] == 0x8B;
+
+    private static bool IsZipMagic(byte[] bytes) =>
+        bytes.Length >= 4 &&
+        bytes[0] == 0x50 && bytes[1] == 0x4B &&
+        bytes[2] == 0x03 && bytes[3] == 0x04;
 
     private static string BuildSlug(string nameNormalized)
     {

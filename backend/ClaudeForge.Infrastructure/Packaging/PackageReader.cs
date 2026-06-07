@@ -20,6 +20,10 @@ namespace ClaudeForge.Infrastructure.Packaging;
 ///
 /// README detection:
 ///   "README.md" at root level. Null when absent.
+///
+/// Decompression-bomb guards (H2):
+///   MaxEntryDecompressedBytes — per-entry cap (10 MB).
+///   MaxArchiveEntries — total entries cap prevents zip/tar bombs with many tiny files.
 /// </summary>
 public sealed class PackageReader : IPackageReader
 {
@@ -30,6 +34,12 @@ public sealed class PackageReader : IPackageReader
     };
 
     private const string ReadmeName = "README.md";
+
+    /// <summary>Maximum decompressed bytes allowed per archive entry (10 MB).</summary>
+    private const long MaxEntryDecompressedBytes = 10L * 1024L * 1024L;
+
+    /// <summary>Maximum number of archive entries to scan (limits zip/tar bomb risk).</summary>
+    private const int MaxArchiveEntries = 1_000;
 
     /// <inheritdoc />
     public async Task<PackageContents> ReadAsync(
@@ -68,6 +78,8 @@ public sealed class PackageReader : IPackageReader
             await using GZipStream gzip = new(buffered, CompressionMode.Decompress, leaveOpen: true);
             using TarReader tar = new(gzip, leaveOpen: true);
 
+            int entryCount = 0;
+
             while (true)
             {
                 TarEntry? entry;
@@ -84,6 +96,10 @@ public sealed class PackageReader : IPackageReader
                 if (entry is null)
                     break;
 
+                entryCount++;
+                if (entryCount > MaxArchiveEntries)
+                    throw new CorruptedArchiveException();
+
                 // Only care about regular files (type == RegularFile or V7RegularFile).
                 if (entry.EntryType is not TarEntryType.RegularFile and not TarEntryType.V7RegularFile)
                     continue;
@@ -97,7 +113,7 @@ public sealed class PackageReader : IPackageReader
                     if (manifestBytes is null && ManifestNames.Contains(baseName) && entry.DataStream is not null)
                     {
                         using MemoryStream ms = new();
-                        await entry.DataStream.CopyToAsync(ms, ct);
+                        await CopyWithSizeCapAsync(entry.DataStream, ms, MaxEntryDecompressedBytes, ct);
                         manifestBytes = ms.ToArray();
                     }
                     else if (readmeText is null &&
@@ -105,7 +121,7 @@ public sealed class PackageReader : IPackageReader
                              entry.DataStream is not null)
                     {
                         using MemoryStream ms = new();
-                        await entry.DataStream.CopyToAsync(ms, ct);
+                        await CopyWithSizeCapAsync(entry.DataStream, ms, MaxEntryDecompressedBytes, ct);
                         readmeText = Encoding.UTF8.GetString(ms.ToArray());
                     }
                 }
@@ -151,6 +167,9 @@ public sealed class PackageReader : IPackageReader
 
         using (zip)
         {
+            if (zip.Entries.Count > MaxArchiveEntries)
+                throw new CorruptedArchiveException();
+
             byte[]? manifestBytes = null;
             string? readmeText = null;
 
@@ -169,8 +188,12 @@ public sealed class PackageReader : IPackageReader
                     {
                         await using Stream s = entry.Open();
                         using MemoryStream ms = new();
-                        await s.CopyToAsync(ms, ct);
+                        await CopyWithSizeCapAsync(s, ms, MaxEntryDecompressedBytes, ct);
                         manifestBytes = StripUtf8Bom(ms.ToArray());
+                    }
+                    catch (CorruptedArchiveException)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {
@@ -184,8 +207,12 @@ public sealed class PackageReader : IPackageReader
                     {
                         await using Stream s = entry.Open();
                         using MemoryStream ms = new();
-                        await s.CopyToAsync(ms, ct);
+                        await CopyWithSizeCapAsync(s, ms, MaxEntryDecompressedBytes, ct);
                         readmeText = Encoding.UTF8.GetString(StripUtf8Bom(ms.ToArray()));
+                    }
+                    catch (CorruptedArchiveException)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {
@@ -204,6 +231,32 @@ public sealed class PackageReader : IPackageReader
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Copies from <paramref name="source"/> into <paramref name="destination"/>,
+    /// throwing <see cref="CorruptedArchiveException"/> if more than <paramref name="maxBytes"/>
+    /// are read. This guards against decompression bombs.
+    /// </summary>
+    private static async Task CopyWithSizeCapAsync(
+        Stream source,
+        MemoryStream destination,
+        long maxBytes,
+        CancellationToken ct)
+    {
+        byte[] buffer = new byte[81_920];
+        long totalRead = 0;
+        int read;
+
+        while ((read = await source.ReadAsync(buffer, ct)) > 0)
+        {
+            totalRead += read;
+            if (totalRead > maxBytes)
+            {
+                throw new CorruptedArchiveException();
+            }
+            destination.Write(buffer, 0, read);
+        }
+    }
 
     /// <summary>
     /// Strips a UTF-8 BOM preamble (0xEF, 0xBB, 0xBF) from <paramref name="bytes"/> if present.

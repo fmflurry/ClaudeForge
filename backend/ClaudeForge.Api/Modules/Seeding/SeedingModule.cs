@@ -10,7 +10,7 @@ namespace ClaudeForge.Api.Modules.Seeding;
 /// </summary>
 public sealed class SeedingModule : IModule
 {
-    public IServiceCollection RegisterModule(IServiceCollection services)
+    public IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration)
     {
         // Register seeders so they can be resolved from DI (e.g., in tests or hosted services)
         services.AddScoped<ICategorySeeder>(sp =>

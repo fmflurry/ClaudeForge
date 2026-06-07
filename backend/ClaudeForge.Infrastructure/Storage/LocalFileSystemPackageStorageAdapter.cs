@@ -65,6 +65,17 @@ public sealed class LocalFileSystemPackageStorageAdapter : IPackageStoragePort
         return new PackageMetadata(sha256Hex, fileBytes.LongLength);
     }
 
+    /// <inheritdoc />
+    public Task DeleteAsync(string key, CancellationToken ct = default)
+    {
+        string filePath = ResolvePath(key);
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+        }
+        return Task.CompletedTask;
+    }
+
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
@@ -72,12 +83,28 @@ public sealed class LocalFileSystemPackageStorageAdapter : IPackageStoragePort
     /// <summary>
     /// Resolves a storage key to an absolute filesystem path by replacing forward-slash
     /// separators with the platform directory separator and combining with <see cref="_rootPath"/>.
+    /// Asserts the resolved path is within the storage root to prevent path traversal.
     /// </summary>
     private string ResolvePath(string key)
     {
         // Normalize forward-slash key separators to the OS path separator,
         // then combine with the root to produce an absolute path.
         string normalizedKey = key.Replace('/', Path.DirectorySeparatorChar);
-        return Path.Combine(_rootPath, normalizedKey);
+        string fullPath = Path.GetFullPath(Path.Combine(_rootPath, normalizedKey));
+
+        // Ensure canonical root ends with separator so prefix check is exact.
+        string canonicalRoot = Path.GetFullPath(_rootPath);
+        if (!canonicalRoot.EndsWith(Path.DirectorySeparatorChar))
+        {
+            canonicalRoot += Path.DirectorySeparatorChar;
+        }
+
+        if (!fullPath.StartsWith(canonicalRoot, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                $"Storage key '{key}' resolves outside the storage root. Path traversal is not allowed.");
+        }
+
+        return fullPath;
     }
 }

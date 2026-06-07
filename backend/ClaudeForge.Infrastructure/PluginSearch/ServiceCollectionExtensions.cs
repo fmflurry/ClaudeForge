@@ -1,6 +1,5 @@
 using ClaudeForge.Application.Modules.PluginSearch.Ports;
 using ClaudeForge.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -48,25 +47,10 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>
-    /// Returns the registered MarketplaceDbContext, or creates a stub instance
-    /// (with empty options) for environments where the DB context is not registered
-    /// (e.g. unit test DI containers that only test adapter selection logic).
-    /// DB operations on a stub context will throw at call time, not at construction time.
-    /// </summary>
     private static MarketplaceDbContext ResolveOrCreateDbContext(IServiceProvider sp)
     {
-        MarketplaceDbContext? existing = sp.GetService<MarketplaceDbContext>();
-        if (existing is not null)
-        {
-            return existing;
-        }
-
-        // Fallback: create a minimal context instance (no DB provider configured).
-        // This allows DI resolution in test environments that only verify adapter types.
-        DbContextOptions<MarketplaceDbContext> emptyOptions =
-            new DbContextOptionsBuilder<MarketplaceDbContext>().Options;
-
-        return new MarketplaceDbContext(emptyOptions);
+        // Hard fail — callers must register a real MarketplaceDbContext (or an in-memory one in tests).
+        // The silent stub fallback was removed because it hid misconfiguration silently.
+        return sp.GetRequiredService<MarketplaceDbContext>();
     }
 }

@@ -85,38 +85,55 @@ public sealed class PluginPublishingRepositoryAdapter : IPluginPublishingReposit
         await using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction tx =
             await _context.Database.BeginTransactionAsync(ct);
 
-        // Flip all existing latest versions to false
-        await _context.PluginVersions
-            .Where(v => v.PluginId == pluginId && v.IsLatest)
-            .ExecuteUpdateAsync(
-                setters => setters.SetProperty(v => v.IsLatest, false),
-                ct);
-
-        // Insert new version as latest
-        Guid versionId = Guid.NewGuid();
-        PluginVersionEntity newVersion = new()
+        try
         {
-            Id = versionId,
-            PluginId = pluginId,
-            Version = command.Version,
-            VersionSort = command.VersionSort,
-            ReleaseNotes = command.ReleaseNotes,
-            IsLatest = true,
-            PackageKey = command.PackageKey,
-            PackageFormat = command.PackageFormat,
-            SizeBytes = command.SizeBytes,
-            Sha256 = command.Sha256,
-            DownloadCount = 0L,
-            ReadmeText = command.ReadmeText,
-            ReleasedAt = DateTimeOffset.UtcNow,
-        };
+            DateTimeOffset now = DateTimeOffset.UtcNow;
 
-        _context.PluginVersions.Add(newVersion);
-        await _context.SaveChangesAsync(ct);
+            // Flip all existing latest versions to false
+            await _context.PluginVersions
+                .Where(v => v.PluginId == pluginId && v.IsLatest)
+                .ExecuteUpdateAsync(
+                    setters => setters.SetProperty(v => v.IsLatest, false),
+                    ct);
 
-        await tx.CommitAsync(ct);
+            // Stamp plugins.updated_at to reflect the new version (LOW-5)
+            await _context.Plugins
+                .Where(p => p.Id == pluginId)
+                .ExecuteUpdateAsync(
+                    setters => setters.SetProperty(p => p.UpdatedAt, now),
+                    ct);
 
-        return new PluginVersionPublishResult(pluginId, versionId, command.Version);
+            // Insert new version as latest
+            Guid versionId = Guid.NewGuid();
+            PluginVersionEntity newVersion = new()
+            {
+                Id = versionId,
+                PluginId = pluginId,
+                Version = command.Version,
+                VersionSort = command.VersionSort,
+                ReleaseNotes = command.ReleaseNotes,
+                IsLatest = true,
+                PackageKey = command.PackageKey,
+                PackageFormat = command.PackageFormat,
+                SizeBytes = command.SizeBytes,
+                Sha256 = command.Sha256,
+                DownloadCount = 0L,
+                ReadmeText = command.ReadmeText,
+                ReleasedAt = now,
+            };
+
+            _context.PluginVersions.Add(newVersion);
+            await _context.SaveChangesAsync(ct);
+
+            await tx.CommitAsync(ct);
+
+            return new PluginVersionPublishResult(pluginId, versionId, command.Version);
+        }
+        catch
+        {
+            await tx.RollbackAsync(ct);
+            throw;
+        }
     }
 
     // -------------------------------------------------------------------------

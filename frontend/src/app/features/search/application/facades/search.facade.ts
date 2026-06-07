@@ -3,7 +3,8 @@
  * Components interact with this facade only — no direct store or port access.
  */
 
-import { computed, inject, Injectable, Signal, signal } from '@angular/core';
+import { computed, DestroyRef, inject, Injectable, Signal, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SearchPort } from '../../domain/ports/search.port';
 import type {
   DiscoveryCriteria,
@@ -28,6 +29,7 @@ export interface SearchPaginationMeta {
 export class SearchFacade {
   private readonly store = inject(SearchStore);
   private readonly port = inject(SearchPort);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Holds the current active search filter query. */
   private readonly _currentQuery = signal<SearchFilterQuery>({});
@@ -91,7 +93,7 @@ export class SearchFacade {
 
     this.store.startLoading(SearchStoreEnum.SEARCH_RESULTS);
 
-    this.port.search(buildSearchQueryParams(merged)).subscribe({
+    this.port.search(buildSearchQueryParams(merged)).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (page) => {
         this._paginationMeta.set({
           totalCount: page.totalCount,
@@ -121,7 +123,7 @@ export class SearchFacade {
   setPage(page: number): void {
     const updated = combineSearchFilters(this._currentQuery(), { page });
     this._currentQuery.set(updated);
-    this.port.search(buildSearchQueryParams(updated)).subscribe({
+    this.port.search(buildSearchQueryParams(updated)).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (resultPage) => {
         this._paginationMeta.set({
           totalCount: resultPage.totalCount,
@@ -153,7 +155,7 @@ export class SearchFacade {
   ): void {
     const updated = combineSearchFilters(this._currentQuery(), { ...filters, page: 1 });
     this._currentQuery.set(updated);
-    this.port.search(buildSearchQueryParams(updated)).subscribe({
+    this.port.search(buildSearchQueryParams(updated)).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (resultPage) => {
         this._paginationMeta.set({
           totalCount: resultPage.totalCount,
@@ -183,7 +185,7 @@ export class SearchFacade {
   discover(criteria: DiscoveryCriteria): void {
     this.store.startLoading(SearchStoreEnum.DISCOVERY);
 
-    this.port.discover(criteria).subscribe({
+    this.port.discover(criteria).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (results) => {
         this.store.update(SearchStoreEnum.DISCOVERY, {
           data: results,

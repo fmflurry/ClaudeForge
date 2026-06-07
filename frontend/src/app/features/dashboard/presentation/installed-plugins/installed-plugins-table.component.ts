@@ -6,7 +6,6 @@ import {
   output,
   Signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { DashboardFacade } from '../../application/facades/dashboard.facade';
 import type { InstalledPlugin } from '../../domain/models/dashboard.models';
 
@@ -14,7 +13,7 @@ import type { InstalledPlugin } from '../../domain/models/dashboard.models';
   selector: 'cf-installed-plugins-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [],
   template: `
     @if (isLoading()) {
       <div data-testid="loading" aria-busy="true" class="loading">

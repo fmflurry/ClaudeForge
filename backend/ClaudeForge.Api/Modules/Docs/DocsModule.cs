@@ -18,7 +18,7 @@ namespace ClaudeForge.Api.Modules.Docs;
 /// </summary>
 public sealed class DocsModule : IModule
 {
-    public IServiceCollection RegisterModule(IServiceCollection services)
+    public IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IDocsRepositoryPort>(sp =>
             new DocsRepositoryAdapter(sp.GetRequiredService<MarketplaceDbContext>()));

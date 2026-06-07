@@ -94,7 +94,8 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
         CancellationToken ct)
     {
         // Build category filter CTE
-        (string typeJoin, string langJoin, string ucJoin) = BuildFilterJoinClauses(criteria);
+        (string typeJoin, string langJoin, string ucJoin, List<Npgsql.NpgsqlParameter> filterParams) =
+            BuildFilterJoinClauses(criteria);
 
         string countFtsWhere = query != null
             ? """
@@ -116,20 +117,15 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
             {countFtsWhere}
             """;
 
-        List<int> countResult;
-
+        List<Npgsql.NpgsqlParameter> countParams = [.. filterParams];
         if (query != null)
         {
-            countResult = await _context.Database
-                .SqlQueryRaw<int>(countSql, new Npgsql.NpgsqlParameter("@query", query))
-                .ToListAsync(ct);
+            countParams.Add(new Npgsql.NpgsqlParameter("@query", query));
         }
-        else
-        {
-            countResult = await _context.Database
-                .SqlQueryRaw<int>(countSql)
-                .ToListAsync(ct);
-        }
+
+        List<int> countResult = await _context.Database
+            .SqlQueryRaw<int>(countSql, [.. countParams])
+            .ToListAsync(ct);
 
         return countResult.FirstOrDefault();
     }
@@ -141,7 +137,8 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
         int take,
         CancellationToken ct)
     {
-        (string typeJoin, string langJoin, string ucJoin) = BuildFilterJoinClauses(criteria);
+        (string typeJoin, string langJoin, string ucJoin, List<Npgsql.NpgsqlParameter> filterParams) =
+            BuildFilterJoinClauses(criteria);
 
         // Ranking: FTS rank (primary) + download popularity (secondary) + recency (tertiary)
         // ts_rank returns 0..1 range, so multiply by 2 to ensure FTS dominates.
@@ -217,6 +214,7 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
         [
             new Npgsql.NpgsqlParameter("@take", take),
             new Npgsql.NpgsqlParameter("@skip", skip),
+            .. filterParams,
         ];
 
         if (query != null)
@@ -233,52 +231,51 @@ public sealed class PostgresSearchAdapter : ISearchIndexPort
     // Filter clause builder
     // -------------------------------------------------------------------------
 
-    private static (string TypeJoin, string LangJoin, string UcJoin) BuildFilterJoinClauses(
+    // Returns parameterized JOIN clauses using = ANY(@param) to prevent SQL injection.
+    // Each active filter dimension adds one NpgsqlParameter with a string[] value.
+    private static (string TypeJoin, string LangJoin, string UcJoin,
+                    List<Npgsql.NpgsqlParameter> FilterParams) BuildFilterJoinClauses(
         SearchCriteria criteria)
     {
         string typeJoin = string.Empty;
         string langJoin = string.Empty;
         string ucJoin = string.Empty;
+        List<Npgsql.NpgsqlParameter> filterParams = [];
 
         if (criteria.TypeFilter is { Count: > 0 })
         {
-            string values = string.Join(",", criteria.TypeFilter.Select(v => $"'{EscapeSql(v)}'"));
-            typeJoin = $"""
+            typeJoin = """
                 JOIN plugin_categories pc_type ON pc_type.plugin_id = p.id
                 JOIN categories c_type ON c_type.id = pc_type.category_id
                     AND c_type.dimension = 'type'
-                    AND c_type.value IN ({values})
+                    AND c_type.value = ANY(@typeFilter)
                 """;
+            filterParams.Add(new Npgsql.NpgsqlParameter("@typeFilter", criteria.TypeFilter.ToArray()));
         }
 
         if (criteria.LanguageFilter is { Count: > 0 })
         {
-            string values = string.Join(",", criteria.LanguageFilter.Select(v => $"'{EscapeSql(v)}'"));
-            langJoin = $"""
+            langJoin = """
                 JOIN plugin_categories pc_lang ON pc_lang.plugin_id = p.id
                 JOIN categories c_lang ON c_lang.id = pc_lang.category_id
                     AND c_lang.dimension = 'language'
-                    AND c_lang.value IN ({values})
+                    AND c_lang.value = ANY(@langFilter)
                 """;
+            filterParams.Add(new Npgsql.NpgsqlParameter("@langFilter", criteria.LanguageFilter.ToArray()));
         }
 
         if (criteria.UseCaseFilter is { Count: > 0 })
         {
-            string values = string.Join(",", criteria.UseCaseFilter.Select(v => $"'{EscapeSql(v)}'"));
-            ucJoin = $"""
+            ucJoin = """
                 JOIN plugin_categories pc_uc ON pc_uc.plugin_id = p.id
                 JOIN categories c_uc ON c_uc.id = pc_uc.category_id
                     AND c_uc.dimension = 'use_case'
-                    AND c_uc.value IN ({values})
+                    AND c_uc.value = ANY(@ucFilter)
                 """;
+            filterParams.Add(new Npgsql.NpgsqlParameter("@ucFilter", criteria.UseCaseFilter.ToArray()));
         }
 
-        return (typeJoin, langJoin, ucJoin);
-    }
-
-    private static string EscapeSql(string value)
-    {
-        return value.Replace("'", "''");
+        return (typeJoin, langJoin, ucJoin, filterParams);
     }
 
     // -------------------------------------------------------------------------

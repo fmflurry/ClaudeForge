@@ -5,7 +5,8 @@
  * No HTTP writes ever happen in this facade.
  */
 
-import { computed, inject, Injectable, Signal } from '@angular/core';
+import { computed, DestroyRef, inject, Injectable, Signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { DashboardStore, DashboardStoreEnum } from '../store/dashboard.store';
@@ -22,6 +23,7 @@ export class DashboardFacade {
   private readonly storagePort = inject(InstalledPluginsStoragePort);
   private readonly catalogPort = inject(CatalogLatestVersionPort);
   private readonly teamContextFacade = inject(TeamContextFacade);
+  private readonly destroyRef = inject(DestroyRef);
 
   // ---------------------------------------------------------------------------
   // Signal getters
@@ -139,6 +141,7 @@ export class DashboardFacade {
 
     forkJoin(versionRequests)
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
         catchError((err: unknown) => {
           const message = err instanceof Error ? err.message : 'Update check failed';
           this.store.update(DashboardStoreEnum.UPDATE_CHECKS, {

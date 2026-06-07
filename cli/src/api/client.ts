@@ -162,7 +162,7 @@ export function createMarketplaceClient(apiUrl: string): IMarketplaceClient {
     },
 
     async uploadPlugin(formData) {
-      const url = `${base}/api/v1/plugins`;
+      const url = `${base}/api/v1/plugins/upload`;
       const response = await fetch(url, {
         method: 'POST',
         body: formData,

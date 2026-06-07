@@ -30,7 +30,7 @@ public sealed class PluginPublishingModule : IModule
 {
     private const string UploadRateLimitPolicy = "plugin-upload-limit";
 
-    public IServiceCollection RegisterModule(IServiceCollection services)
+    public IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration)
     {
         // Package storage — adapter selected at startup by StorageOptions.Type.
         services.AddSingleton<IPackageStoragePort>(sp =>

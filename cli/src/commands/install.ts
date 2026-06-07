@@ -124,7 +124,24 @@ export async function runInstall(
   }
 
   // ── 3. Write files to disk ───────────────────────────────────────────────
-  const pluginDir = path.join(homeDir, 'plugins', pluginName);
+  // Guard against path traversal: reject names that are absolute paths or
+  // contain '..' segments, then assert the resolved path stays inside the
+  // plugins root (defense-in-depth).
+  const hasDotDot = pluginName.split(/[\\/]/).some((seg) => seg === '..');
+  if (path.isAbsolute(pluginName) || hasDotDot || pluginName.includes('\0')) {
+    return {
+      exitCode: 1,
+      output: `Invalid plugin name: "${pluginName}" contains unsafe path components.`,
+    };
+  }
+  const pluginsRoot = path.resolve(homeDir, 'plugins');
+  const pluginDir = path.resolve(pluginsRoot, pluginName);
+  if (!pluginDir.startsWith(pluginsRoot + path.sep)) {
+    return {
+      exitCode: 1,
+      output: `Invalid plugin name: "${pluginName}" escapes the plugins directory.`,
+    };
+  }
   await fsPort.mkdir(pluginDir);
   await fsPort.writeStream(path.join(pluginDir, 'package.tar.gz'), stream);
 

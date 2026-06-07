@@ -21,7 +21,7 @@ public sealed class TelemetryModule : IModule
 {
     private const string TelemetryRateLimitPolicy = "telemetry-ingest-limit";
 
-    public IServiceCollection RegisterModule(IServiceCollection services)
+    public IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration)
     {
         // In-memory cache for summary results (5-minute window)
         services.AddMemoryCache();

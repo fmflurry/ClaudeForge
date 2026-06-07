@@ -31,10 +31,21 @@ public sealed class SearchPluginsUseCase
         SearchPluginsQuery query,
         CancellationToken ct = default)
     {
+        // Validate that page and limit are positive (spec: "Page and limit must be greater than 0").
         if (query.Page <= 0 || query.Limit <= 0)
         {
             throw new InvalidPaginationException();
         }
+
+        // Clamp limit to the allowed maximum to prevent unbounded DB queries (MEDIUM-1).
+        int page = query.Page;
+        int limit = Math.Min(query.Limit, 100);
+
+        PaginationRequest pagination = new()
+        {
+            Page = page,
+            Limit = limit,
+        };
 
         SearchCriteria criteria = new()
         {
@@ -44,12 +55,6 @@ public sealed class SearchPluginsUseCase
             UseCaseFilter = query.UseCaseFilter,
         };
 
-        PaginationRequest pagination = new()
-        {
-            Page = query.Page,
-            Limit = query.Limit,
-        };
-
         (IReadOnlyList<SearchResultDto> items, int totalCount) =
             await _index.SearchAsync(criteria, pagination, ct);
 
@@ -57,8 +62,8 @@ public sealed class SearchPluginsUseCase
         {
             Data = items,
             TotalCount = totalCount,
-            Page = query.Page,
-            Limit = query.Limit,
+            Page = page,
+            Limit = limit,
         };
 
         IReadOnlyList<string> categorySuggestions = items.Count == 0

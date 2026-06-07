@@ -7,7 +7,6 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { DashboardFacade } from '../application/facades/dashboard.facade';
 import { InstalledPluginsTableComponent } from './installed-plugins/installed-plugins-table.component';
 import { PluginDetailsModalComponent } from './plugin-details-modal/plugin-details-modal.component';
@@ -20,7 +19,7 @@ const UPDATE_CHECK_INTERVAL_MS = 300_000;
   selector: 'cf-dashboard-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, InstalledPluginsTableComponent, PluginDetailsModalComponent],
+  imports: [InstalledPluginsTableComponent, PluginDetailsModalComponent],
   template: `
     <div data-testid="dashboard-page" class="dashboard-page">
 

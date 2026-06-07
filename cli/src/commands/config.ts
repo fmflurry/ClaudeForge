@@ -87,9 +87,28 @@ export async function runConfigSet(
   const updated = { ...current, apiUrl: value };
   await writeConfig(homeDir, updated);
 
+  const lines: string[] = [`API URL set to ${value}`];
+
+  // Informational warning: plain HTTP to a remote host sends credentials in clear text.
+  try {
+    const parsed = new URL(value);
+    const isLocalhost =
+      parsed.hostname === 'localhost' ||
+      parsed.hostname === '127.0.0.1' ||
+      parsed.hostname === '::1';
+    if (parsed.protocol === 'http:' && !isLocalhost) {
+      lines.push(
+        'Warning: the configured URL uses plain HTTP with a non-localhost host. ' +
+          'Consider using HTTPS to avoid sending credentials in clear text.',
+      );
+    }
+  } catch {
+    // validateUrl already accepted the URL; URL constructor should never throw here.
+  }
+
   return {
     exitCode: 0,
-    output: `API URL set to ${value}`,
+    output: lines.join('\n'),
   };
 }
 

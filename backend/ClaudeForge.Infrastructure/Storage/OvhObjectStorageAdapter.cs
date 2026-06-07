@@ -121,6 +121,21 @@ public sealed class OvhObjectStorageAdapter : IPackageStoragePort
     }
 
     /// <inheritdoc />
+    public async Task DeleteAsync(string key, CancellationToken ct = default)
+    {
+        try
+        {
+            await _s3Client
+                .DeleteObjectAsync(_bucketName, key, ct)
+                .ConfigureAwait(false);
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // Object was already absent — treat as success for best-effort cleanup.
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<PackageMetadata> GetMetadataAsync(string key, CancellationToken ct = default)
     {
         // Stream the object and compute SHA-256 on the fly.
