@@ -43,7 +43,7 @@ import { ZardButtonComponent } from '../shared/components/button';
     <div class="cf-shell">
       <header class="cf-shell__header">
         <a routerLink="/" class="cf-shell__brand-link" aria-label="ClaudeForge home">
-          <img src="/hero.png" alt="ClaudeForge" class="cf-shell__logo-img" />
+          <img src="/logo-assets/claudeforge-header-logo-fit.png" alt="ClaudeForge" class="cf-shell__logo-img" />
         </a>
         <nav class="cf-shell__nav" [attr.aria-label]="i18n.t('shell.nav-aria')">
           <a routerLink="/catalog" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">

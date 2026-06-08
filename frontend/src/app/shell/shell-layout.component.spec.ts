@@ -192,10 +192,12 @@ function setup(): {
 // ---------------------------------------------------------------------------
 
 describe('ShellLayoutComponent — EN rendering (stays green through migration)', () => {
-  it('renders the brand name "ClaudeForge" as literal (never translated)', () => {
+  it('renders the brand logo image', () => {
     const { fixture } = setup();
-    const brand = fixture.nativeElement.querySelector('.cf-shell__logo') as HTMLElement | null;
-    expect(brand?.textContent?.trim()).toBe('ClaudeForge');
+    const logoImg = fixture.nativeElement.querySelector('.cf-shell__logo-img') as HTMLImageElement | null;
+    expect(logoImg).toBeTruthy();
+    expect(logoImg?.getAttribute('src')).toBe('/logo-assets/claudeforge-header-logo-fit.png');
+    expect(logoImg?.getAttribute('alt')).toBe('ClaudeForge');
   });
 
   it('brand link navigates to /', () => {
@@ -345,14 +347,7 @@ describe('ShellLayoutComponent — FR rendering (RED — fails until migration)'
     expect(nav?.getAttribute('aria-label')).toBe('Navigation principale');
   });
 
-  it('brand "ClaudeForge" stays literal even when lang is fr', () => {
-    const { fixture, translocoService } = setup();
-    translocoService.setActiveLang('fr');
-    fixture.detectChanges();
 
-    const brand = fixture.nativeElement.querySelector('.cf-shell__logo') as HTMLElement | null;
-    expect(brand?.textContent?.trim()).toBe('ClaudeForge');
-  });
 });
 
 // ---------------------------------------------------------------------------
