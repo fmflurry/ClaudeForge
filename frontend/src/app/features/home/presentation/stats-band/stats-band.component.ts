@@ -59,28 +59,28 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
       .sb-status {
         text-align: center;
         padding: 1.5rem;
-        color: #6b7280;
+        color: var(--muted-foreground);
       }
 
       .sb-error {
         text-align: center;
         padding: 1.5rem;
-        color: #b91c1c;
+        color: var(--destructive);
       }
 
       .sb-retry-btn {
         margin-top: 0.5rem;
         padding: 0.5rem 1.25rem;
-        border: 1px solid #b91c1c;
+        border: 1px solid var(--destructive);
         border-radius: 0.375rem;
         background: transparent;
-        color: #b91c1c;
+        color: var(--destructive);
         cursor: pointer;
         font-size: 0.9375rem;
       }
 
       .sb-retry-btn:hover {
-        background: rgba(185, 28, 28, 0.06);
+        background: color-mix(in oklch, var(--destructive) 8%, transparent);
       }
 
       .sb-band {
@@ -89,7 +89,7 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         gap: 1.5rem;
         justify-content: center;
         padding: 2rem 1.5rem;
-        background: #f9fafb;
+        background: var(--muted);
       }
 
       .sb-stat-card {
@@ -103,7 +103,7 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
       .sb-stat-card__label {
         margin: 0;
         font-size: 0.875rem;
-        color: #6b7280;
+        color: var(--muted-foreground);
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -112,7 +112,7 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         margin: 0;
         font-size: 1.75rem;
         font-weight: 700;
-        color: #111827;
+        color: var(--foreground);
       }
     `,
   ],

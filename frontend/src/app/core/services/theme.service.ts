@@ -97,8 +97,14 @@ export class ThemeService {
     return prefersDark ? 'dark' : 'light';
   }
 
-  /** Adds or removes the `.dark` class on `document.documentElement`. */
+  /**
+   * Adds or removes the `.dark` class on `document.documentElement`.
+   * Browser-only: returns immediately when running on the server (SSR).
+   */
   private applyClass(theme: Theme): void {
+    if (!this.isBrowser) {
+      return;
+    }
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {

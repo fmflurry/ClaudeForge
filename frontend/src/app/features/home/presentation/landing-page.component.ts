@@ -78,7 +78,7 @@ const FEATURED_LIMIT = 6;
             [attr.aria-label]="i18n.t('home.aria.learn-publish')"
           >{{ i18n.t('home.publish-plugin') }}</a>
 
-          <!-- Sign-in CTA — routes to the login page -->
+          <!-- Sign-in CTA — intentionally disabled; auth is not yet implemented. -->
           <button
             type="button"
             z-button
@@ -88,7 +88,6 @@ const FEATURED_LIMIT = 6;
             [zDisabled]="true"
             tabindex="-1"
             [title]="i18n.t('home.sign-in')"
-            (click)="onSignIn()"
           >
             {{ i18n.t('home.sign-in') }}
           </button>
@@ -610,10 +609,6 @@ export class LandingPageComponent implements OnInit {
     } else {
       void this.router.navigate(['/search']);
     }
-  }
-
-  onSignIn(): void {
-    void this.router.navigate(['/login']);
   }
 
   formatDownloads(count: number): string {

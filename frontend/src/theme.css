@@ -52,7 +52,7 @@
 @import 'tailwindcss';
 @plugin 'tailwindcss-animate';
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark, .dark *));
 
 /* ─── Light mode tokens (applied to :root) ──────────────────────────── */
 :root {
