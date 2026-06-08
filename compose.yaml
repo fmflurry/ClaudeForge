@@ -1,0 +1,13 @@
+# Root entry point so the full stack can be built and run from the repo root:
+#   docker compose up --build
+#
+# The actual service definitions live in infra/docker-compose.yml (single source
+# of truth). This file just includes them. Relative paths inside the included
+# file resolve relative to infra/, so build contexts and the jwt secret still work.
+#
+# Optional semantic-search profile:
+#   docker compose --profile semantic up --build
+name: claudeforge-dev
+
+include:
+  - infra/docker-compose.yml
