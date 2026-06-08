@@ -33,7 +33,7 @@
 - [x] 2.11 Run production build and confirm no TypeScript or esbuild errors
 - [x] 2.12 Run `npx tsc --noEmit --pretty false` and verify no type errors
 - [x] 2.13 Run `npm run build:ssr` and confirm SSR build succeeds
-- [ ] 2.14 Commit `.postcssrc.json`, `src/theme.css`, `src/app/shared/ui/`, and updated `angular.json` with message: "feat: add Tailwind v4 and ZardUI foundation"
+- [x] 2.14 Commit `.postcssrc.json`, `src/theme.css`, `src/app/shared/ui/`, and updated `angular.json` with message: "feat: add Tailwind v4 and ZardUI foundation" (committed as 9efd3bc feat(frontend): add Tailwind v4 and ZardUI foundation)
 
 ---
 
@@ -50,7 +50,7 @@
 - [x] 3.9 Document the token set in a new file `docs/DESIGN_TOKENS.md` listing all semantic tokens, their OKLCH values, and light/dark mode variants
 - [x] 3.10 Update or create a linting rule / code review guideline: custom SCSS files MUST reference `var(--token-name)` for colors, not hardcoded hex/RGB; document in `CONTRIBUTING.md` or a style guide
 - [x] 3.11 Run production build and confirm token CSS is compiled correctly
-- [ ] 3.12 Commit `src/theme.css` (finalized tokens), `docs/DESIGN_TOKENS.md`, and updated contributor guidelines with message: "feat: define and validate yellow-forward OKLCH semantic tokens"
+- [x] 3.12 Commit `src/theme.css` (finalized tokens), `docs/DESIGN_TOKENS.md`, and updated contributor guidelines with message: "feat: define and validate yellow-forward OKLCH semantic tokens" (committed as 597b08d, with dark mode)
 
 ---
 
@@ -68,7 +68,7 @@
 - [x] 4.10 Test theme persistence: toggle to dark mode, reload the page, verify dark mode is re-applied without flash
 - [x] 4.11 Test SSR in development: the inline script in `index.html` runs render-blocking before Angular bootstrap; SSR HTML does not include `.dark` (server is theme-neutral); the inline script applies it on the client before first paint — no FOUC. A full serve-based SSR manual check is impractical in this environment; see notes on the anti-FOUC mechanism.
 - [x] 4.12 Run production build and confirm no errors — build green; only 2 pre-existing budget warnings.
-- [ ] 4.13 Commit theme service, inline script, shell toggle control, and SSR handling with message: "feat: implement theme service and dark mode with SSR flash prevention"
+- [x] 4.13 Commit theme service, inline script, shell toggle control, and SSR handling with message: "feat: implement theme service and dark mode with SSR flash prevention" (committed as 597b08d feat(frontend): yellow-forward design tokens and dark mode with SSR flash prevention)
 
 ---
 
@@ -89,7 +89,7 @@
 - [x] 5.13 Run production build and verify no errors
 - [x] 5.14 Visual QA: compare migrated shell in light mode to design spec; compare dark mode to spec
 - [x] 5.15 Test mobile responsiveness (if applicable to shell)
-- [ ] 5.16 Commit shell migration with message: "feat: migrate application shell to ZardUI components"
+- [x] 5.16 Commit shell migration with message: "feat: migrate application shell to ZardUI components" (committed as 4e9b8bc feat(frontend): migrate shell to ZardUI button and semantic color tokens)
 
 ---
 
@@ -112,7 +112,7 @@
 - [x] 6.15 Visual QA light mode: compare rendered home to design spec
 - [x] 6.16 Visual QA dark mode: toggle to dark theme, verify home page appears as per spec
 - [x] 6.17 Test mobile responsiveness on home page
-- [ ] 6.18 Commit home migration with message: "feat: migrate home/landing page to ZardUI components"
+- [x] 6.18 Commit home migration with message: "feat: migrate home/landing page to ZardUI components" (committed as 80bb956 feat(frontend): migrate home/landing page to ZardUI card, badge, and button)
 
 ---
 
@@ -157,5 +157,5 @@
 - [x] 7.10 Create or update `CHANGELOG.md` (created at repo root with unreleased entry documenting ZardUI + Tailwind v4, yellow-forward palette, dark mode, component migrations)
 - [ ] 7.11 Final accessibility sweep: run axe DevTools or similar on home and shell in both light and dark modes, fix any WCAG violations (MANUAL-QA-REQUIRED — requires browser session)
 - [ ] 7.12 Final visual review: render app in dev mode, compare light and dark themes against design spec, confirm yellow-forward brand is prominent and professional (MANUAL-QA-REQUIRED — requires browser session)
-- [ ] 7.13 Commit documentation, style guide updates, and changelog with message: "docs: design system documentation and contribution guidelines" (deferred — ready for orchestrator to commit)
+- [x] 7.13 Commit documentation, style guide updates, and changelog with message: "docs: design system documentation and contribution guidelines" (committed as 832ab3f docs(design-system): add design system guide, changelog, and verification record)
 - [x] 7.14 Verify all tests pass and build is green before considering the change ready for review (verified: tsc 0, build green, 2057/2057 tests pass)
