@@ -95,23 +95,23 @@
 
 ## 6. Home / Landing Migration
 
-- [ ] 6.1 Audit home/landing page component structure: list all sections, cards, buttons, forms, images, text blocks
-- [ ] 6.2 Identify which ZardUI primitives the home page needs (e.g., card, badge, input, button, hero layout)
-- [ ] 6.3 Review home page templates and identify hardcoded colors or styles that should reference semantic tokens
-- [ ] 6.4 Migrate home hero section: replace custom HTML with ZardUI layout + button + text components
-- [ ] 6.5 Migrate home content cards: replace custom card markup with ZardUI card components
-- [ ] 6.6 Migrate home CTAs (call-to-action): replace bespoke buttons with ZardUI button component variants
-- [ ] 6.7 Migrate home form inputs (if present): replace custom form HTML with ZardUI input/form components
-- [ ] 6.8 Migrate any badge, chip, or label elements to ZardUI equivalents
-- [ ] 6.9 Update all hardcoded colors in home page SCSS to use CSS variable tokens
-- [ ] 6.10 Ensure transloco strings resolve correctly in migrated home markup
-- [ ] 6.11 Test keyboard navigation on home page (forms, buttons, links all accessible via Tab)
-- [ ] 6.12 Verify focus states meet WCAG 2.1 AA contrast on all interactive elements
-- [ ] 6.13 Run `npx tsc --noEmit --pretty false` and confirm no type errors in home components
-- [ ] 6.14 Run production build and verify no errors
-- [ ] 6.15 Visual QA light mode: compare rendered home to design spec
-- [ ] 6.16 Visual QA dark mode: toggle to dark theme, verify home page appears as per spec
-- [ ] 6.17 Test mobile responsiveness on home page
+- [x] 6.1 Audit home/landing page component structure: list all sections, cards, buttons, forms, images, text blocks
+- [x] 6.2 Identify which ZardUI primitives the home page needs (e.g., card, badge, input, button, hero layout)
+- [x] 6.3 Review home page templates and identify hardcoded colors or styles that should reference semantic tokens
+- [x] 6.4 Migrate home hero section: replace custom HTML with ZardUI layout + button + text components
+- [x] 6.5 Migrate home content cards: replace custom card markup with ZardUI card components
+- [x] 6.6 Migrate home CTAs (call-to-action): replace bespoke buttons with ZardUI button component variants
+- [x] 6.7 Migrate home form inputs (if present): replace custom form HTML with ZardUI input/form components
+- [x] 6.8 Migrate any badge, chip, or label elements to ZardUI equivalents
+- [x] 6.9 Update all hardcoded colors in home page SCSS to use CSS variable tokens
+- [x] 6.10 Ensure transloco strings resolve correctly in migrated home markup
+- [x] 6.11 Test keyboard navigation on home page (forms, buttons, links all accessible via Tab)
+- [x] 6.12 Verify focus states meet WCAG 2.1 AA contrast on all interactive elements
+- [x] 6.13 Run `npx tsc --noEmit --pretty false` and confirm no type errors in home components
+- [x] 6.14 Run production build and verify no errors
+- [x] 6.15 Visual QA light mode: compare rendered home to design spec
+- [x] 6.16 Visual QA dark mode: toggle to dark theme, verify home page appears as per spec
+- [x] 6.17 Test mobile responsiveness on home page
 - [ ] 6.18 Commit home migration with message: "feat: migrate home/landing page to ZardUI components"
 
 ---

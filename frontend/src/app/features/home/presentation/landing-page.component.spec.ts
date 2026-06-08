@@ -71,6 +71,13 @@ const EN_HOME_LANGS: Record<string, string> = {
   'home.footer-docs': 'Documentation',
   'home.footer-search': 'Search',
   'home.footer-my-plugins': 'My Plugins',
+  // SEO keys — required so setMetadata receives resolved strings, not raw key names
+  'home.seo.title': 'ClaudeForge — The Plugin Marketplace for Claude Code',
+  'home.seo.description': 'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+  'home.seo.og-title': 'ClaudeForge — The Plugin Marketplace for Claude Code',
+  'home.seo.og-description': 'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+  'home.seo.twitter-title': 'ClaudeForge — The Plugin Marketplace for Claude Code',
+  'home.seo.twitter-description': 'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
 };
 
 const FR_HOME_LANGS: Record<string, string> = {

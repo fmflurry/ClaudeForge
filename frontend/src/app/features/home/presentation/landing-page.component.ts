@@ -11,6 +11,12 @@
  * NOTE: Sign-in CTA is rendered as a disabled button linked to /auth/login.
  * Auth is not yet implemented; the affordance signals the intent without
  * routing to a broken page (button is aria-disabled and tabIndex=-1).
+ *
+ * Phase 6 ZardUI migration:
+ * - Hero CTAs: anchors/buttons use z-button attribute for ZardUI styling
+ * - Plugin cards: z-card wraps each plugin card's body content
+ * - Type/category badges: z-badge replaces cf-badge
+ * - Hardcoded colors replaced with var(--token) semantic tokens
  */
 
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, Signal, signal } from '@angular/core';
@@ -18,7 +24,9 @@ import { Router, RouterLink } from '@angular/router';
 import { CatalogFacade } from '../../catalog/application/facades/catalog.facade';
 import type { PluginSummary } from '../../catalog/domain/models/catalog.models';
 import { EmptyStateComponent } from '../../../shared/design-system/empty-state.component';
-import { BadgeComponent } from '../../../shared/design-system/badge.component';
+import { ZardBadgeComponent } from '../../../shared/components/badge/badge.component';
+import { ZardButtonComponent } from '../../../shared/components/button/button.component';
+import { ZardCardComponent } from '../../../shared/components/card/card.component';
 import { formatMetricCount } from '../../../shared/utils/format-metric-count';
 import { StatsBandComponent } from './stats-band/stats-band.component';
 import { SeoMetadataService } from '../../../shared/infrastructure/seo/seo-metadata.service';
@@ -32,7 +40,14 @@ const FEATURED_LIMIT = 6;
   selector: 'cf-landing-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, EmptyStateComponent, BadgeComponent, StatsBandComponent],
+  imports: [
+    RouterLink,
+    EmptyStateComponent,
+    ZardBadgeComponent,
+    ZardButtonComponent,
+    ZardCardComponent,
+    StatsBandComponent,
+  ],
   template: `
     <!-- ================================================================= -->
     <!-- HERO                                                                -->
@@ -45,19 +60,32 @@ const FEATURED_LIMIT = 6;
         </p>
 
         <div class="lp-hero__ctas" role="group" [attr.aria-label]="i18n.t('home.aria.primary-actions')">
-          <a routerLink="/catalog" class="lp-btn lp-btn--primary" [attr.aria-label]="i18n.t('home.aria.browse-all')">{{
-            i18n.t('home.browse-plugins')
-          }}</a>
+          <a
+            routerLink="/catalog"
+            z-button
+            zType="default"
+            zSize="lg"
+            class="lp-hero-cta-primary"
+            [attr.aria-label]="i18n.t('home.aria.browse-all')"
+          >{{ i18n.t('home.browse-plugins') }}</a>
 
-          <a routerLink="/docs" class="lp-btn lp-btn--secondary" [attr.aria-label]="i18n.t('home.aria.learn-publish')">{{
-            i18n.t('home.publish-plugin')
-          }}</a>
+          <a
+            routerLink="/docs"
+            z-button
+            zType="outline"
+            zSize="lg"
+            class="lp-hero-cta-secondary"
+            [attr.aria-label]="i18n.t('home.aria.learn-publish')"
+          >{{ i18n.t('home.publish-plugin') }}</a>
 
           <!-- Sign-in CTA — routes to the login page -->
           <button
             type="button"
-            class="lp-btn lp-btn--ghost"
-            aria-disabled="true"
+            z-button
+            zType="ghost"
+            zSize="lg"
+            class="lp-hero-cta-ghost"
+            [zDisabled]="true"
             tabindex="-1"
             [title]="i18n.t('home.sign-in')"
             (click)="onSignIn()"
@@ -86,7 +114,9 @@ const FEATURED_LIMIT = 6;
         />
         <button
           type="submit"
-          class="lp-btn lp-btn--primary lp-search-entry__btn"
+          z-button
+          zType="default"
+          class="lp-search-entry__btn"
           [attr.aria-label]="i18n.t('home.search-btn')"
         >
           {{ i18n.t('home.search-btn') }}
@@ -129,32 +159,39 @@ const FEATURED_LIMIT = 6;
           <ul class="lp-featured__grid" role="list" [attr.aria-label]="i18n.t('home.aria.popular-plugins')">
             @for (plugin of featuredPlugins(); track plugin.pluginId) {
               <li class="lp-plugin-card">
-                <div class="lp-plugin-card__header">
-                  <span class="lp-plugin-card__name">{{ plugin.name }}</span>
-                  @if (plugin.latestVersion) {
-                    <cf-badge variant="info">v{{ plugin.latestVersion }}</cf-badge>
-                  }
-                </div>
-                <p class="lp-plugin-card__description">{{ plugin.description }}</p>
-                <div class="lp-plugin-card__meta">
-                  <span class="lp-plugin-card__author">{{ i18n.t('home.plugin-card.by') }} {{ plugin.author }}</span>
-                  <span class="lp-plugin-card__downloads" [attr.aria-label]="i18n.t('home.aria.plugin-downloads', { count: plugin.downloadCount })">
-                    {{ formatDownloads(plugin.downloadCount) }} {{ i18n.t('home.plugin-card.downloads') }}
-                  </span>
-                </div>
-                @if (plugin.types.length > 0) {
-                  <div class="lp-plugin-card__tags" [attr.aria-label]="i18n.t('home.aria.plugin-types')">
-                    @for (type of plugin.types; track type) {
-                      <cf-badge>{{ type }}</cf-badge>
+                <z-card class="lp-plugin-card__zcard">
+                  <div class="lp-plugin-card__header">
+                    <span class="lp-plugin-card__name">{{ plugin.name }}</span>
+                    @if (plugin.latestVersion) {
+                      <z-badge zType="secondary" zShape="pill">v{{ plugin.latestVersion }}</z-badge>
                     }
                   </div>
-                }
+                  <p class="lp-plugin-card__description">{{ plugin.description }}</p>
+                  <div class="lp-plugin-card__meta">
+                    <span class="lp-plugin-card__author">{{ i18n.t('home.plugin-card.by') }} {{ plugin.author }}</span>
+                    <span class="lp-plugin-card__downloads" [attr.aria-label]="i18n.t('home.aria.plugin-downloads', { count: plugin.downloadCount })">
+                      {{ formatDownloads(plugin.downloadCount) }} {{ i18n.t('home.plugin-card.downloads') }}
+                    </span>
+                  </div>
+                  @if (plugin.types.length > 0) {
+                    <div class="lp-plugin-card__tags" [attr.aria-label]="i18n.t('home.aria.plugin-types')">
+                      @for (type of plugin.types; track type) {
+                        <z-badge zType="outline">{{ type }}</z-badge>
+                      }
+                    </div>
+                  }
+                </z-card>
               </li>
             }
           </ul>
 
           <div class="lp-featured__cta">
-            <a routerLink="/catalog" class="lp-btn lp-btn--secondary">{{ i18n.t('home.view-all-plugins') }}</a>
+            <a
+              routerLink="/catalog"
+              z-button
+              zType="outline"
+              zSize="lg"
+            >{{ i18n.t('home.view-all-plugins') }}</a>
           </div>
         }
       </div>
@@ -205,60 +242,11 @@ const FEATURED_LIMIT = 6;
         border-width: 0;
       }
       .lp-link {
-        color: #3b82f6;
+        color: var(--primary);
         text-decoration: underline;
       }
       .lp-link:hover {
-        color: #1d4ed8;
-      }
-
-      .lp-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.625rem 1.25rem;
-        border-radius: 0.375rem;
-        font-size: 0.9375rem;
-        font-weight: 600;
-        line-height: 1.25;
-        text-decoration: none;
-        border: 2px solid transparent;
-        cursor: pointer;
-        transition:
-          background-color 0.2s ease,
-          color 0.2s ease,
-          border-color 0.2s ease;
-      }
-      .lp-btn--primary {
-        background: #1a1a2e;
-        color: #fff;
-        border-color: #1a1a2e;
-      }
-      .lp-btn--primary:hover {
-        background: #16213e;
-        border-color: #16213e;
-      }
-      .lp-btn--primary:focus-visible,
-      .lp-btn--secondary:focus-visible {
-        outline: 3px solid #60a5fa;
-        outline-offset: 2px;
-      }
-      .lp-btn--secondary {
-        background: transparent;
-        color: #1a1a2e;
-        border-color: #1a1a2e;
-      }
-      .lp-btn--secondary:hover {
-        background: rgba(26, 26, 46, 0.06);
-      }
-      .lp-btn--ghost {
-        background: transparent;
-        color: rgba(255, 255, 255, 0.75);
-        border-color: rgba(255, 255, 255, 0.45);
-        cursor: pointer;
-      }
-      .lp-btn--ghost:hover {
-        background: rgba(255, 255, 255, 0.1);
+        color: var(--primary-foreground);
       }
 
       .lp-section-inner {
@@ -269,14 +257,15 @@ const FEATURED_LIMIT = 6;
       .lp-section-title {
         font-size: 1.625rem;
         font-weight: 700;
-        color: #111827;
+        color: var(--foreground);
         margin: 0 0 2rem;
         letter-spacing: -0.02em;
       }
 
+      /* ── Hero ─────────────────────────────────────────────────────────── */
       .lp-hero {
-        background: #1a1a2e;
-        color: #fff;
+        background: var(--foreground);
+        color: var(--background);
         padding: 5rem 1.5rem 4rem;
         text-align: center;
       }
@@ -291,12 +280,9 @@ const FEATURED_LIMIT = 6;
         letter-spacing: -0.03em;
         margin: 0 0 1.25rem;
       }
-      .lp-hero__brand {
-        color: #818cf8;
-      }
       .lp-hero__tagline {
         font-size: 1.125rem;
-        color: rgba(255, 255, 255, 0.78);
+        color: color-mix(in oklch, var(--background) 78%, transparent);
         max-width: 40rem;
         margin: 0 auto 2.5rem;
         line-height: 1.7;
@@ -307,25 +293,46 @@ const FEATURED_LIMIT = 6;
         gap: 0.875rem;
         justify-content: center;
       }
-      .lp-hero .lp-btn--primary {
-        background: #818cf8;
-        border-color: #818cf8;
-        color: #fff;
+
+      /* Override z-button defaults for hero CTAs */
+      .lp-hero .lp-hero-cta-primary {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        border-color: var(--primary);
       }
-      .lp-hero .lp-btn--primary:hover {
-        background: #6366f1;
-        border-color: #6366f1;
+      .lp-hero .lp-hero-cta-primary:hover {
+        background: color-mix(in oklch, var(--primary) 85%, black);
+        border-color: color-mix(in oklch, var(--primary) 85%, black);
       }
-      .lp-hero .lp-btn--secondary {
-        color: #fff;
-        border-color: rgba(255, 255, 255, 0.55);
+      .lp-hero .lp-hero-cta-primary:focus-visible {
+        outline: 3px solid var(--ring);
+        outline-offset: 2px;
       }
-      .lp-hero .lp-btn--secondary:hover {
-        background: rgba(255, 255, 255, 0.1);
+      .lp-hero .lp-hero-cta-secondary {
+        color: var(--background);
+        border-color: color-mix(in oklch, var(--background) 55%, transparent);
+        background: transparent;
+      }
+      .lp-hero .lp-hero-cta-secondary:hover {
+        background: color-mix(in oklch, var(--background) 10%, transparent);
+      }
+      .lp-hero .lp-hero-cta-secondary:focus-visible {
+        outline: 3px solid var(--ring);
+        outline-offset: 2px;
+      }
+      .lp-hero .lp-hero-cta-ghost {
+        color: color-mix(in oklch, var(--background) 75%, transparent);
+        border-color: color-mix(in oklch, var(--background) 45%, transparent);
+        background: transparent;
+        cursor: pointer;
+      }
+      .lp-hero .lp-hero-cta-ghost:hover {
+        background: color-mix(in oklch, var(--background) 10%, transparent);
       }
 
+      /* ── Search entry ─────────────────────────────────────────────────── */
       .lp-search-entry {
-        background: #f3f4f6;
+        background: var(--muted);
         padding: 2rem 1.5rem;
       }
       .lp-search-entry__form {
@@ -337,32 +344,33 @@ const FEATURED_LIMIT = 6;
       .lp-search-entry__input {
         flex: 1;
         padding: 0.625rem 1rem;
-        border: 2px solid #d1d5db;
+        border: 2px solid var(--border);
         border-radius: 0.375rem;
         font-size: 0.9375rem;
-        background: #fff;
-        color: #111827;
+        background: var(--background);
+        color: var(--foreground);
         transition: border-color 0.2s;
         outline: none;
       }
       .lp-search-entry__input:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+        border-color: var(--ring);
+        box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 20%, transparent);
       }
 
+      /* ── Featured plugins ─────────────────────────────────────────────── */
       .lp-featured {
         padding: 4rem 0;
-        background: #fff;
+        background: var(--background);
       }
       .lp-featured__loading,
       .lp-featured__error {
         text-align: center;
         padding: 3rem 0;
-        color: #6b7280;
+        color: var(--muted-foreground);
         font-size: 0.9375rem;
       }
       .lp-featured__error {
-        color: #b91c1c;
+        color: var(--destructive);
       }
       .lp-featured__grid {
         display: grid;
@@ -376,18 +384,16 @@ const FEATURED_LIMIT = 6;
         text-align: center;
       }
 
+      /* ── Plugin card ──────────────────────────────────────────────────── */
       .lp-plugin-card {
-        border: 1px solid #e5e7eb;
-        border-radius: 0.75rem;
-        padding: 1.25rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        background: #fff;
+        display: contents;
+      }
+      .lp-plugin-card__zcard {
+        /* z-card provides bg-card, border, rounded-xl, shadow-sm, px-6, py-6 via Tailwind */
         transition: box-shadow 0.2s;
       }
-      .lp-plugin-card:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      .lp-plugin-card__zcard:hover {
+        box-shadow: 0 4px 16px color-mix(in oklch, var(--foreground) 8%, transparent);
       }
       .lp-plugin-card__header {
         display: flex;
@@ -398,12 +404,12 @@ const FEATURED_LIMIT = 6;
       .lp-plugin-card__name {
         font-size: 1rem;
         font-weight: 700;
-        color: #111827;
+        color: var(--card-foreground);
         line-height: 1.3;
       }
       .lp-plugin-card__description {
         font-size: 0.875rem;
-        color: #4b5563;
+        color: var(--muted-foreground);
         line-height: 1.6;
         margin: 0;
         overflow: hidden;
@@ -413,7 +419,7 @@ const FEATURED_LIMIT = 6;
         display: flex;
         justify-content: space-between;
         font-size: 0.8125rem;
-        color: #6b7280;
+        color: var(--muted-foreground);
         gap: 0.5rem;
         flex-wrap: wrap;
       }
@@ -423,9 +429,10 @@ const FEATURED_LIMIT = 6;
         gap: 0.375rem;
       }
 
+      /* ── How it works ─────────────────────────────────────────────────── */
       .lp-how {
         padding: 4rem 0;
-        background: #f9fafb;
+        background: var(--muted);
       }
       .lp-how__steps {
         display: grid;
@@ -447,19 +454,20 @@ const FEATURED_LIMIT = 6;
       .lp-how__step-title {
         font-size: 1.0625rem;
         font-weight: 700;
-        color: #111827;
+        color: var(--foreground);
         margin: 0;
       }
       .lp-how__step-desc {
         font-size: 0.9375rem;
-        color: #4b5563;
+        color: var(--muted-foreground);
         line-height: 1.6;
         margin: 0;
       }
 
+      /* ── Footer ───────────────────────────────────────────────────────── */
       .lp-footer {
-        background: #1a1a2e;
-        color: rgba(255, 255, 255, 0.75);
+        background: var(--foreground);
+        color: color-mix(in oklch, var(--background) 75%, transparent);
         padding: 2.5rem 1.5rem;
         text-align: center;
       }
@@ -471,25 +479,26 @@ const FEATURED_LIMIT = 6;
         margin-bottom: 1.25rem;
       }
       .lp-footer__link {
-        color: rgba(255, 255, 255, 0.75);
+        color: color-mix(in oklch, var(--background) 75%, transparent);
         text-decoration: none;
         font-size: 0.9375rem;
         transition: color 0.2s ease;
       }
       .lp-footer__link:hover {
-        color: #fff;
+        color: var(--background);
       }
       .lp-footer__link:focus-visible {
-        outline: 2px solid #818cf8;
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
         border-radius: 2px;
       }
       .lp-footer__copy {
         font-size: 0.8125rem;
         margin: 0;
-        color: rgba(255, 255, 255, 0.5);
+        color: color-mix(in oklch, var(--background) 50%, transparent);
       }
 
+      /* ── Responsive ───────────────────────────────────────────────────── */
       @media (max-width: 640px) {
         .lp-hero {
           padding: 3rem 1rem 2.5rem;
