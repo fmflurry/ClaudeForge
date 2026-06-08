@@ -14,6 +14,7 @@ import { ORG_ACTIVE_ORG_SWITCHED } from '../features/organizations/application/f
 import type { ActiveOrgSwitchedPayload } from '../features/organizations/application/facades/org-context.facade';
 import { CatalogFacade } from '../features/catalog/application/facades/catalog.facade';
 import { LanguageSwitcherComponent } from './language-switcher/language-switcher.component';
+import { ThemeToggleComponent } from './theme-toggle/theme-toggle.component';
 import { I18nFacade } from '../application/i18n/i18n.facade';
 
 /**
@@ -35,14 +36,16 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
     TelemetrySettingsComponent,
     OrgSwitcherComponent,
     LanguageSwitcherComponent,
+    ThemeToggleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="cf-shell">
       <header class="cf-shell__header">
-        <div class="cf-shell__brand">
+        <a routerLink="/" class="cf-shell__brand-link" aria-label="ClaudeForge home">
+          <img src="hero.png" alt="ClaudeForge logo" class="cf-shell__logo-img" width="32" height="32" />
           <span class="cf-shell__logo">ClaudeForge</span>
-        </div>
+        </a>
         <nav class="cf-shell__nav" [attr.aria-label]="i18n.t('shell.nav-aria')">
           <a routerLink="/catalog" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
             {{ i18n.t('shell.nav.catalog') }}
@@ -69,7 +72,10 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
         <div class="cf-shell__lang">
           <cf-language-switcher />
         </div>
-        <div class="cf-shell__auth" aria-label="User account">
+        <div class="cf-shell__theme">
+          <cf-theme-toggle />
+        </div>
+        <div class="cf-shell__auth" [attr.aria-label]="i18n.t('shell.aria.user-account')">
           @if (currentUser()) {
             <span class="cf-shell__user-email">{{ currentUser()!.email }}</span>
             <button
@@ -116,6 +122,27 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
         font-weight: 700;
         font-size: 1.125rem;
         letter-spacing: -0.025rem;
+      }
+
+      .cf-shell__brand-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .cf-shell__brand-link:focus-visible {
+        outline: 2px solid #818cf8;
+        outline-offset: 2px;
+        border-radius: 0.25rem;
+      }
+
+      .cf-shell__logo-img {
+        display: block;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
       }
 
       .cf-shell__nav {

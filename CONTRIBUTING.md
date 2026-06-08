@@ -48,6 +48,37 @@ Open a GitHub Discussion or Issue to propose:
    - Include tests for new functionality
    - Follow the project's code style
 
+### Frontend Styling Rule (mandatory)
+
+**Custom SCSS MUST reference CSS variable tokens for all colors — never hardcoded hex, RGB, or HSL values.**
+
+```scss
+// CORRECT — references the semantic token
+.my-component {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--border);
+}
+
+// WRONG — hardcoded values break dark mode and design-system consistency
+.my-component {
+  background-color: #f5c800;
+  color: #1a1a1a;
+  border-color: #e5e5e5;
+}
+```
+
+All semantic tokens are defined in `frontend/src/theme.css` and documented in
+`frontend/docs/DESIGN_TOKENS.md`. The full list of available tokens includes:
+`--primary`, `--primary-foreground`, `--background`, `--foreground`, `--card`,
+`--secondary`, `--secondary-foreground`, `--muted`, `--muted-foreground`,
+`--accent`, `--accent-foreground`, `--destructive`, `--border`, `--input`, `--ring`.
+
+This rule ensures:
+- Dark mode works automatically (tokens resolve to the correct palette when `.dark` is present)
+- A single change in `theme.css` propagates to all components
+- WCAG AA contrast compliance is maintained (validated token values only)
+
 3. **Test before submitting:**
    - Run tests and linting locally
    - Verify the build passes

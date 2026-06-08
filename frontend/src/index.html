@@ -6,6 +6,31 @@
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <!--
+      Anti-FOUC (Flash-of-Wrong-Theme) inline script — design.md D5.
+      Runs render-blocking BEFORE Angular bootstraps. Reads the persisted
+      theme preference (key "cf.theme") from localStorage with a fallback to
+      prefers-color-scheme, then applies the ".dark" class to <html>
+      synchronously. This guarantees the correct palette is visible on first
+      paint; the ThemeService in Angular picks up the same key after hydration
+      and takes over without double-toggling.
+      Key "cf.theme" is the canonical storage key (ThemeService.THEME_STORAGE_KEY).
+      Pure vanilla JS — zero external dependencies.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('cf.theme');
+          var prefersDark =
+            !stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (stored === 'dark' || prefersDark) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (_) {
+          // localStorage may be blocked in some browser contexts; silently skip.
+        }
+      })();
+    </script>
   </head>
   <body>
     <cf-root></cf-root>
