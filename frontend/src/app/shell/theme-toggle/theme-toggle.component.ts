@@ -35,6 +35,10 @@ import { I18nFacade } from '../../application/i18n/i18n.facade';
   `,
   styles: [
     `
+      /*
+       * Theme toggle button — all colors use semantic CSS custom property tokens (D3 rule).
+       * Lives in the shell header, so --sidebar-* tokens provide correct surface context.
+       */
       .cf-theme-toggle {
         display: inline-flex;
         align-items: center;
@@ -43,22 +47,25 @@ import { I18nFacade } from '../../application/i18n/i18n.facade';
         height: 2rem;
         padding: 0;
         background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.35);
-        border-radius: 0.25rem;
-        color: rgba(255, 255, 255, 0.85);
+        border: 1px solid var(--sidebar-border);
+        border-radius: var(--radius-sm, 0.25rem);
+        color: var(--sidebar-foreground);
         cursor: pointer;
-        transition: background-color 0.2s ease;
+        transition:
+          background-color 0.2s ease,
+          color 0.2s ease;
         font-size: 1rem;
       }
 
       .cf-theme-toggle:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--sidebar-accent);
+        color: var(--sidebar-accent-foreground);
       }
 
       .cf-theme-toggle:focus-visible {
         outline: 2px solid var(--ring);
         outline-offset: 2px;
-        border-radius: 0.25rem;
+        border-radius: var(--radius-sm, 0.25rem);
       }
     `,
   ],

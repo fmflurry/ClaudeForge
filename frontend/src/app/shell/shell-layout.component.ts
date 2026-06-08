@@ -4,7 +4,6 @@ import { TeamContextFacade } from '../features/team-context/application/facades/
 import { TeamContextStore } from '../features/team-context/application/store/team-context.store';
 import { TeamWelcomeOverlayComponent } from '../features/team-context/presentation/welcome-overlay/team-welcome-overlay.component';
 import { TeamSwitcherComponent } from '../features/team-context/presentation/team-switcher/team-switcher.component';
-import { TelemetrySettingsComponent } from '../features/telemetry/presentation/settings/telemetry-settings.component';
 import { AuthFacade } from '../features/auth/application/facades/auth.facade';
 import type { CurrentUser } from '../features/auth/domain/models/auth.models';
 import { OrgSwitcherComponent } from '../features/organizations/presentation/org-switcher/org-switcher.component';
@@ -16,6 +15,7 @@ import { CatalogFacade } from '../features/catalog/application/facades/catalog.f
 import { LanguageSwitcherComponent } from './language-switcher/language-switcher.component';
 import { ThemeToggleComponent } from './theme-toggle/theme-toggle.component';
 import { I18nFacade } from '../application/i18n/i18n.facade';
+import { ZardButtonComponent } from '../shared/components/button';
 
 /**
  * Main application shell — header, primary navigation, and router outlet.
@@ -33,17 +33,17 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
     RouterLinkActive,
     TeamWelcomeOverlayComponent,
     TeamSwitcherComponent,
-    TelemetrySettingsComponent,
     OrgSwitcherComponent,
     LanguageSwitcherComponent,
     ThemeToggleComponent,
+    ZardButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="cf-shell">
       <header class="cf-shell__header">
         <a routerLink="/" class="cf-shell__brand-link" aria-label="ClaudeForge home">
-          <img src="hero.png" alt="ClaudeForge logo" class="cf-shell__logo-img" width="32" height="32" />
+          <img src="/hero.png" alt="ClaudeForge logo" class="cf-shell__logo-img" width="32" height="32" />
           <span class="cf-shell__logo">ClaudeForge</span>
         </a>
         <nav class="cf-shell__nav" [attr.aria-label]="i18n.t('shell.nav-aria')">
@@ -66,9 +66,6 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
         <div class="cf-shell__orgs">
           <cf-org-switcher />
         </div>
-        <div class="cf-shell__settings">
-          <cf-telemetry-settings />
-        </div>
         <div class="cf-shell__lang">
           <cf-language-switcher />
         </div>
@@ -79,15 +76,25 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
           @if (currentUser()) {
             <span class="cf-shell__user-email">{{ currentUser()!.email }}</span>
             <button
+              z-button
+              zType="outline"
+              zSize="sm"
               type="button"
-              class="cf-shell__sign-out"
+              class="cf-shell__sign-out cf-shell__sign-out--zard"
               (click)="onSignOut()"
               [attr.aria-label]="i18n.t('shell.auth.sign-out')"
             >
               {{ i18n.t('shell.auth.sign-out') }}
             </button>
           } @else {
-            <a routerLink="/login" class="cf-shell__sign-in" [attr.aria-label]="i18n.t('shell.auth.sign-in')">
+            <a
+              z-button
+              zType="outline"
+              zSize="sm"
+              routerLink="/login"
+              class="cf-shell__sign-in cf-shell__sign-in--zard"
+              [attr.aria-label]="i18n.t('shell.auth.sign-in')"
+            >
               {{ i18n.t('shell.auth.sign-in') }}
             </a>
           }
@@ -103,6 +110,13 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
   `,
   styles: [
     `
+      /*
+       * Shell layout styles — all colors reference semantic CSS custom property tokens (D3 rule).
+       * No hardcoded hex/rgb values; use var(--token-name) for all theme-able colors.
+       * The header uses --sidebar tokens (a dark/branded surface) to provide a distinct
+       * background separate from the main --background content area.
+       */
+
       .cf-shell {
         display: flex;
         flex-direction: column;
@@ -114,14 +128,16 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
         align-items: center;
         gap: 2rem;
         padding: 0.75rem 1.5rem;
-        background: #1a1a2e;
-        color: #fff;
+        background: var(--sidebar);
+        color: var(--sidebar-foreground);
+        border-bottom: 1px solid var(--sidebar-border);
       }
 
       .cf-shell__logo {
         font-weight: 700;
         font-size: 1.125rem;
         letter-spacing: -0.025rem;
+        color: var(--sidebar-foreground);
       }
 
       .cf-shell__brand-link {
@@ -133,7 +149,7 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
       }
 
       .cf-shell__brand-link:focus-visible {
-        outline: 2px solid #818cf8;
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
         border-radius: 0.25rem;
       }
@@ -151,17 +167,28 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
       }
 
       .cf-shell__nav-link {
-        color: rgba(255, 255, 255, 0.8);
+        color: var(--sidebar-foreground);
+        opacity: 0.8;
         text-decoration: none;
         padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        transition: color 0.2s ease;
+        border-radius: var(--radius-sm, 0.25rem);
+        transition:
+          color 0.2s ease,
+          background-color 0.2s ease,
+          opacity 0.2s ease;
       }
 
       .cf-shell__nav-link:hover,
       .cf-shell__nav-link--active {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.1);
+        opacity: 1;
+        color: var(--sidebar-foreground);
+        background: var(--sidebar-accent);
+      }
+
+      .cf-shell__nav-link:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+        opacity: 1;
       }
 
       .cf-shell__content {
@@ -178,40 +205,37 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
 
       .cf-shell__user-email {
         font-size: 0.875rem;
-        color: rgba(255, 255, 255, 0.85);
+        color: var(--sidebar-foreground);
+        opacity: 0.85;
         max-width: 14rem;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-      .cf-shell__sign-out {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.35);
-        color: rgba(255, 255, 255, 0.85);
-        padding: 0.25rem 0.75rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
+      /*
+       * ZardUI button overrides for the shell header surface.
+       * The header uses --sidebar tokens so we need the button border/text
+       * to contrast against the sidebar background rather than --background.
+       * --zard suffix classes co-exist with the existing selector classes so
+       * specs that look up .cf-shell__sign-out / .cf-shell__sign-in still work.
+       */
+      .cf-shell__sign-out--zard,
+      .cf-shell__sign-in--zard {
+        border-color: var(--sidebar-border);
+        color: var(--sidebar-foreground);
       }
 
-      .cf-shell__sign-out:hover {
-        background: rgba(255, 255, 255, 0.1);
+      .cf-shell__sign-out--zard:hover,
+      .cf-shell__sign-in--zard:hover {
+        background-color: var(--sidebar-accent);
+        color: var(--sidebar-accent-foreground);
       }
 
-      .cf-shell__sign-in {
-        color: rgba(255, 255, 255, 0.85);
-        text-decoration: none;
-        padding: 0.25rem 0.75rem;
-        border: 1px solid rgba(255, 255, 255, 0.35);
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        transition: background-color 0.2s ease;
-      }
-
-      .cf-shell__sign-in:hover {
-        background: rgba(255, 255, 255, 0.1);
+      .cf-shell__sign-out--zard:focus-visible,
+      .cf-shell__sign-in--zard:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
       }
     `,
   ],

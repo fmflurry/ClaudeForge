@@ -198,6 +198,13 @@ describe('ShellLayoutComponent — EN rendering (stays green through migration)'
     expect(brand?.textContent?.trim()).toBe('ClaudeForge');
   });
 
+  it('brand link navigates to /', () => {
+    const { fixture } = setup();
+    const brandLink = fixture.nativeElement.querySelector('.cf-shell__brand-link') as HTMLAnchorElement | null;
+    expect(brandLink).toBeTruthy();
+    expect(brandLink?.getAttribute('href')).toBe('/');
+  });
+
   it('renders Catalog nav link', () => {
     const { fixture } = setup();
     const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');

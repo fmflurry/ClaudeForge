@@ -45,6 +45,10 @@ class StubI18nFacade {
     this._activeLang.set(lang);
   });
 
+  t(key: string, _params?: Record<string, unknown>): string {
+    return key;
+  }
+
   /** Test helper — sets the active lang signal directly */
   setActive(lang: Lang): void {
     this._activeLang.set(lang);

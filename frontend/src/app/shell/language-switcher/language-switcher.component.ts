@@ -15,6 +15,57 @@ import type { Lang } from '../../core/i18n/active-language';
   standalone: true,
   imports: [TranslocoModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [
+    `
+      /*
+       * Language switcher — all colors use semantic CSS custom property tokens (D3 rule).
+       * Lives in the shell header (sidebar surface).
+       */
+      .cf-lang-switcher {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .cf-lang-switcher__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.25rem 0.5rem;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm, 0.25rem);
+        color: var(--sidebar-foreground);
+        opacity: 0.7;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background-color 0.2s ease,
+          opacity 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .cf-lang-switcher__btn[aria-pressed='true'] {
+        opacity: 1;
+        background: var(--sidebar-accent);
+        color: var(--sidebar-accent-foreground);
+        border-color: var(--sidebar-border);
+      }
+
+      .cf-lang-switcher__btn:hover {
+        opacity: 1;
+        background: var(--sidebar-accent);
+        color: var(--sidebar-accent-foreground);
+      }
+
+      .cf-lang-switcher__btn:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+        opacity: 1;
+      }
+    `,
+  ],
   template: `<div class="cf-lang-switcher" role="group" [attr.aria-label]="facade.t('language-switcher.aria')">
     @for (lang of langs; track lang) {
       <button

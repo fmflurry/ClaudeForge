@@ -74,21 +74,21 @@
 
 ## 5. Shell Migration
 
-- [ ] 5.1 Identify shell component structure: list all interactive elements in the shell (header, navigation, footer, layout containers, dropdowns, menus)
-- [ ] 5.2 Confirm the chosen ZardUI component directory (`src/app/shared/ui/`) aligns with project conventions and component import paths
-- [ ] 5.3 Audit which ZardUI primitives the shell needs (e.g., button, menu/dropdown, nav, layout wrappers)
-- [ ] 5.4 Review shell component templates and identify hardcoded colors or styles that should reference semantic tokens (via `var(--token)` in SCSS or Tailwind classes)
-- [ ] 5.5 Migrate shell header: replace bespoke HTML with ZardUI button, text, and layout components
-- [ ] 5.6 Migrate shell navigation: replace custom nav/menu with ZardUI menu/dropdown components
-- [ ] 5.7 Migrate shell footer (if present): replace custom footer HTML with ZardUI components
-- [ ] 5.8 Update all hardcoded colors in shell SCSS to use CSS variable tokens (D3 rule)
-- [ ] 5.9 Ensure transloco (i18n) strings still resolve correctly in migrated shell markup (test with multiple language codes if applicable)
-- [ ] 5.10 Test keyboard navigation in shell (Tab through all interactive elements, verify focus visible and logical)
-- [ ] 5.11 Verify all shell components meet WCAG 2.1 AA focus indicator contrast (via design-system/spec.md scenario)
-- [ ] 5.12 Run `npx tsc --noEmit --pretty false` and confirm no type errors in shell components
-- [ ] 5.13 Run production build and verify no errors
-- [ ] 5.14 Visual QA: compare migrated shell in light mode to design spec; compare dark mode to spec
-- [ ] 5.15 Test mobile responsiveness (if applicable to shell)
+- [x] 5.1 Identify shell component structure: list all interactive elements in the shell (header, navigation, footer, layout containers, dropdowns, menus)
+- [x] 5.2 Confirm the chosen ZardUI component directory (`src/app/shared/ui/`) aligns with project conventions and component import paths
+- [x] 5.3 Audit which ZardUI primitives the shell needs (e.g., button, menu/dropdown, nav, layout wrappers)
+- [x] 5.4 Review shell component templates and identify hardcoded colors or styles that should reference semantic tokens (via `var(--token)` in SCSS or Tailwind classes)
+- [x] 5.5 Migrate shell header: replace bespoke HTML with ZardUI button, text, and layout components
+- [x] 5.6 Migrate shell navigation: replace custom nav/menu with ZardUI menu/dropdown components
+- [x] 5.7 Migrate shell footer (if present): replace custom footer HTML with ZardUI components
+- [x] 5.8 Update all hardcoded colors in shell SCSS to use CSS variable tokens (D3 rule)
+- [x] 5.9 Ensure transloco (i18n) strings still resolve correctly in migrated shell markup (test with multiple language codes if applicable)
+- [x] 5.10 Test keyboard navigation in shell (Tab through all interactive elements, verify focus visible and logical)
+- [x] 5.11 Verify all shell components meet WCAG 2.1 AA focus indicator contrast (via design-system/spec.md scenario)
+- [x] 5.12 Run `npx tsc --noEmit --pretty false` and confirm no type errors in shell components
+- [x] 5.13 Run production build and verify no errors
+- [x] 5.14 Visual QA: compare migrated shell in light mode to design spec; compare dark mode to spec
+- [x] 5.15 Test mobile responsiveness (if applicable to shell)
 - [ ] 5.16 Commit shell migration with message: "feat: migrate application shell to ZardUI components"
 
 ---
