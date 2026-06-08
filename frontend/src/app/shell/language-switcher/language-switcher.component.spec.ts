@@ -49,6 +49,10 @@ class StubI18nFacade {
     return key;
   }
 
+  load(): Promise<void> {
+    return Promise.resolve();
+  }
+
   /** Test helper — sets the active lang signal directly */
   setActive(lang: Lang): void {
     this._activeLang.set(lang);

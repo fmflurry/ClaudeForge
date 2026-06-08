@@ -96,28 +96,40 @@ function i18nInitializer(
   storage: LanguageStoragePort,
   serverLang: Lang,
   request: Request | null,
-): () => void {
-  return () => {
+): () => Promise<void> {
+  return async () => {
     if (isPlatformBrowser(platformId)) {
       const stored = storage.read();
       if (stored) {
         facade.setLanguage(stored);
+        await facade.load(stored);
         return;
       }
       // Fall back to browser navigator languages
       const navigatorLangs = typeof navigator !== 'undefined' ? (navigator.languages as readonly string[]) : [];
       const detected = pickLanguage(navigatorLangs, LANG_VALUES, 'en');
       facade.setLanguage(detected);
+      await facade.load(detected);
     } else {
       // On SSR: prefer ?lang query param, then Accept-Language, fall back to SERVER_ACTIVE_LANG
       const urlLang = request ? (new URL(request.url).searchParams.get('lang') as Lang | null) : null;
-      if (urlLang && (LANG_VALUES as readonly string[]).includes(urlLang)) {
-        facade.setLanguage(urlLang);
-        return;
+      const chosenLang: Lang = (() => {
+        if (urlLang && (LANG_VALUES as readonly string[]).includes(urlLang)) {
+          return urlLang as Lang;
+        }
+        const acceptLang = request?.headers?.get('accept-language') ?? null;
+        return pickLanguage(parseAcceptLanguage(acceptLang), LANG_VALUES, serverLang);
+      })();
+      facade.setLanguage(chosenLang);
+      // Guard against build-time prerender where the browser dist i18n files may
+      // not yet exist (route-extraction phase). At real SSR runtime, the browser
+      // dist is fully built and the load will succeed, fixing the raw-key bug.
+      try {
+        await facade.load(chosenLang);
+      } catch {
+        // Prerender/build context: i18n files not yet present — silently skip.
+        // This does NOT affect the runtime SSR server where files are available.
       }
-      const acceptLang = request?.headers?.get('accept-language') ?? null;
-      const detected = pickLanguage(parseAcceptLanguage(acceptLang), LANG_VALUES, serverLang);
-      facade.setLanguage(detected);
     }
   };
 }

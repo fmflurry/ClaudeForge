@@ -4,6 +4,7 @@
  */
 
 import { inject, Injectable, Signal, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { LanguageStoragePort } from '../../core/i18n/language-storage.port';
 import { LANG_VALUES, DEFAULT_LANG } from '../../core/i18n/active-language';
@@ -46,5 +47,15 @@ export class I18nFacade {
     this.transloco.setActiveLang(lang);
     this.storage.write(lang);
     this._activeLang.set(lang);
+  }
+
+  /**
+   * Eagerly loads the translation file for the given language so that
+   * synchronous `t()` calls work immediately after awaiting this method.
+   * Used by APP_INITIALIZER to block bootstrap/SSR render until translations
+   * are available.
+   */
+  load(lang: Lang): Promise<void> {
+    return firstValueFrom(this.transloco.load(lang)).then(() => undefined);
   }
 }
