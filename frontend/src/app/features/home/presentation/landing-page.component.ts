@@ -44,12 +44,12 @@ const FEATURED_LIMIT = 6;
           {{ i18n.t('home.hero-tagline') }}
         </p>
 
-        <div class="lp-hero__ctas" role="group" aria-label="Primary actions">
-          <a routerLink="/catalog" class="lp-btn lp-btn--primary" aria-label="Browse all plugins">{{
+        <div class="lp-hero__ctas" role="group" [attr.aria-label]="i18n.t('home.aria.primary-actions')">
+          <a routerLink="/catalog" class="lp-btn lp-btn--primary" [attr.aria-label]="i18n.t('home.aria.browse-all')">{{
             i18n.t('home.browse-plugins')
           }}</a>
 
-          <a routerLink="/docs" class="lp-btn lp-btn--secondary" aria-label="Learn how to publish a plugin">{{
+          <a routerLink="/docs" class="lp-btn lp-btn--secondary" [attr.aria-label]="i18n.t('home.aria.learn-publish')">{{
             i18n.t('home.publish-plugin')
           }}</a>
 
@@ -109,7 +109,7 @@ const FEATURED_LIMIT = 6;
         </h2>
 
         @if (isLoadingPlugins()) {
-          <div class="lp-featured__loading" aria-busy="true" role="status" aria-label="Loading popular plugins">
+          <div class="lp-featured__loading" aria-busy="true" role="status" [attr.aria-label]="i18n.t('home.aria.loading-plugins')">
             {{ i18n.t('home.loading-plugins') }}
           </div>
         }
@@ -117,7 +117,7 @@ const FEATURED_LIMIT = 6;
         @if (!isLoadingPlugins() && hasError()) {
           <div role="alert" class="lp-featured__error">
             {{ i18n.t('home.error-plugins') }}
-            <a routerLink="/catalog" class="lp-link">browse the full catalog</a>.
+            <a routerLink="/catalog" class="lp-link">{{ i18n.t('home.error.browse-catalog') }}</a>.
           </div>
         }
 
@@ -126,7 +126,7 @@ const FEATURED_LIMIT = 6;
         }
 
         @if (!isLoadingPlugins() && !hasError() && featuredPlugins().length > 0) {
-          <ul class="lp-featured__grid" role="list" aria-label="Popular plugins">
+          <ul class="lp-featured__grid" role="list" [attr.aria-label]="i18n.t('home.aria.popular-plugins')">
             @for (plugin of featuredPlugins(); track plugin.pluginId) {
               <li class="lp-plugin-card">
                 <div class="lp-plugin-card__header">
@@ -137,13 +137,13 @@ const FEATURED_LIMIT = 6;
                 </div>
                 <p class="lp-plugin-card__description">{{ plugin.description }}</p>
                 <div class="lp-plugin-card__meta">
-                  <span class="lp-plugin-card__author">by {{ plugin.author }}</span>
-                  <span class="lp-plugin-card__downloads" aria-label="{{ plugin.downloadCount }} downloads">
-                    {{ formatDownloads(plugin.downloadCount) }} downloads
+                  <span class="lp-plugin-card__author">{{ i18n.t('home.plugin-card.by') }} {{ plugin.author }}</span>
+                  <span class="lp-plugin-card__downloads" [attr.aria-label]="i18n.t('home.aria.plugin-downloads', { count: plugin.downloadCount })">
+                    {{ formatDownloads(plugin.downloadCount) }} {{ i18n.t('home.plugin-card.downloads') }}
                   </span>
                 </div>
                 @if (plugin.types.length > 0) {
-                  <div class="lp-plugin-card__tags" aria-label="Plugin types">
+                  <div class="lp-plugin-card__tags" [attr.aria-label]="i18n.t('home.aria.plugin-types')">
                     @for (type of plugin.types; track type) {
                       <cf-badge>{{ type }}</cf-badge>
                     }
@@ -167,11 +167,11 @@ const FEATURED_LIMIT = 6;
       <div class="lp-section-inner">
         <h2 id="lp-how-title" class="lp-section-title">{{ i18n.t('home.how-heading') }}</h2>
         <ol class="lp-how__steps" role="list">
-          @for (step of howItWorksSteps; track step.title) {
+          @for (step of howItWorksSteps; track step.titleKey) {
             <li class="lp-how__step">
               <span class="lp-how__icon" aria-hidden="true">{{ step.icon }}</span>
-              <h3 class="lp-how__step-title">{{ step.title }}</h3>
-              <p class="lp-how__step-desc">{{ step.description }}</p>
+              <h3 class="lp-how__step-title">{{ i18n.t(step.titleKey) }}</h3>
+              <p class="lp-how__step-desc">{{ i18n.t(step.descKey) }}</p>
             </li>
           }
         </ol>
@@ -182,13 +182,13 @@ const FEATURED_LIMIT = 6;
     <!-- FOOTER                                                              -->
     <!-- ================================================================= -->
     <footer class="lp-footer" role="contentinfo">
-      <nav class="lp-footer__nav" aria-label="Footer navigation">
+      <nav class="lp-footer__nav" [attr.aria-label]="i18n.t('home.aria.footer-nav')">
         <a routerLink="/catalog" class="lp-footer__link">{{ i18n.t('home.footer-catalog') }}</a>
         <a routerLink="/docs" class="lp-footer__link">{{ i18n.t('home.footer-docs') }}</a>
         <a routerLink="/search" class="lp-footer__link">{{ i18n.t('home.footer-search') }}</a>
         <a routerLink="/dashboard" class="lp-footer__link">{{ i18n.t('home.footer-my-plugins') }}</a>
       </nav>
-      <p class="lp-footer__copy">&copy; {{ currentYear }} ClaudeForge — A plugin marketplace for Claude Code</p>
+      <p class="lp-footer__copy">&copy; {{ currentYear }} {{ i18n.t('home.footer-copy') }}</p>
     </footer>
   `,
   styles: [
@@ -539,28 +539,28 @@ export class LandingPageComponent implements OnInit {
 
   readonly howItWorksSteps: readonly {
     readonly icon: string;
-    readonly title: string;
-    readonly description: string;
+    readonly titleKey: string;
+    readonly descKey: string;
   }[] = [
     {
       icon: '🔍',
-      title: 'Discover',
-      description: 'Browse hundreds of community plugins for Claude Code — filter by type, language, or use case.',
+      titleKey: 'home.how.step-discover-title',
+      descKey: 'home.how.step-discover-desc',
     },
     {
       icon: '⚡',
-      title: 'Install via CLI',
-      description: 'One command installs any plugin: `claude-forge install <slug>`. No configuration needed.',
+      titleKey: 'home.how.step-install-title',
+      descKey: 'home.how.step-install-desc',
     },
     {
       icon: '🚀',
-      title: 'Publish',
-      description: 'Package your automation as a plugin and publish it to the marketplace in minutes.',
+      titleKey: 'home.how.step-publish-title',
+      descKey: 'home.how.step-publish-desc',
     },
     {
       icon: '👥',
-      title: 'Share with your team',
-      description: 'Create a team workspace to share a curated set of plugins across your organisation.',
+      titleKey: 'home.how.step-share-title',
+      descKey: 'home.how.step-share-desc',
     },
   ];
 
@@ -568,19 +568,16 @@ export class LandingPageComponent implements OnInit {
     this.catalogFacade.loadPlugins({ sort: 'downloadCount', order: 'desc' });
 
     this.seoMetadata.setMetadata({
-      title: 'ClaudeForge — The Plugin Marketplace for Claude Code',
-      description:
-        'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
-      ogTitle: 'ClaudeForge — The Plugin Marketplace for Claude Code',
-      ogDescription:
-        'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+      title: this.i18n.t('home.seo.title'),
+      description: this.i18n.t('home.seo.description'),
+      ogTitle: this.i18n.t('home.seo.og-title'),
+      ogDescription: this.i18n.t('home.seo.og-description'),
       ogType: 'website',
       ogUrl: 'https://claudeforge.dev/',
       ogImage: 'https://claudeforge.dev/assets/og-image.png',
       twitterCard: 'summary_large_image',
-      twitterTitle: 'ClaudeForge — The Plugin Marketplace for Claude Code',
-      twitterDescription:
-        'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+      twitterTitle: this.i18n.t('home.seo.twitter-title'),
+      twitterDescription: this.i18n.t('home.seo.twitter-description'),
     });
 
     this.structuredData.injectOrganizationAndWebSite({

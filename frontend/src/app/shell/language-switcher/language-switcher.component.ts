@@ -15,7 +15,7 @@ import type { Lang } from '../../core/i18n/active-language';
   standalone: true,
   imports: [TranslocoModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<div class="cf-lang-switcher" role="group" aria-label="Language switcher">
+  template: `<div class="cf-lang-switcher" role="group" [attr.aria-label]="facade.t('language-switcher.aria')">
     @for (lang of langs; track lang) {
       <button
         type="button"
