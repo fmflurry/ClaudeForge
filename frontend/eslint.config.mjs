@@ -25,6 +25,18 @@ export default tseslint.config(
     },
   },
   {
+    // ZardUI scaffolded library files use `z-` / `zard` selector prefixes by design.
+    // These are not app-authored components, so the project's `cf` prefix rule is suppressed.
+    files: [
+      'src/app/shared/components/**/*.ts',
+      'src/app/shared/core/**/*.ts',
+    ],
+    rules: {
+      '@angular-eslint/component-selector': 'off',
+      '@angular-eslint/directive-selector': 'off',
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [
       ...angular.configs.templateRecommended,

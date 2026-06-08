@@ -61,6 +61,7 @@ import { DeviceActivationFacade } from './features/device-activation/application
 import { MarketplaceStatsPort } from './features/home/domain/ports/marketplace-stats.port';
 import { MarketplaceStatsHttpAdapter } from './features/home/infrastructure/adapter/marketplace-stats-http.adapter';
 import { HomeMetricsFacade } from './features/home/application/facades/home-metrics.facade';
+import { provideZard } from './shared/core/provider/providezard';
 
 /**
  * Reads the runtime API base URL from:
@@ -124,6 +125,7 @@ function i18nInitializer(
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideZard(),
     provideRouter(routes),
     provideClientHydration(withEventReplay(), withHttpTransferCacheOptions({ includePostRequests: false })),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),

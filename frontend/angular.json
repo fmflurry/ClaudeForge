@@ -41,6 +41,7 @@
               }
             ],
             "styles": [
+              "src/theme.css",
               "src/styles.scss"
             ]
           },
