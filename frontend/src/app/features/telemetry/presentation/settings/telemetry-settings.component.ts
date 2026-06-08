@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, Signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { TelemetryFacade } from '../../application/facades/telemetry.facade';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
@@ -11,7 +10,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   selector: 'cf-telemetry-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('telemetry')],
   template: `
     <div class="cf-telemetry-settings">
       <label class="cf-telemetry-settings__label">

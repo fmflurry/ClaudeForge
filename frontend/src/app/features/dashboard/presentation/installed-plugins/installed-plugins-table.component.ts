@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { DashboardFacade } from '../../application/facades/dashboard.facade';
 import type { InstalledPlugin } from '../../domain/models/dashboard.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
@@ -9,7 +8,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
-  providers: [provideTranslocoScope('dashboard')],
   template: `
     @if (isLoading()) {
       <div data-testid="loading" aria-busy="true" class="loading">{{ i18n.t('dashboard.loading') }}</div>

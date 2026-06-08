@@ -6,7 +6,6 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrganizationsFacade } from '../../application/facades/organizations.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
@@ -15,7 +14,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   selector: 'cf-create-org',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-create-org">

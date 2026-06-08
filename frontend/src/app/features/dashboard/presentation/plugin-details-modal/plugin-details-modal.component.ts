@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import type { InstalledPlugin } from '../../domain/models/dashboard.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
@@ -8,7 +7,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
-  providers: [provideTranslocoScope('dashboard')],
   template: `
     <div class="modal-overlay">
       <div class="modal-content" role="dialog" aria-modal="true">

@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, Signal, inject, signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { TeamContextFacade } from '../../application/facades/team-context.facade';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
@@ -14,7 +13,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   standalone: true,
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('team-context')],
   template: `
     <div class="team-switcher" data-testid="team-switcher">
       @if (!isEditing()) {

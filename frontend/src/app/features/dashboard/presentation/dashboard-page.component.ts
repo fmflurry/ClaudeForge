@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { DashboardFacade } from '../application/facades/dashboard.facade';
 import { InstalledPluginsTableComponent } from './installed-plugins/installed-plugins-table.component';
 import { PluginDetailsModalComponent } from './plugin-details-modal/plugin-details-modal.component';
@@ -14,7 +13,6 @@ const UPDATE_CHECK_INTERVAL_MS = 300_000;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InstalledPluginsTableComponent, PluginDetailsModalComponent],
-  providers: [provideTranslocoScope('dashboard')],
   template: `
     <div data-testid="dashboard-page" class="dashboard-page">
       @if (facade.hasUpdates()) {

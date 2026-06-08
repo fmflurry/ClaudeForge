@@ -6,7 +6,6 @@
 
 import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { DocsFacade } from '../../application/facades/docs.facade';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
@@ -15,7 +14,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe],
-  providers: [provideTranslocoScope('docs')],
   template: `
     @if (facade.isLoadingDoc()) {
       <div aria-busy="true" data-testid="loading" class="loading">{{ i18n.t('docs.loading-plugin-doc') }}</div>

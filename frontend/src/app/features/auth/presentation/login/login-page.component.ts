@@ -5,7 +5,6 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, Signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { AuthFacade } from '../../application/facades/auth.facade';
 import type { AuthProvider, AuthStatus } from '../../domain/models/auth.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
@@ -14,7 +13,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   selector: 'cf-login-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('auth')],
   template: `
     <div class="cf-login">
       <div class="cf-login__card">

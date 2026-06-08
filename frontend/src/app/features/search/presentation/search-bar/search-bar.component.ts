@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import type { SearchFilterQuery } from '../../domain/rules/search-filter.rules';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
@@ -9,7 +8,6 @@ export type SearchFilterOutput = Partial<Pick<SearchFilterQuery, 'types' | 'lang
   selector: 'cf-search-bar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('search')],
   template: `
     <div class="cf-search-bar">
       <input

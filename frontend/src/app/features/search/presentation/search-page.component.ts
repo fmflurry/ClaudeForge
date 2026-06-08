@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, Signal, signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { SearchFacade } from '../application/facades/search.facade';
 import { SearchBarComponent } from './search-bar/search-bar.component';
 import { FilterChipsComponent, FilterChipsOutput } from './filter-chips/filter-chips.component';
@@ -12,7 +11,6 @@ import { I18nFacade } from '../../../application/i18n/i18n.facade';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SearchBarComponent, FilterChipsComponent, SearchResultsComponent],
-  providers: [provideTranslocoScope('search')],
   template: `
     <div class="cf-search-page" data-testid="search-page">
       <cf-search-bar [isLoading]="isLoading()" (searchSubmitted)="onSearch($event)" />

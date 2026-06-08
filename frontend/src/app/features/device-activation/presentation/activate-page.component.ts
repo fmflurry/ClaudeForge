@@ -11,7 +11,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, Signal } from '@angular/core';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { DeviceActivationFacade } from '../application/facades/device-activation.facade';
 import type { DeviceActivationErrorReason, DeviceActivationStatus } from '../domain/ports/device-activation.port';
 import { I18nFacade } from '../../../application/i18n/i18n.facade';
@@ -21,7 +20,6 @@ import { I18nFacade } from '../../../application/i18n/i18n.facade';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  providers: [provideTranslocoScope('device-activation')],
   template: `
     <div class="cf-activate">
       <div class="cf-activate__card">

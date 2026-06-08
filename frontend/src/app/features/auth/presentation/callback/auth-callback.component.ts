@@ -6,7 +6,6 @@
 
 import { ChangeDetectionStrategy, Component, inject, OnInit, Signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { AuthFacade } from '../../application/facades/auth.facade';
 import type { AuthStatus } from '../../domain/models/auth.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
@@ -15,7 +14,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   selector: 'cf-auth-callback',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('auth')],
   template: `
     <div class="cf-callback">
       @if (authStatus() === 'error') {

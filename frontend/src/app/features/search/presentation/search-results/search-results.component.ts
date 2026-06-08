@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, Signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { SearchFacade } from '../../application/facades/search.facade';
 import type { DiscoveryCriteria, DiscoveryResult, SearchResult } from '../../domain/models/search.models';
 import type { SearchFilterQuery } from '../../domain/rules/search-filter.rules';
@@ -11,7 +10,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [EmptyStateComponent],
-  providers: [provideTranslocoScope('search')],
   template: `
     @if (isLoading()) {
       <div aria-busy="true" data-testid="loading" class="loading">{{ i18n.t('search.loading-results') }}</div>

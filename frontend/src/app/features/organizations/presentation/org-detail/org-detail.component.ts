@@ -6,7 +6,6 @@
 
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrganizationsFacade } from '../../application/facades/organizations.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 import { OrgMembersComponent } from '../org-members/org-members.component';
@@ -19,7 +18,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, OrgMembersComponent, OrgInvitationsComponent],
-  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-org-detail">

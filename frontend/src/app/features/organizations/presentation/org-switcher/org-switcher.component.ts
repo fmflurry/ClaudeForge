@@ -5,7 +5,6 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrgContextFacade } from '../../application/facades/org-context.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
@@ -14,7 +13,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   selector: 'cf-org-switcher',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-org-switcher">

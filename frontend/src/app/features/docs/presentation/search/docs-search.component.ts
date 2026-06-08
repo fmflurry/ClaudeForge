@@ -4,7 +4,6 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { DocsFacade } from '../../application/facades/docs.facade';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 import type { DocSearchResult } from '../../domain/models/docs.models';
@@ -13,7 +12,6 @@ import type { DocSearchResult } from '../../domain/models/docs.models';
   selector: 'cf-docs-search',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('docs')],
   template: `
     <div>
       <input

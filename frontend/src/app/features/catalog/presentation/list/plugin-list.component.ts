@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { CatalogFacade } from '../../application/facades/catalog.facade';
 import type { PaginationMeta, PluginSummary } from '../../domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../../domain/rules/catalog-filter.rules';
@@ -12,7 +11,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [EmptyStateComponent, PaginationComponent],
-  providers: [provideTranslocoScope('catalog')],
   template: `
     @if (isLoading()) {
       <div aria-busy="true" data-testid="loading" class="loading">{{ i18n.t('catalog.loading-plugins') }}</div>

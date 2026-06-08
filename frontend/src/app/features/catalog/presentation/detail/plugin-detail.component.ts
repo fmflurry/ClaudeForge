@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { CatalogFacade } from '../../application/facades/catalog.facade';
 import type { PluginDetail } from '../../domain/models/catalog.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
@@ -9,7 +8,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
-  providers: [provideTranslocoScope('catalog')],
   template: `
     <div class="cf-plugin-detail">
       <button

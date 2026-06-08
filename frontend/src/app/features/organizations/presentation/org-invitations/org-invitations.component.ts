@@ -6,7 +6,6 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
-import { provideTranslocoScope } from '@jsverse/transloco';
 import { OrganizationsFacade } from '../../application/facades/organizations.facade';
 import { OrgContextFacade } from '../../application/facades/org-context.facade';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
@@ -18,7 +17,6 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   selector: 'cf-org-invitations',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('organizations')],
   template: `
     @if (authFacade.isAuthenticated()) {
       <div class="cf-org-inv">
