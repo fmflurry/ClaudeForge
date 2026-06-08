@@ -43,8 +43,7 @@ import { ZardButtonComponent } from '../shared/components/button';
     <div class="cf-shell">
       <header class="cf-shell__header">
         <a routerLink="/" class="cf-shell__brand-link" aria-label="ClaudeForge home">
-          <img src="/hero.png" alt="ClaudeForge logo" class="cf-shell__logo-img" width="32" height="32" />
-          <span class="cf-shell__logo">ClaudeForge</span>
+          <img src="/hero.png" alt="ClaudeForge" class="cf-shell__logo-img" />
         </a>
         <nav class="cf-shell__nav" [attr.aria-label]="i18n.t('shell.nav-aria')">
           <a routerLink="/catalog" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
@@ -127,17 +126,11 @@ import { ZardButtonComponent } from '../shared/components/button';
         display: flex;
         align-items: center;
         gap: 2rem;
-        padding: 0.75rem 1.5rem;
+        padding: 0.875rem 1.5rem;
+        min-height: 80px;
         background: var(--sidebar);
         color: var(--sidebar-foreground);
         border-bottom: 1px solid var(--sidebar-border);
-      }
-
-      .cf-shell__logo {
-        font-weight: 700;
-        font-size: 1.125rem;
-        letter-spacing: -0.025rem;
-        color: var(--sidebar-foreground);
       }
 
       .cf-shell__brand-link {
@@ -156,8 +149,9 @@ import { ZardButtonComponent } from '../shared/components/button';
 
       .cf-shell__logo-img {
         display: block;
-        width: 32px;
-        height: 32px;
+        height: 64px;
+        width: auto;
+        object-fit: contain;
         flex-shrink: 0;
       }
 
