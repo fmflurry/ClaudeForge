@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/assets/claudeforge-hero.png" alt="ClaudeForge hero" width="900">
+</p>
+
 <h1 align="center">ClaudeForge</h1>
 
 <p align="center">
