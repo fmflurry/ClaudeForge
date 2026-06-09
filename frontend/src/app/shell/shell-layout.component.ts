@@ -1,9 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit, Signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { TeamContextFacade } from '../features/team-context/application/facades/team-context.facade';
-import { TeamContextStore } from '../features/team-context/application/store/team-context.store';
-import { TeamWelcomeOverlayComponent } from '../features/team-context/presentation/welcome-overlay/team-welcome-overlay.component';
-import { TeamSwitcherComponent } from '../features/team-context/presentation/team-switcher/team-switcher.component';
 import { AuthFacade } from '../features/auth/application/facades/auth.facade';
 import type { CurrentUser } from '../features/auth/domain/models/auth.models';
 import { OrgSwitcherComponent } from '../features/organizations/presentation/org-switcher/org-switcher.component';
@@ -26,13 +22,11 @@ import { ZardButtonComponent } from '../shared/components/button';
 @Component({
   selector: 'cf-shell-layout',
   standalone: true,
-  providers: [TeamContextStore, TeamContextFacade, AuthFacade, OrgContextFacade],
+  providers: [AuthFacade, OrgContextFacade],
   imports: [
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
-    TeamWelcomeOverlayComponent,
-    TeamSwitcherComponent,
     OrgSwitcherComponent,
     LanguageSwitcherComponent,
     ThemeToggleComponent,
@@ -49,60 +43,55 @@ import { ZardButtonComponent } from '../shared/components/button';
           <a routerLink="/catalog" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
             {{ i18n.t('shell.nav.catalog') }}
           </a>
-          <a routerLink="/search" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
-            {{ i18n.t('shell.nav.search') }}
-          </a>
-          <a routerLink="/dashboard" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
-            {{ i18n.t('shell.nav.dashboard') }}
-          </a>
+          @if (currentUser()) {
+            <a routerLink="/dashboard" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
+              {{ i18n.t('shell.nav.dashboard') }}
+            </a>
+          }
           <a routerLink="/docs" routerLinkActive="cf-shell__nav-link--active" class="cf-shell__nav-link">
             {{ i18n.t('shell.nav.docs') }}
           </a>
         </nav>
-        <div class="cf-shell__team">
-          <cf-team-switcher />
-        </div>
         <div class="cf-shell__orgs">
           <cf-org-switcher />
         </div>
-        <div class="cf-shell__lang">
-          <cf-language-switcher />
-        </div>
-        <div class="cf-shell__theme">
-          <cf-theme-toggle />
-        </div>
-        <div class="cf-shell__auth" [attr.aria-label]="i18n.t('shell.aria.user-account')">
-          @if (currentUser()) {
-            <span class="cf-shell__user-email">{{ currentUser()!.email }}</span>
-            <button
-              z-button
-              zType="outline"
-              zSize="sm"
-              type="button"
-              class="cf-shell__sign-out cf-shell__sign-out--zard"
-              (click)="onSignOut()"
-              [attr.aria-label]="i18n.t('shell.auth.sign-out')"
-            >
-              {{ i18n.t('shell.auth.sign-out') }}
-            </button>
-          } @else {
-            <a
-              z-button
-              zType="outline"
-              zSize="sm"
-              routerLink="/login"
-              class="cf-shell__sign-in cf-shell__sign-in--zard"
-              [attr.aria-label]="i18n.t('shell.auth.sign-in')"
-            >
-              {{ i18n.t('shell.auth.sign-in') }}
-            </a>
-          }
+        <div class="cf-shell__controls">
+          <div class="cf-shell__lang">
+            <cf-language-switcher />
+          </div>
+          <div class="cf-shell__theme">
+            <cf-theme-toggle />
+          </div>
+          <div class="cf-shell__auth" [attr.aria-label]="i18n.t('shell.aria.user-account')">
+            @if (currentUser()) {
+              <span class="cf-shell__user-email">{{ currentUser()!.email }}</span>
+              <button
+                z-button
+                zType="outline"
+                zSize="sm"
+                type="button"
+                class="cf-shell__sign-out cf-shell__sign-out--zard"
+                (click)="onSignOut()"
+                [attr.aria-label]="i18n.t('shell.auth.sign-out')"
+              >
+                {{ i18n.t('shell.auth.sign-out') }}
+              </button>
+            } @else {
+              <a
+                z-button
+                zType="outline"
+                zSize="sm"
+                routerLink="/login"
+                class="cf-shell__sign-in cf-shell__sign-in--zard"
+                [attr.aria-label]="i18n.t('shell.auth.sign-in')"
+              >
+                {{ i18n.t('shell.auth.sign-in') }}
+              </a>
+            }
+          </div>
         </div>
       </header>
       <main class="cf-shell__content">
-        @if (facade.needsInit()) {
-          <cf-team-welcome />
-        }
         <router-outlet />
       </main>
     </div>
@@ -142,7 +131,7 @@ import { ZardButtonComponent } from '../shared/components/button';
       }
 
       .cf-shell__brand-link:focus-visible {
-        outline: 2px solid var(--ring);
+        outline: 2px solid var(--sidebar-ring);
         outline-offset: 2px;
         border-radius: 0.25rem;
       }
@@ -180,7 +169,7 @@ import { ZardButtonComponent } from '../shared/components/button';
       }
 
       .cf-shell__nav-link:focus-visible {
-        outline: 2px solid var(--ring);
+        outline: 2px solid var(--sidebar-ring);
         outline-offset: 2px;
         opacity: 1;
       }
@@ -190,8 +179,16 @@ import { ZardButtonComponent } from '../shared/components/button';
         padding: 1.5rem;
       }
 
-      .cf-shell__auth {
+      /* Right-aligned cluster: language → theme → auth (D8 revamp-landing-page).
+         margin-left:auto pushes this entire cluster to the far right of the header. */
+      .cf-shell__controls {
         margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .cf-shell__auth {
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -216,7 +213,11 @@ import { ZardButtonComponent } from '../shared/components/button';
        */
       .cf-shell__sign-out--zard,
       .cf-shell__sign-in--zard {
-        border-color: var(--sidebar-border);
+        /* Transparent so the navy header shows through behind the light text/border.
+           Without this, the ZardUI outline default (--background) renders a light fill,
+           putting near-white --sidebar-foreground text on a near-white surface. */
+        background-color: transparent;
+        border-color: var(--sidebar-foreground);
         color: var(--sidebar-foreground);
       }
 
@@ -228,14 +229,13 @@ import { ZardButtonComponent } from '../shared/components/button';
 
       .cf-shell__sign-out--zard:focus-visible,
       .cf-shell__sign-in--zard:focus-visible {
-        outline: 2px solid var(--ring);
+        outline: 2px solid var(--sidebar-ring);
         outline-offset: 2px;
       }
     `,
   ],
 })
 export class ShellLayoutComponent implements OnInit, OnDestroy {
-  protected readonly facade = inject(TeamContextFacade);
   private readonly authFacade = inject(AuthFacade);
   private readonly catalogFacade = inject(CatalogFacade);
   protected readonly i18n = inject(I18nFacade);
@@ -245,8 +245,6 @@ export class ShellLayoutComponent implements OnInit, OnDestroy {
   private unsubscribeOrgSwitch: (() => void) | undefined;
 
   ngOnInit(): void {
-    this.facade.init();
-
     // Subscribe to org-switch events via the contextRegistry singleton.
     // No cross-domain facade injection — catalog reload is triggered by the event.
     this.unsubscribeOrgSwitch = contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, () => {
