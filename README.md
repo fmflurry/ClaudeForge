@@ -1,7 +1,3 @@
-<p align="center">
-  <img src=".github/assets/claudeforge-hero.png" alt="ClaudeForge forge and robot hero art" width="900">
-</p>
-
 <h1 align="center">ClaudeForge</h1>
 
 <p align="center">
@@ -14,7 +10,7 @@
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white&style=for-the-badge">
   <img alt="Angular 22" src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white&style=for-the-badge">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white&style=for-the-badge">
-  <img alt="Node.js >= 22.22.3" src="https://img.shields.io/badge/Node.js-%3E%3D22.22.3-339933?logo=nodedotjs&logoColor=white&style=for-the-badge">
+  <img alt="Node.js 22.22.3+" title="Node.js 22.22.3+" src="https://img.shields.io/badge/Node.js-22.22.3%2B-339933?logo=nodedotjs&logoColor=white&style=for-the-badge">
   <img alt="PostgreSQL 16" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white&style=for-the-badge">
   <img alt="Docker Compose" src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white&style=for-the-badge">
   <a href="https://github.com/fmflurry/ClaudeForge/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/fmflurry/ClaudeForge?style=for-the-badge"></a>
