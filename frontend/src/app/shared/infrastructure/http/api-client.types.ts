@@ -200,3 +200,18 @@ export interface MarketplaceStatsDto {
   publisherCount: number;
   categoryCount: number;
 }
+
+// ---------------------------------------------------------------------------
+// Featured Plugin
+// ---------------------------------------------------------------------------
+
+export interface FeaturedPluginDto {
+  pluginId: string;
+  name: string;
+  slug: string;
+  latestVersion: string | null;
+}
+
+export interface FeaturedPluginEnvelope {
+  data: FeaturedPluginDto;
+}

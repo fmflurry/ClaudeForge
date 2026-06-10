@@ -1,0 +1,183 @@
+# ─── Analysis Service CI/CD ──────────────────────────────────────────────────
+# Trigger: push/PR to main affecting analysis-related code.
+# 
+# Install to .github/workflows/analysis-ci.yml when ready to activate.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Analysis Service CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/ClaudeForge.AnalysisWorker/**'
+      - 'backend/ClaudeForge.Infrastructure/**'
+      - 'backend/ClaudeForge.Core/**'
+      - 'openspec/changes/cli-plugin-marketplace-security/devops/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/ClaudeForge.AnalysisWorker/**'
+      - 'backend/ClaudeForge.Infrastructure/**'
+      - 'backend/ClaudeForge.Core/**'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  IMAGE_NAME: 'claudeforge/analysis-worker'
+  REGISTRY: 'ghcr.io'
+
+jobs:
+  # ─── Build & Test ───────────────────────────────────────────────────────────
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: claudeforge_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        working-directory: backend
+        run: dotnet restore ClaudeForge.AnalysisWorker/ClaudeForge.AnalysisWorker.csproj
+
+      - name: Build
+        working-directory: backend
+        run: dotnet build ClaudeForge.AnalysisWorker/ClaudeForge.AnalysisWorker.csproj \
+              --no-restore --nologo -clp:ErrorsOnly
+
+      - name: Test
+        working-directory: backend
+        env:
+          ConnectionStrings__Postgres: "Host=localhost;Port=5432;Database=claudeforge_test;Username=postgres;Password=testpassword"
+        run: |
+          # Run tests with analysis-related filters, or full suite
+          dotnet test ClaudeForge.Tests/ClaudeForge.Tests.csproj \
+            --no-build --nologo \
+            --filter "FullyQualifiedName~Analysis|FullyQualifiedName~Karma|FullyQualifiedName~Appeal|FullyQualifiedName~SafeZone" \
+            --verbosity normal
+
+      - name: Publish
+        working-directory: backend
+        run: dotnet publish ClaudeForge.AnalysisWorker/ClaudeForge.AnalysisWorker.csproj \
+              -c Release -o /tmp/publish --no-restore
+
+      - name: Upload published artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-worker-publish
+          path: /tmp/publish
+          if-no-files-found: error
+
+  # ─── Security Scan ──────────────────────────────────────────────────────────
+  security-scan:
+    name: Security Scan (Semgrep)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/default
+            p/owasp-top-ten
+            p/security-audit
+            p/cheatsheets
+          # Scan the entire backend for cross-cutting issues
+          auditOn: push
+
+  # ─── Docker Build & Push ────────────────────────────────────────────────────
+  docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [build]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: openspec/changes/cli-plugin-marketplace-security/devops/Dockerfile.analysis-worker
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ─── Deploy (manual approval gate) ──────────────────────────────────────────
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [docker, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://claudeforge.dev
+    # Manual approval gate — requires reviewer to approve in GitHub UI
+    # Configure this environment in GitHub repo Settings > Environments.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Deploy analysis workers
+        env:
+          CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
+          DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
+          API_KEY: ${{ secrets.API_KEY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          chmod +x openspec/changes/cli-plugin-marketplace-security/devops/deploy-analysis.sh
+          openspec/changes/cli-plugin-marketplace-security/devops/deploy-analysis.sh

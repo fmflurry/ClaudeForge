@@ -52,6 +52,508 @@
         }
       }
     },
+    "/api/v1/plugins/submit": {
+      "post": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "SubmitPluginForAnalysis",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/{pluginId}/analysis": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetPluginAnalysis",
+        "parameters": [
+          {
+            "name": "pluginId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/{pluginId}/appeal": {
+      "post": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "SubmitPluginAppeal",
+        "parameters": [
+          {
+            "name": "pluginId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetPluginAppealStatus",
+        "parameters": [
+          {
+            "name": "pluginId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/safe-zone/{orgId}/plugins/{pluginId}/approve": {
+      "post": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "ApprovePluginForSafeZone",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pluginId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/safe-zone/{orgId}/plugins": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "ListOrgSafePlugins",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/safe-zone/{orgId}/pending": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "ListPendingSafeZonePlugins",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/safe-zone/global": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "ListGlobalSafeZonePlugins",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/safe-zone/{orgId}/plugins/{pluginId}/block": {
+      "post": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "BlockGlobalPluginForOrg",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pluginId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/safe-zone/{orgId}/plugins/{pluginId}/unblock": {
+      "post": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "UnblockGlobalPluginForOrg",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pluginId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/safe-zone/{orgId}/requests": {
+      "post": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "RequestSafeZoneApproval",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/control-center/metrics": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetControlCenterMetrics",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/control-center/appeals": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "ListControlCenterAppeals",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/control-center/appeals/{appealId}": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetControlCenterAppealDetail",
+        "parameters": [
+          {
+            "name": "appealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "ResolveControlCenterAppeal",
+        "parameters": [
+          {
+            "name": "appealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/control-center/config/analysis": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetAnalysisConfig",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "UpdateAnalysisConfig",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/control-center/config/history": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetAnalysisConfigHistory",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/control-center/audit-logs": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetAuditLogs",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetNotifications",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/{notificationId}/read": {
+      "put": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "MarkNotificationRead",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/read-all": {
+      "put": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "MarkAllNotificationsRead",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/preferences": {
+      "put": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "UpdateNotificationPreferences",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reputation/leaderboard": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetReputationLeaderboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reputation/authors/{authorId}": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetAuthorReputation",
+        "parameters": [
+          {
+            "name": "authorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reputation/badges": {
+      "get": {
+        "tags": [
+          "SecurityAnalysis"
+        ],
+        "operationId": "GetAvailableBadges",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/plugins/search": {
       "get": {
         "tags": [
@@ -1387,6 +1889,9 @@
   "tags": [
     {
       "name": "Telemetry"
+    },
+    {
+      "name": "SecurityAnalysis"
     },
     {
       "name": "PluginSearch"

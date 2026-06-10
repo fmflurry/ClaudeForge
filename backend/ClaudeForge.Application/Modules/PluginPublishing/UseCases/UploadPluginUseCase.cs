@@ -7,6 +7,7 @@ using ClaudeForge.Core.Domain.Plugins;
 using ClaudeForge.Core.Ports;
 using ClaudeForge.Core.Shared.Authorization;
 using ClaudeForge.Core.Shared.Exceptions;
+using ICategoryLookupPort = ClaudeForge.Application.Modules.PluginPublishing.Ports.ICategoryLookupPort;
 
 namespace ClaudeForge.Application.Modules.PluginPublishing.UseCases;
 
@@ -31,6 +32,7 @@ public sealed class UploadPluginUseCase
     private readonly ICurrentUser _currentUser;
     private readonly IOrgMembershipQueryPort _membershipQuery;
     private readonly IPluginAccessPolicy _accessPolicy;
+    private readonly ICategoryLookupPort? _categoryLookup;
 
     public UploadPluginUseCase(
         IPluginPublishingRepositoryPort repository,
@@ -38,7 +40,8 @@ public sealed class UploadPluginUseCase
         IPackageReader packageReader,
         ICurrentUser currentUser,
         IOrgMembershipQueryPort membershipQuery,
-        IPluginAccessPolicy accessPolicy)
+        IPluginAccessPolicy accessPolicy,
+        ICategoryLookupPort? categoryLookup = null)
     {
         _repository = repository;
         _storage = storage;
@@ -46,6 +49,7 @@ public sealed class UploadPluginUseCase
         _currentUser = currentUser;
         _membershipQuery = membershipQuery;
         _accessPolicy = accessPolicy;
+        _categoryLookup = categoryLookup;
     }
 
     /// <summary>
@@ -134,7 +138,15 @@ public sealed class UploadPluginUseCase
 
         await _storage.PutAsync(packageKey, new MemoryStream(packageBytes), ct);
 
-        // Step 9: persist — if this throws, best-effort delete the orphaned artifact (HIGH-3)
+        // Step 9a: resolve category tags if provided
+        IReadOnlyList<short>? resolvedCategoryIds = null;
+        if (_categoryLookup is not null)
+        {
+            IReadOnlyDictionary<string, short> vocab = await _categoryLookup.GetAllCategoryKeysAsync(ct);
+            resolvedCategoryIds = await ResolveCategoryTagsAsync(command, vocab, ct);
+        }
+
+        // Step 9b: persist — if this throws, best-effort delete the orphaned artifact (HIGH-3)
         string slug = BuildSlug(nameNormalized);
         CreatePluginCommand createCommand = new(
             Name: command.Name,
@@ -152,7 +164,8 @@ public sealed class UploadPluginUseCase
             ReadmeText: contents.ReadmeText,
             Visibility: visibility,
             OwnerOrgId: ownerOrgId,
-            OwnerUserId: ownerUserId);
+            OwnerUserId: ownerUserId,
+            ResolvedCategoryIds: resolvedCategoryIds);
 
         try
         {
@@ -169,6 +182,53 @@ public sealed class UploadPluginUseCase
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Resolves command category tag strings (Types, Languages, UseCaseTags) into
+    /// category IDs using the provided vocabulary. Throws <see cref="UnknownCategoryTagException"/>
+    /// for any value not present in the vocabulary for its dimension.
+    /// </summary>
+    private static Task<IReadOnlyList<short>?> ResolveCategoryTagsAsync(
+        UploadPluginCommand command,
+        IReadOnlyDictionary<string, short> vocab,
+        CancellationToken ct)
+    {
+        _ = ct; // synchronous resolution
+        var resolved = new List<short>();
+
+        if (command.Types is not null && command.Types.Count > 0)
+        {
+            List<string> invalid = command.Types
+                .Where(v => !vocab.ContainsKey($"type:{v}"))
+                .ToList();
+            if (invalid.Count > 0)
+                throw new UnknownCategoryTagException("type", invalid);
+            resolved.AddRange(command.Types.Select(v => vocab[$"type:{v}"]));
+        }
+
+        if (command.Languages is not null && command.Languages.Count > 0)
+        {
+            List<string> invalid = command.Languages
+                .Where(v => !vocab.ContainsKey($"language:{v}"))
+                .ToList();
+            if (invalid.Count > 0)
+                throw new UnknownCategoryTagException("language", invalid);
+            resolved.AddRange(command.Languages.Select(v => vocab[$"language:{v}"]));
+        }
+
+        if (command.UseCaseTags is not null && command.UseCaseTags.Count > 0)
+        {
+            List<string> invalid = command.UseCaseTags
+                .Where(v => !vocab.ContainsKey($"use_case:{v}"))
+                .ToList();
+            if (invalid.Count > 0)
+                throw new UnknownCategoryTagException("use_case", invalid);
+            resolved.AddRange(command.UseCaseTags.Select(v => vocab[$"use_case:{v}"]));
+        }
+
+        IReadOnlyList<short>? result = resolved.Count > 0 ? resolved.AsReadOnly() : null;
+        return Task.FromResult(result);
+    }
 
     private async Task<IReadOnlySet<Guid>> ResolveCallerOrgIdsAsync(CancellationToken ct)
     {

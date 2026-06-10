@@ -39,6 +39,28 @@ public sealed class MarketplaceDbContext : DbContext
     public DbSet<OrgAuditEntryEntity> OrgAuditLog => Set<OrgAuditEntryEntity>();
     public DbSet<RevokedJtiEntity> RevokedJtis => Set<RevokedJtiEntity>();
 
+    // Security analysis sets
+    public DbSet<AnalysisJobEntity> AnalysisJobs => Set<AnalysisJobEntity>();
+    public DbSet<AnalysisResultEntity> AnalysisResults => Set<AnalysisResultEntity>();
+    public DbSet<AnalysisConfigEntity> AnalysisConfig => Set<AnalysisConfigEntity>();
+    public DbSet<ConfigChangeLogEntity> ConfigChangeLogs => Set<ConfigChangeLogEntity>();
+    public DbSet<AppealEntity> Appeals => Set<AppealEntity>();
+
+    // Safe zone / org block sets
+    public DbSet<SafeZonePluginEntity> SafeZonePlugins => Set<SafeZonePluginEntity>();
+    public DbSet<OrgPluginBlockEntity> OrgPluginBlocks => Set<OrgPluginBlockEntity>();
+
+    // Reputation sets
+    public DbSet<BadgeEntity> Badges => Set<BadgeEntity>();
+    public DbSet<AuthorBadgeEntity> AuthorBadges => Set<AuthorBadgeEntity>();
+    public DbSet<AuthorReputationEntity> AuthorReputations => Set<AuthorReputationEntity>();
+    public DbSet<KarmaEventEntity> KarmaEvents => Set<KarmaEventEntity>();
+    public DbSet<LeaderboardCacheEntity> LeaderboardCache => Set<LeaderboardCacheEntity>();
+
+    // Notification sets
+    public DbSet<NotificationEntity> Notifications => Set<NotificationEntity>();
+    public DbSet<UserNotificationPreferencesEntity> UserNotificationPreferences => Set<UserNotificationPreferencesEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -63,6 +85,20 @@ public sealed class MarketplaceDbContext : DbContext
         ConfigureRefreshTokens(modelBuilder);
         ConfigureOrgAuditLog(modelBuilder);
         ConfigureRevokedJti(modelBuilder);
+        ConfigureAnalysisJobs(modelBuilder);
+        ConfigureAnalysisResults(modelBuilder);
+        ConfigureAnalysisConfig(modelBuilder);
+        ConfigureConfigChangeLog(modelBuilder);
+        ConfigureAppeals(modelBuilder);
+        ConfigureSafeZonePlugins(modelBuilder);
+        ConfigureOrgPluginBlocks(modelBuilder);
+        ConfigureBadges(modelBuilder);
+        ConfigureAuthorBadges(modelBuilder);
+        ConfigureAuthorReputations(modelBuilder);
+        ConfigureKarmaEvents(modelBuilder);
+        ConfigureLeaderboardCache(modelBuilder);
+        ConfigureNotifications(modelBuilder);
+        ConfigureUserNotificationPreferences(modelBuilder);
     }
 
     private static void ConfigurePlugins(ModelBuilder modelBuilder, bool isPostgres = true)
@@ -194,6 +230,14 @@ public sealed class MarketplaceDbContext : DbContext
             // Composite index for visibility + owner_org_id filter queries
             entity.HasIndex(p => new { p.Visibility, p.OwnerOrgId })
                   .HasDatabaseName("idx_plugins_visibility_org");
+
+            entity.Property(p => p.SecurityScore)
+                  .HasColumnName("security_score")
+                  .IsRequired(false);
+
+            entity.Property(p => p.SecurityStatus)
+                  .HasColumnName("security_status")
+                  .IsRequired(false);
         });
     }
 
@@ -882,6 +926,701 @@ public sealed class MarketplaceDbContext : DbContext
             entity.Property(r => r.ExpiresAt)
                   .HasColumnName("expires_at")
                   .IsRequired();
+        });
+    }
+
+    private static void ConfigureAnalysisJobs(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AnalysisJobEntity>(entity =>
+        {
+            entity.ToTable("analysis_jobs");
+            entity.HasKey(j => j.Id);
+            entity.Property(j => j.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(j => j.PluginId)
+                  .HasColumnName("plugin_id")
+                  .IsRequired();
+
+            entity.Property(j => j.PluginVersion)
+                  .HasColumnName("plugin_version")
+                  .IsRequired();
+
+            entity.Property(j => j.Status)
+                  .HasColumnName("status")
+                  .HasDefaultValue("queued")
+                  .IsRequired();
+
+            entity.Property(j => j.Priority)
+                  .HasColumnName("priority")
+                  .HasDefaultValue(0);
+
+            entity.Property(j => j.Attempts)
+                  .HasColumnName("attempts")
+                  .HasDefaultValue(0);
+
+            entity.Property(j => j.LastError)
+                  .HasColumnName("last_error")
+                  .IsRequired(false);
+
+            entity.Property(j => j.CreatedAt)
+                  .HasColumnName("created_at")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.Property(j => j.StartedAt)
+                  .HasColumnName("started_at")
+                  .IsRequired(false);
+
+            entity.Property(j => j.CompletedAt)
+                  .HasColumnName("completed_at")
+                  .IsRequired(false);
+
+            // FK → plugins ON DELETE CASCADE
+            entity.HasOne(j => j.Plugin)
+                  .WithMany()
+                  .HasForeignKey(j => j.PluginId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(j => j.Status)
+                  .HasDatabaseName("idx_analysis_jobs_status");
+
+            entity.HasIndex(j => new { j.Status, j.Priority, j.CreatedAt })
+                  .HasDatabaseName("idx_analysis_jobs_queue");
+        });
+    }
+
+    private static void ConfigureAnalysisResults(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AnalysisResultEntity>(entity =>
+        {
+            entity.ToTable("analysis_results");
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(r => r.PluginId)
+                  .HasColumnName("plugin_id")
+                  .IsRequired();
+
+            entity.Property(r => r.PluginVersion)
+                  .HasColumnName("plugin_version")
+                  .IsRequired();
+
+            entity.Property(r => r.StaticEslintScore)
+                  .HasColumnName("static_eslint_score")
+                  .IsRequired(false);
+
+            entity.Property(r => r.StaticSemgrepScore)
+                  .HasColumnName("static_semgrep_score")
+                  .IsRequired(false);
+
+            entity.Property(r => r.StaticGitleaksScore)
+                  .HasColumnName("static_gitleaks_score")
+                  .IsRequired(false);
+
+            entity.Property(r => r.StaticTrivyScore)
+                  .HasColumnName("static_trivy_score")
+                  .IsRequired(false);
+
+            entity.Property(r => r.StaticFindings)
+                  .HasColumnName("static_findings")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValue("[]")
+                  .IsRequired();
+
+            entity.Property(r => r.DynamicBehaviorScore)
+                  .HasColumnName("dynamic_behavior_score")
+                  .IsRequired(false);
+
+            entity.Property(r => r.DynamicFindings)
+                  .HasColumnName("dynamic_findings")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValue("[]")
+                  .IsRequired();
+
+            entity.Property(r => r.TotalScore)
+                  .HasColumnName("total_score")
+                  .IsRequired();
+
+            entity.Property(r => r.Status)
+                  .HasColumnName("status")
+                  .IsRequired();
+
+            entity.Property(r => r.AnalysisCompletedAt)
+                  .HasColumnName("analysis_completed_at")
+                  .IsRequired(false);
+
+            entity.Property(r => r.StaticWeight)
+                  .HasColumnName("static_weight")
+                  .HasDefaultValue(0.6m);
+
+            entity.Property(r => r.DynamicWeight)
+                  .HasColumnName("dynamic_weight")
+                  .HasDefaultValue(0.4m);
+
+            entity.Property(r => r.PassThreshold)
+                  .HasColumnName("pass_threshold")
+                  .HasDefaultValue(80m);
+
+            entity.Property(r => r.FailThreshold)
+                  .HasColumnName("fail_threshold")
+                  .HasDefaultValue(50m);
+
+            entity.Property(r => r.CreatedAt)
+                  .HasColumnName("created_at")
+                  .HasDefaultValueSql("NOW()");
+
+            // FK → plugins ON DELETE CASCADE
+            entity.HasOne(r => r.Plugin)
+                  .WithMany()
+                  .HasForeignKey(r => r.PluginId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(r => r.PluginId)
+                  .HasDatabaseName("idx_analysis_results_plugin");
+        });
+    }
+
+    private static void ConfigureAnalysisConfig(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AnalysisConfigEntity>(entity =>
+        {
+            entity.ToTable("analysis_config");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Id)
+                  .HasColumnName("id")
+                  .UseIdentityByDefaultColumn();
+
+            entity.Property(c => c.StaticWeight)
+                  .HasColumnName("static_weight")
+                  .HasDefaultValue(0.6m);
+
+            entity.Property(c => c.DynamicWeight)
+                  .HasColumnName("dynamic_weight")
+                  .HasDefaultValue(0.4m);
+
+            entity.Property(c => c.PassThreshold)
+                  .HasColumnName("pass_threshold")
+                  .HasDefaultValue(80m);
+
+            entity.Property(c => c.FailThreshold)
+                  .HasColumnName("fail_threshold")
+                  .HasDefaultValue(50m);
+
+            entity.Property(c => c.MaxWorkers)
+                  .HasColumnName("max_workers")
+                  .HasDefaultValue(2);
+
+            entity.Property(c => c.RetryLimit)
+                  .HasColumnName("retry_limit")
+                  .HasDefaultValue(3);
+
+            entity.Property(c => c.AnalysisTimeoutSeconds)
+                  .HasColumnName("analysis_timeout_seconds")
+                  .HasDefaultValue(300);
+
+            entity.Property(c => c.UpdatedAt)
+                  .HasColumnName("updated_at")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.Property(c => c.UpdatedBy)
+                  .HasColumnName("updated_by")
+                  .IsRequired(false);
+        });
+    }
+
+    private static void ConfigureConfigChangeLog(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ConfigChangeLogEntity>(entity =>
+        {
+            entity.ToTable("config_change_log");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(c => c.ChangedBy)
+                  .HasColumnName("changed_by")
+                  .IsRequired();
+
+            entity.Property(c => c.PreviousConfig)
+                  .HasColumnName("previous_config")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValue("{}")
+                  .IsRequired();
+
+            entity.Property(c => c.NewConfig)
+                  .HasColumnName("new_config")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValue("{}")
+                  .IsRequired();
+
+            entity.Property(c => c.ChangeDescription)
+                  .HasColumnName("change_description")
+                  .IsRequired();
+
+            entity.Property(c => c.CreatedAt)
+                  .HasColumnName("created_at")
+                  .HasDefaultValueSql("NOW()");
+        });
+    }
+
+    private static void ConfigureAppeals(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AppealEntity>(entity =>
+        {
+            entity.ToTable("appeals");
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(a => a.PluginId)
+                  .HasColumnName("plugin_id")
+                  .IsRequired();
+
+            entity.Property(a => a.AnalysisResultId)
+                  .HasColumnName("analysis_result_id")
+                  .IsRequired(false);
+
+            entity.Property(a => a.AuthorId)
+                  .HasColumnName("author_id")
+                  .IsRequired();
+
+            entity.Property(a => a.Reason)
+                  .HasColumnName("reason")
+                  .IsRequired();
+
+            entity.Property(a => a.Evidence)
+                  .HasColumnName("evidence")
+                  .IsRequired(false);
+
+            entity.Property(a => a.Status)
+                  .HasColumnName("status")
+                  .HasDefaultValue("pending")
+                  .IsRequired();
+
+            entity.Property(a => a.ReviewedBy)
+                  .HasColumnName("reviewed_by")
+                  .IsRequired(false);
+
+            entity.Property(a => a.ReviewedAt)
+                  .HasColumnName("reviewed_at")
+                  .IsRequired(false);
+
+            entity.Property(a => a.Resolution)
+                  .HasColumnName("resolution")
+                  .IsRequired(false);
+
+            entity.Property(a => a.CreatedAt)
+                  .HasColumnName("created_at")
+                  .HasDefaultValueSql("NOW()");
+
+            // FK → plugins ON DELETE CASCADE
+            entity.HasOne(a => a.Plugin)
+                  .WithMany()
+                  .HasForeignKey(a => a.PluginId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // FK → analysis_results ON DELETE SET NULL
+            entity.HasOne(a => a.AnalysisResult)
+                  .WithMany()
+                  .HasForeignKey(a => a.AnalysisResultId)
+                  .OnDelete(DeleteBehavior.SetNull)
+                  .IsRequired(false);
+
+            entity.HasIndex(a => a.PluginId)
+                  .HasDatabaseName("idx_appeals_plugin");
+
+            entity.HasIndex(a => a.AuthorId)
+                  .HasDatabaseName("idx_appeals_author");
+        });
+    }
+
+    private static void ConfigureSafeZonePlugins(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SafeZonePluginEntity>(entity =>
+        {
+            entity.ToTable("safe_zone_plugins");
+            entity.HasKey(sz => sz.Id);
+            entity.Property(sz => sz.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(sz => sz.OrgId)
+                  .HasColumnName("org_id")
+                  .IsRequired();
+
+            entity.Property(sz => sz.PluginId)
+                  .HasColumnName("plugin_id")
+                  .IsRequired();
+
+            entity.Property(sz => sz.PluginVersion)
+                  .HasColumnName("plugin_version")
+                  .IsRequired();
+
+            entity.Property(sz => sz.ApprovedBy)
+                  .HasColumnName("approved_by")
+                  .IsRequired();
+
+            entity.Property(sz => sz.ApprovedAt)
+                  .HasColumnName("approved_at")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.Property(sz => sz.IsActive)
+                  .HasColumnName("is_active")
+                  .HasDefaultValue(true);
+
+            // FK → organizations ON DELETE CASCADE
+            entity.HasOne(sz => sz.Organization)
+                  .WithMany()
+                  .HasForeignKey(sz => sz.OrgId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // FK → plugins ON DELETE CASCADE
+            entity.HasOne(sz => sz.Plugin)
+                  .WithMany()
+                  .HasForeignKey(sz => sz.PluginId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // UNIQUE(org_id, plugin_id, plugin_version)
+            entity.HasIndex(sz => new { sz.OrgId, sz.PluginId, sz.PluginVersion })
+                  .IsUnique()
+                  .HasDatabaseName("ix_safe_zone_plugins_org_plugin_version");
+        });
+    }
+
+    private static void ConfigureOrgPluginBlocks(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<OrgPluginBlockEntity>(entity =>
+        {
+            entity.ToTable("org_plugin_blocks");
+            entity.HasKey(b => b.Id);
+            entity.Property(b => b.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(b => b.OrgId)
+                  .HasColumnName("org_id")
+                  .IsRequired();
+
+            entity.Property(b => b.PluginId)
+                  .HasColumnName("plugin_id")
+                  .IsRequired();
+
+            entity.Property(b => b.BlockedBy)
+                  .HasColumnName("blocked_by")
+                  .IsRequired();
+
+            entity.Property(b => b.BlockedAt)
+                  .HasColumnName("blocked_at")
+                  .HasDefaultValueSql("NOW()");
+
+            // FK → organizations ON DELETE CASCADE
+            entity.HasOne(b => b.Organization)
+                  .WithMany()
+                  .HasForeignKey(b => b.OrgId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // FK → plugins ON DELETE CASCADE
+            entity.HasOne(b => b.Plugin)
+                  .WithMany()
+                  .HasForeignKey(b => b.PluginId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // UNIQUE(org_id, plugin_id) — one block record per org+plugin
+            entity.HasIndex(b => new { b.OrgId, b.PluginId })
+                  .IsUnique()
+                  .HasDatabaseName("ix_org_plugin_blocks_org_plugin");
+        });
+    }
+
+    private static void ConfigureBadges(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<BadgeEntity>(entity =>
+        {
+            entity.ToTable("badges");
+            entity.HasKey(b => b.Id);
+            entity.Property(b => b.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(b => b.Name)
+                  .HasColumnName("name")
+                  .IsRequired();
+
+            entity.Property(b => b.Slug)
+                  .HasColumnName("slug")
+                  .IsRequired();
+
+            entity.Property(b => b.Description)
+                  .HasColumnName("description")
+                  .IsRequired();
+
+            entity.Property(b => b.IconUrl)
+                  .HasColumnName("icon_url")
+                  .IsRequired(false);
+
+            entity.Property(b => b.Requirements)
+                  .HasColumnName("requirements")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValue("{}")
+                  .IsRequired();
+
+            entity.Property(b => b.CreatedAt)
+                  .HasColumnName("created_at")
+                  .HasDefaultValueSql("NOW()");
+
+            // UNIQUE on slug
+            entity.HasIndex(b => b.Slug)
+                  .IsUnique()
+                  .HasDatabaseName("ix_badges_slug");
+        });
+    }
+
+    private static void ConfigureAuthorBadges(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AuthorBadgeEntity>(entity =>
+        {
+            entity.ToTable("author_badges");
+            entity.HasKey(ab => ab.Id);
+            entity.Property(ab => ab.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(ab => ab.AuthorId)
+                  .HasColumnName("author_id")
+                  .IsRequired();
+
+            entity.Property(ab => ab.BadgeId)
+                  .HasColumnName("badge_id")
+                  .IsRequired();
+
+            entity.Property(ab => ab.AwardedAt)
+                  .HasColumnName("awarded_at")
+                  .HasDefaultValueSql("NOW()");
+
+            // FK → badges ON DELETE CASCADE
+            entity.HasOne(ab => ab.Badge)
+                  .WithMany(b => b.AuthorBadges)
+                  .HasForeignKey(ab => ab.BadgeId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // UNIQUE(author_id, badge_id)
+            entity.HasIndex(ab => new { ab.AuthorId, ab.BadgeId })
+                  .IsUnique()
+                  .HasDatabaseName("ix_author_badges_author_badge");
+
+            entity.HasIndex(ab => ab.AuthorId)
+                  .HasDatabaseName("idx_author_badges_author");
+        });
+    }
+
+    private static void ConfigureAuthorReputations(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AuthorReputationEntity>(entity =>
+        {
+            entity.ToTable("author_reputation");
+
+            // PK is the author_id — no surrogate
+            entity.HasKey(ar => ar.AuthorId);
+            entity.Property(ar => ar.AuthorId)
+                  .HasColumnName("author_id");
+
+            entity.Property(ar => ar.KarmaPoints)
+                  .HasColumnName("karma_points")
+                  .HasDefaultValue(0);
+
+            entity.Property(ar => ar.Level)
+                  .HasColumnName("level")
+                  .HasDefaultValue(1);
+
+            entity.Property(ar => ar.Badges)
+                  .HasColumnName("badges")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValue("[]")
+                  .IsRequired();
+
+            entity.Property(ar => ar.CreatedAt)
+                  .HasColumnName("created_at")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.Property(ar => ar.UpdatedAt)
+                  .HasColumnName("updated_at")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.HasIndex(ar => ar.KarmaPoints)
+                  .HasDatabaseName("idx_author_reputation_karma");
+        });
+    }
+
+    private static void ConfigureKarmaEvents(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KarmaEventEntity>(entity =>
+        {
+            entity.ToTable("karma_events");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(e => e.AuthorId)
+                  .HasColumnName("author_id")
+                  .IsRequired();
+
+            entity.Property(e => e.EventType)
+                  .HasColumnName("event_type")
+                  .IsRequired();
+
+            entity.Property(e => e.Points)
+                  .HasColumnName("points")
+                  .IsRequired();
+
+            entity.Property(e => e.Description)
+                  .HasColumnName("description")
+                  .IsRequired(false);
+
+            entity.Property(e => e.CreatedAt)
+                  .HasColumnName("created_at")
+                  .HasDefaultValueSql("NOW()");
+
+            // FK → author_reputation ON DELETE CASCADE
+            entity.HasOne(e => e.Author)
+                  .WithMany()
+                  .HasForeignKey(e => e.AuthorId)
+                  .HasPrincipalKey(ar => ar.AuthorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.AuthorId)
+                  .HasDatabaseName("idx_karma_events_author");
+
+            entity.HasIndex(e => e.CreatedAt)
+                  .HasDatabaseName("idx_karma_events_created");
+        });
+    }
+
+    private static void ConfigureLeaderboardCache(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<LeaderboardCacheEntity>(entity =>
+        {
+            entity.ToTable("leaderboard_cache");
+            entity.HasKey(lc => lc.Id);
+            entity.Property(lc => lc.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(lc => lc.AuthorId)
+                  .HasColumnName("author_id")
+                  .IsRequired();
+
+            entity.Property(lc => lc.KarmaPoints)
+                  .HasColumnName("karma_points")
+                  .HasDefaultValue(0);
+
+            entity.Property(lc => lc.BadgeCount)
+                  .HasColumnName("badge_count")
+                  .HasDefaultValue(0);
+
+            entity.Property(lc => lc.Rank)
+                  .HasColumnName("rank")
+                  .IsRequired();
+
+            entity.Property(lc => lc.Period)
+                  .HasColumnName("period")
+                  .HasDefaultValue("all_time")
+                  .IsRequired();
+
+            entity.Property(lc => lc.OrgId)
+                  .HasColumnName("org_id")
+                  .IsRequired(false);
+
+            entity.Property(lc => lc.CalculatedAt)
+                  .HasColumnName("calculated_at")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.HasIndex(lc => new { lc.Period, lc.OrgId, lc.Rank })
+                  .HasDatabaseName("idx_leaderboard_cache_period_org_rank");
+        });
+    }
+
+    private static void ConfigureNotifications(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<NotificationEntity>(entity =>
+        {
+            entity.ToTable("notifications");
+            entity.HasKey(n => n.Id);
+            entity.Property(n => n.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(n => n.UserId)
+                  .HasColumnName("user_id")
+                  .IsRequired();
+
+            entity.Property(n => n.Type)
+                  .HasColumnName("type")
+                  .IsRequired();
+
+            entity.Property(n => n.Title)
+                  .HasColumnName("title")
+                  .IsRequired();
+
+            entity.Property(n => n.Message)
+                  .HasColumnName("message")
+                  .IsRequired();
+
+            entity.Property(n => n.IsRead)
+                  .HasColumnName("is_read")
+                  .HasDefaultValue(false);
+
+            entity.Property(n => n.CreatedAt)
+                  .HasColumnName("created_at")
+                  .HasDefaultValueSql("NOW()");
+
+            // FK → users ON DELETE CASCADE
+            entity.HasOne(n => n.User)
+                  .WithMany()
+                  .HasForeignKey(n => n.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(n => n.UserId)
+                  .HasDatabaseName("idx_notifications_user");
+
+            entity.HasIndex(n => new { n.UserId, n.IsRead })
+                  .HasDatabaseName("idx_notifications_user_unread");
+        });
+    }
+
+    private static void ConfigureUserNotificationPreferences(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserNotificationPreferencesEntity>(entity =>
+        {
+            entity.ToTable("user_notification_preferences");
+
+            // PK is the user_id — no surrogate
+            entity.HasKey(p => p.UserId);
+            entity.Property(p => p.UserId)
+                  .HasColumnName("user_id");
+
+            entity.Property(p => p.EmailAlerts)
+                  .HasColumnName("email_alerts")
+                  .HasDefaultValue(true);
+
+            entity.Property(p => p.InAppAlerts)
+                  .HasColumnName("in_app_alerts")
+                  .HasDefaultValue(true);
+
+            entity.Property(p => p.UpdatedAt)
+                  .HasColumnName("updated_at")
+                  .HasDefaultValueSql("NOW()");
+
+            // FK → users ON DELETE CASCADE
+            entity.HasOne(p => p.User)
+                  .WithMany()
+                  .HasForeignKey(p => p.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

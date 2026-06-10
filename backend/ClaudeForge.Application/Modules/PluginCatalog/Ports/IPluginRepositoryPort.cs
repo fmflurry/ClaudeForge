@@ -65,4 +65,10 @@ public interface IPluginRepositoryPort
     /// The check is case-insensitive: callers must pass <c>name.ToLowerInvariant()</c>.
     /// </summary>
     Task<bool> ExistsByNameNormalizedAsync(string nameNormalized, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns the currently featured plugin as a <see cref="FeaturedPluginDto"/>,
+    /// or <c>null</c> when no plugin is flagged as featured.
+    /// </summary>
+    Task<FeaturedPluginDto?> GetFeaturedPluginAsync(CancellationToken ct = default);
 }

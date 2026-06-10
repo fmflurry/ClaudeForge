@@ -1,0 +1,90 @@
+# ─── Prometheus Alerting Rules ────────────────────────────────────────────────
+# Deploy to Prometheus rules directory (e.g. /etc/prometheus/rules/analysis.yml)
+# Loaded automatically when Prometheus starts or config reloaded.
+# ─────────────────────────────────────────────────────────────────────────────
+
+groups:
+  - name: analysis-pipeline
+    interval: 30s
+    rules:
+
+      # ── Queue Backlog ──────────────────────────────────────────────────────
+      - alert: QueueBacklog
+        expr: analysis_queue_size > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analysis queue backlog ({{ $value }} jobs)"
+          description: >
+            Analysis queue depth has exceeded 50 for more than 5 minutes.
+            Current depth: {{ $value }}. Scale up workers or investigate
+            worker health.
+          runbook: "https://github.com/fmflurry/ClaudeForge/wiki/Runbook:QueueBacklog"
+          dashboard: "https://grafana.claudeforge.dev/d/analysis-pipeline"
+
+      # ── Worker Down ────────────────────────────────────────────────────────
+      - alert: WorkerDown
+        expr: worker_active_count < 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No active analysis workers"
+          description: >
+            All analysis workers have been unavailable for 2 minutes.
+            No plugins can be analyzed until workers recover.
+          runbook: "https://github.com/fmflurry/ClaudeForge/wiki/Runbook:WorkerDown"
+          dashboard: "https://grafana.claudeforge.dev/d/analysis-pipeline"
+
+      # ── High Failure Rate ───────────────────────────────────────────────────
+      - alert: HighFailureRate
+        expr: |
+          (
+            rate(analysis_completed_total{status="failed"}[15m])
+            /
+            rate(analysis_completed_total[15m])
+          ) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High analysis failure rate ({{ $value | humanizePercentage }})"
+          description: >
+            More than 30% of analyses have failed in the last 15 minutes.
+            Failure rate: {{ $value | humanizePercentage }}. Check analysis
+            tool health, sandbox, and plugin input format.
+          runbook: "https://github.com/fmflurry/ClaudeForge/wiki/Runbook:HighFailureRate"
+          dashboard: "https://grafana.claudeforge.dev/d/analysis-pipeline"
+
+      # ── Analysis Timeout ────────────────────────────────────────────────────
+      - alert: AnalysisTimeout
+        expr: |
+          histogram_quantile(0.95,
+            rate(analysis_duration_seconds_bucket[10m])
+          ) > 300
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analysis duration P95 exceeds 5 minutes"
+          description: >
+            95th percentile analysis duration has exceeded 5 minutes
+            for 2 minutes. Current P95: {{ $value }}s. Check for
+            resource contention or sandbox delays.
+          runbook: "https://github.com/fmflurry/ClaudeForge/wiki/Runbook:AnalysisTimeout"
+          dashboard: "https://grafana.claudeforge.dev/d/analysis-pipeline"
+
+      # ── Appeal Backlog ──────────────────────────────────────────────────────
+      - alert: AppealBacklog
+        expr: appeals_pending_count > 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Appeal backlog ({{ $value }} pending)"
+          description: >
+            {{ $value }} appeals are pending resolution. Review queue
+            requires admin attention to prevent author frustration.
+          runbook: "https://github.com/fmflurry/ClaudeForge/wiki/Runbook:AppealBacklog"
+          dashboard: "https://grafana.claudeforge.dev/d/appeals"

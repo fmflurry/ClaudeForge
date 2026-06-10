@@ -1,0 +1,97 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information",
+      "Microsoft.EntityFrameworkCore": "Warning",
+      "System": "Warning"
+    },
+    "Console": {
+      "FormatterName": "json",
+      "FormatterOptions": {
+        "TimestampFormat": "yyyy-MM-dd'T'HH:mm:ss.fffZ",
+        "UseUtcTimestamp": true,
+        "IncludeScopes": true,
+        "SingleLine": true
+      }
+    }
+  },
+
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning",
+        "Microsoft.EntityFrameworkCore": "Warning"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Console",
+        "Args": {
+          "formatter": "Serilog.Formatting.Compact.CompactJsonFormatter, Serilog.Formatting.Compact"
+        }
+      },
+      {
+        "Name": "File",
+        "Args": {
+          "path": "/var/log/claudeforge/analysis-worker-.log",
+          "rollingInterval": "Day",
+          "retainedFileCountLimit": 7,
+          "formatter": "Serilog.Formatting.Compact.CompactJsonFormatter, Serilog.Formatting.Compact"
+        }
+      }
+    ],
+    "Enrich": ["FromLogContext", "WithMachineName", "WithThreadId"],
+    "Properties": {
+      "Application": "ClaudeForge.AnalysisWorker",
+      "Environment": ""
+    }
+  },
+
+  "AnalysisWorker": {
+    "LogCategories": {
+      "SecurityAnalysis": {
+        "LogLevel": "Information",
+        "Events": [
+          "analysis_submitted",
+          "analysis_started",
+          "analysis_completed",
+          "analysis_failed"
+        ]
+      },
+      "AnalysisWorker": {
+        "LogLevel": "Information",
+        "Events": [
+          "worker_started",
+          "worker_stopped",
+          "job_polled",
+          "job_acquired",
+          "job_completed",
+          "job_released"
+        ]
+      },
+      "KarmaService": {
+        "LogLevel": "Information",
+        "Events": [
+          "karma_awarded",
+          "karma_deducted",
+          "badge_earned",
+          "threshold_reached"
+        ]
+      },
+      "SandboxRunner": {
+        "LogLevel": "Information",
+        "Events": [
+          "sandbox_created",
+          "container_started",
+          "execution_completed",
+          "container_destroyed",
+          "execution_timeout"
+        ]
+      }
+    }
+  }
+}

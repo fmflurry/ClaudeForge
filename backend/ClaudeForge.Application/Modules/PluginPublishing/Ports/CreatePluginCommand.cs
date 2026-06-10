@@ -19,4 +19,5 @@ public sealed record CreatePluginCommand(
     string? ReadmeText,
     string Visibility = "public",
     Guid? OwnerOrgId = null,
-    Guid? OwnerUserId = null);
+    Guid? OwnerUserId = null,
+    IReadOnlyList<short>? ResolvedCategoryIds = null);

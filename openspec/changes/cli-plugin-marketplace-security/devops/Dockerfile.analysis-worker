@@ -1,0 +1,92 @@
+# ─── Multi-stage Dockerfile for ClaudeForge Analysis Worker ─────────────────
+# Stage 1 (build): restore + publish analysis worker project
+# Stage 2 (runtime): minimal aspnet image + analysis CLI tools
+#
+# Build:
+#   docker build -t claudeforge-analysis-worker:latest \
+#     -f devops/Dockerfile.analysis-worker \
+#     ./backend
+#
+# Requires: backend/ClaudeForge.AnalysisWorker/ClaudeForge.AnalysisWorker.csproj
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Stage 1: build ──────────────────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+WORKDIR /src
+
+# Copy all project manifests for layer-cached restore
+COPY ClaudeForge.Core/*.csproj ClaudeForge.Core/
+COPY ClaudeForge.Application/*.csproj ClaudeForge.Application/
+COPY ClaudeForge.Infrastructure/*.csproj ClaudeForge.Infrastructure/
+COPY ClaudeForge.AnalysisWorker/*.csproj ClaudeForge.AnalysisWorker/
+
+RUN dotnet restore ClaudeForge.AnalysisWorker/ClaudeForge.AnalysisWorker.csproj
+
+# Copy remaining source
+COPY . .
+
+# Publish worker as a trimmed, ready-to-run app
+RUN dotnet publish ClaudeForge.AnalysisWorker/ClaudeForge.AnalysisWorker.csproj \
+    -c Release \
+    -o /publish \
+    --no-restore
+
+# ── Stage 2: runtime ─────────────────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+
+# ── Install analysis tools ───────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    gnupg \
+    # Trivy requirements
+    apt-transport-https \
+    && curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor -o /usr/share/keyrings/trivy.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | tee /etc/apt/sources.list.d/trivy.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        trivy \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js + npm (for ESLint)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-installed-recommends nodejs \
+    && npm install -g eslint@8 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python + pip (for Semgrep)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-pip \
+    && pip3 install semgrep --no-cache-dir \
+    && rm -rf /var/lib/apt/lists/*
+
+# Gitleaks — binary download
+RUN curl -fsSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz \
+    | tar -xz -C /usr/local/bin gitleaks \
+    && chmod +x /usr/local/bin/gitleaks
+
+# ── Create non-root user ─────────────────────────────────────────────────────
+RUN adduser --disabled-password --gecos "" appuser
+
+WORKDIR /app
+
+# Copy published .NET worker
+COPY --from=build /publish ./
+
+# Runtime data directory for temporary analysis artifacts
+RUN mkdir -p /tmp/analysis-workspace && chown appuser:appuser /tmp/analysis-workspace
+
+USER appuser
+
+EXPOSE 8080
+
+ENV \
+    DOTNET_ENVIRONMENT=Production \
+    ASPNETCORE_URLS=http://+:8080 \
+    # Worker identity for metrics/logging
+    WORKER_ID="" \
+    # Connection string set at runtime via env or secrets
+    ConnectionStrings__Postgres=""
+
+ENTRYPOINT ["dotnet", "ClaudeForge.AnalysisWorker.dll"]
