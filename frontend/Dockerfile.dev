@@ -1,17 +1,39 @@
-# Dev Dockerfile for Angular frontend — supports live reload via ng serve
-# Used by docker-compose.yml (infra/docker-compose.yml)
-FROM node:22-alpine AS dev
+# ─── Dev Dockerfile for Angular SSR frontend (production-parity live reload) ──
+# Runs `ng build --watch` + nodemon to restart the SSR Node server on rebuild.
+# This is dev-only — for production use frontend/Dockerfile (multi-stage).
+#
+# Build context: repo root (required — frontend is an npm workspace; the
+# authoritative package-lock.json lives at the repo root, not in frontend/).
+#
+# devDependencies (concurrently, nodemon, @angular/cli) are installed because
+# they are needed at container runtime by the `dev:ssr` npm script.
+#
+# Usage (via docker compose): docker compose up web
+# ─────────────────────────────────────────────────────────────────────────────
+FROM node:22-alpine
 
-WORKDIR /app
+WORKDIR /repo
 
-# Install dependencies first for layer caching
+# Copy workspace manifests for dependency install.
+# Root package.json declares workspaces; root package-lock.json is the lockfile.
 COPY package.json package-lock.json* ./
-RUN npm ci --prefer-offline || npm install
+COPY frontend/package.json ./frontend/
 
-# Copy source (will be overridden by bind-mount in dev)
-COPY . .
+# Install ALL dependencies (including devDeps) from the authoritative root lockfile.
+# concurrently, nodemon, and @angular/cli are required at runtime by dev:ssr.
+# --legacy-peer-deps: angular-eslint@21 peer constraint on @angular/cli <22 is
+# benign and pre-existing; same flag used in the production Dockerfile.
+RUN npm ci --workspace=frontend --legacy-peer-deps
 
-EXPOSE 4200
+# Copy frontend source (overridden at runtime by the bind-mount in compose, but
+# needed here so the image is self-contained if run without bind-mount).
+COPY frontend/ ./frontend/
 
-# Angular dev server — poll for file changes (needed in Docker)
-CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--poll", "1000"]
+WORKDIR /repo/frontend
+
+EXPOSE 4000
+
+# ng build --watch polls for file changes (CHOKIDAR_USEPOLLING is set by compose
+# as the primary mechanism; --poll=1000 here is a belt-and-suspenders fallback).
+# nodemon watches dist/frontend/server and restarts the SSR Node server on rebuild.
+CMD ["npm", "run", "dev:ssr"]

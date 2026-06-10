@@ -11,7 +11,8 @@
     "lint:fix": "eslint . --ext .ts,.html --fix",
     "format": "prettier --write \"src/**/*.{ts,html,scss,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\"",
-    "serve:ssr:frontend": "node dist/frontend/server/server.mjs"
+    "serve:ssr:frontend": "node dist/frontend/server/server.mjs",
+    "dev:ssr": "concurrently \"ng build --watch --configuration development --poll=1000\" \"nodemon\""
   },
   "prettier": {
     "printWidth": 120,
@@ -54,6 +55,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.10",
     "@angular-eslint/eslint-plugin": "^21.4.0",
     "@angular-eslint/eslint-plugin-template": "^21.4.0",
     "@angular-eslint/template-parser": "^21.4.0",
