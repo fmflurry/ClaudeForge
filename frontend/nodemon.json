@@ -2,6 +2,7 @@
   "watch": ["dist/frontend/server"],
   "ext": "mjs,js",
   "exec": "node dist/frontend/server/server.mjs",
-  "delay": 1000,
-  "legacyWatch": true
+  "delay": 1500,
+  "legacyWatch": true,
+  "signal": "SIGTERM"
 }

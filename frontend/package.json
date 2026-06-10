@@ -12,7 +12,7 @@
     "format": "prettier --write \"src/**/*.{ts,html,scss,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\"",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs",
-    "dev:ssr": "concurrently \"ng build --watch --configuration development --poll=1000\" \"nodemon\""
+    "dev:ssr": "ng build --configuration development && concurrently \"ng build --watch --configuration development --poll=1000\" \"nodemon\""
   },
   "prettier": {
     "printWidth": 120,
