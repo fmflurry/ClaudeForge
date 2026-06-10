@@ -21,6 +21,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER: "1"
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-plugin_marketplace};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-devpassword}"
       PackageStorage__Type: "${PackageStorage__Type:-LocalFileSystem}"
       PackageStorage__LocalPath: /packages
@@ -59,6 +60,22 @@ services:
         condition: service_healthy
     volumes:
       - ../backend:/app
+      # Anonymous volumes shadow the host obj/ and bin/ directories so that
+      # Windows-host build artifacts (backslash paths, Windows PE binaries) never
+      # leak into the Linux container. The container builds entirely inside the
+      # anonymous volume; the host tree stays clean.
+      - /app/ClaudeForge.Api/obj
+      - /app/ClaudeForge.Api/bin
+      - /app/ClaudeForge.Application/obj
+      - /app/ClaudeForge.Application/bin
+      - /app/ClaudeForge.Core/obj
+      - /app/ClaudeForge.Core/bin
+      - /app/ClaudeForge.Infrastructure/obj
+      - /app/ClaudeForge.Infrastructure/bin
+      - /app/ClaudeForge.Tests/obj
+      - /app/ClaudeForge.Tests/bin
+      - /app/ClaudeForge.ArchTests/obj
+      - /app/ClaudeForge.ArchTests/bin
       - ../packages:/packages
       - dotnet-watch-cache:/root/.nuget
     secrets:

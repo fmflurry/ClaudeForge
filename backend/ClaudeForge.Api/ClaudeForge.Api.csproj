@@ -26,9 +26,24 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- Static OpenAPI artifact: emitted to backend/openapi/ during build -->
-    <OpenApiGenerateDocumentsOnBuild>true</OpenApiGenerateDocumentsOnBuild>
+    <!--
+      Static OpenAPI artifact: emitted to backend/openapi/ during build.
+      Disabled for Debug to prevent dotnet-getdocument from booting the ASP.NET
+      app (and running hosted services / DB migrations) at build time inside
+      'dotnet watch'. The runtime GET /openapi/v1.json endpoint (MapOpenApi) is
+      unaffected. Release builds (CI) keep this enabled so the openapi-document
+      artifact continues to be uploaded by the CI workflow.
+    -->
+    <OpenApiGenerateDocumentsOnBuild Condition="'$(Configuration)' != 'Debug'">true</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiGenerateDocumentsOnBuild Condition="'$(Configuration)' == 'Debug'">false</OpenApiGenerateDocumentsOnBuild>
     <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../openapi</OpenApiDocumentsDirectory>
+    <!--
+      This is a pure API project — it has no Razor pages, SPA, or static files to serve.
+      Disabling static web assets prevents dotnet watch from generating/reading
+      staticwebassets.development.json with Windows-style backslash paths when the
+      host obj/ directory is bind-mounted from a Windows machine into a Linux container.
+    -->
+    <UseStaticWebAssets>false</UseStaticWebAssets>
   </PropertyGroup>
 
 </Project>
