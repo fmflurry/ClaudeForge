@@ -97,8 +97,8 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
                     Name: p.Name,
                     Slug: p.Slug,
                     PluginVersion: sz.PluginVersion,
-                    SecurityScore: p.SecurityScore ?? 0m,
-                    SecurityStatus: p.SecurityStatus ?? string.Empty,
+                    SecurityScore: p.SecurityScore,
+                    SecurityStatus: p.SecurityStatus,
                     ApprovedBy: sz.ApprovedBy,
                     ApprovedAt: sz.ApprovedAt,
                     Label: "APPROVED"))
@@ -127,8 +127,8 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
                 PluginId: p.Id,
                 Name: p.Name,
                 Slug: p.Slug,
-                SecurityScore: p.SecurityScore ?? 0m,
-                SecurityStatus: p.SecurityStatus ?? string.Empty))
+                SecurityScore: p.SecurityScore,
+                SecurityStatus: p.SecurityStatus))
             .ToListAsync(ct);
 
         return results;

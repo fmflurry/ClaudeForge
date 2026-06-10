@@ -60,14 +60,14 @@ public sealed class PluginEntity
     public bool IsFeatured { get; set; }
 
     /// <summary>
-    /// Overall security score from the latest completed analysis (0–100). Null until first analysis completes.
+    /// Overall security score from the latest completed analysis (0–100). Default 0 until first analysis completes.
     /// </summary>
-    public decimal? SecurityScore { get; set; }
+    public decimal SecurityScore { get; set; }
 
     /// <summary>
-    /// Security analysis status: "pending" | "processing" | "passed" | "failed" | "review". Null until first analysis.
+    /// Security analysis status: "pending" | "processing" | "passed" | "failed" | "in_review". Default "pending".
     /// </summary>
-    public string? SecurityStatus { get; set; }
+    public string SecurityStatus { get; set; } = "pending";
 
     // Navigation properties
     public ICollection<PluginVersionEntity> Versions { get; set; } = [];

@@ -223,21 +223,40 @@ public sealed class MarketplaceDbContext : DbContext
                   .IsRequired(false);
 
             // CHECK: visibility='public' OR owner_org_id IS NOT NULL
-            entity.ToTable(t => t.HasCheckConstraint(
-                "chk_visibility_owner",
-                "visibility = 'public' OR owner_org_id IS NOT NULL"));
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint(
+                    "chk_visibility_owner",
+                    "visibility = 'public' OR owner_org_id IS NOT NULL");
+                t.HasCheckConstraint(
+                    "chk_plugins_security_status",
+                    "security_status IN ('pending', 'passed', 'failed', 'in_review')");
+            });
 
             // Composite index for visibility + owner_org_id filter queries
             entity.HasIndex(p => new { p.Visibility, p.OwnerOrgId })
                   .HasDatabaseName("idx_plugins_visibility_org");
 
+            entity.Property(p => p.IsFeatured)
+                  .HasColumnName("is_featured")
+                  .HasDefaultValue(false);
+
+            // Partial unique index — at most one featured plugin at a time
+            entity.HasIndex(p => p.IsFeatured)
+                  .IsUnique()
+                  .HasFilter("is_featured = true")
+                  .HasDatabaseName("ux_plugins_featured");
+
             entity.Property(p => p.SecurityScore)
                   .HasColumnName("security_score")
-                  .IsRequired(false);
+                  .HasColumnType("numeric(5,2)")
+                  .HasDefaultValue(0m)
+                  .IsRequired();
 
             entity.Property(p => p.SecurityStatus)
                   .HasColumnName("security_status")
-                  .IsRequired(false);
+                  .HasDefaultValue("pending")
+                  .IsRequired();
         });
     }
 
@@ -985,8 +1004,13 @@ public sealed class MarketplaceDbContext : DbContext
             entity.HasIndex(j => j.Status)
                   .HasDatabaseName("idx_analysis_jobs_status");
 
-            entity.HasIndex(j => new { j.Status, j.Priority, j.CreatedAt })
-                  .HasDatabaseName("idx_analysis_jobs_queue");
+            entity.HasIndex(j => new { j.Priority, j.CreatedAt })
+                  .IsDescending(true, false)
+                  .HasDatabaseName("idx_analysis_jobs_priority");
+
+            entity.ToTable(t => t.HasCheckConstraint(
+                "chk_analysis_jobs_status",
+                "status IN ('queued', 'processing', 'completed', 'failed')"));
         });
     }
 
@@ -1010,38 +1034,44 @@ public sealed class MarketplaceDbContext : DbContext
 
             entity.Property(r => r.StaticEslintScore)
                   .HasColumnName("static_eslint_score")
+                  .HasColumnType("numeric(5,2)")
                   .IsRequired(false);
 
             entity.Property(r => r.StaticSemgrepScore)
                   .HasColumnName("static_semgrep_score")
+                  .HasColumnType("numeric(5,2)")
                   .IsRequired(false);
 
             entity.Property(r => r.StaticGitleaksScore)
                   .HasColumnName("static_gitleaks_score")
+                  .HasColumnType("numeric(5,2)")
                   .IsRequired(false);
 
             entity.Property(r => r.StaticTrivyScore)
                   .HasColumnName("static_trivy_score")
+                  .HasColumnType("numeric(5,2)")
                   .IsRequired(false);
 
             entity.Property(r => r.StaticFindings)
                   .HasColumnName("static_findings")
                   .HasColumnType("jsonb")
-                  .HasDefaultValue("[]")
+                  .HasDefaultValueSql("'[]'::jsonb")
                   .IsRequired();
 
             entity.Property(r => r.DynamicBehaviorScore)
                   .HasColumnName("dynamic_behavior_score")
+                  .HasColumnType("numeric(5,2)")
                   .IsRequired(false);
 
             entity.Property(r => r.DynamicFindings)
                   .HasColumnName("dynamic_findings")
                   .HasColumnType("jsonb")
-                  .HasDefaultValue("[]")
+                  .HasDefaultValueSql("'[]'::jsonb")
                   .IsRequired();
 
             entity.Property(r => r.TotalScore)
                   .HasColumnName("total_score")
+                  .HasColumnType("numeric(5,2)")
                   .IsRequired();
 
             entity.Property(r => r.Status)
@@ -1054,18 +1084,22 @@ public sealed class MarketplaceDbContext : DbContext
 
             entity.Property(r => r.StaticWeight)
                   .HasColumnName("static_weight")
+                  .HasColumnType("numeric(5,2)")
                   .HasDefaultValue(0.6m);
 
             entity.Property(r => r.DynamicWeight)
                   .HasColumnName("dynamic_weight")
+                  .HasColumnType("numeric(5,2)")
                   .HasDefaultValue(0.4m);
 
             entity.Property(r => r.PassThreshold)
                   .HasColumnName("pass_threshold")
+                  .HasColumnType("numeric(5,2)")
                   .HasDefaultValue(80m);
 
             entity.Property(r => r.FailThreshold)
                   .HasColumnName("fail_threshold")
+                  .HasColumnType("numeric(5,2)")
                   .HasDefaultValue(50m);
 
             entity.Property(r => r.CreatedAt)
@@ -1080,6 +1114,13 @@ public sealed class MarketplaceDbContext : DbContext
 
             entity.HasIndex(r => r.PluginId)
                   .HasDatabaseName("idx_analysis_results_plugin");
+
+            entity.HasIndex(r => r.Status)
+                  .HasDatabaseName("idx_analysis_results_status");
+
+            entity.ToTable(t => t.HasCheckConstraint(
+                "chk_analysis_results_status",
+                "status IN ('passed', 'failed', 'in_review')"));
         });
     }
 
@@ -1091,22 +1132,26 @@ public sealed class MarketplaceDbContext : DbContext
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Id)
                   .HasColumnName("id")
-                  .UseIdentityByDefaultColumn();
+                  .HasDefaultValue(1);
 
             entity.Property(c => c.StaticWeight)
                   .HasColumnName("static_weight")
+                  .HasColumnType("numeric(5,2)")
                   .HasDefaultValue(0.6m);
 
             entity.Property(c => c.DynamicWeight)
                   .HasColumnName("dynamic_weight")
+                  .HasColumnType("numeric(5,2)")
                   .HasDefaultValue(0.4m);
 
             entity.Property(c => c.PassThreshold)
                   .HasColumnName("pass_threshold")
+                  .HasColumnType("numeric(5,2)")
                   .HasDefaultValue(80m);
 
             entity.Property(c => c.FailThreshold)
                   .HasColumnName("fail_threshold")
+                  .HasColumnType("numeric(5,2)")
                   .HasDefaultValue(50m);
 
             entity.Property(c => c.MaxWorkers)
@@ -1128,6 +1173,12 @@ public sealed class MarketplaceDbContext : DbContext
             entity.Property(c => c.UpdatedBy)
                   .HasColumnName("updated_by")
                   .IsRequired(false);
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("chk_analysis_config_thresholds", "pass_threshold > fail_threshold");
+                t.HasCheckConstraint("chk_analysis_config_weights", "static_weight + dynamic_weight = 1.0");
+            });
         });
     }
 
@@ -1148,13 +1199,13 @@ public sealed class MarketplaceDbContext : DbContext
             entity.Property(c => c.PreviousConfig)
                   .HasColumnName("previous_config")
                   .HasColumnType("jsonb")
-                  .HasDefaultValue("{}")
+                  .HasDefaultValueSql("'{}'::jsonb")
                   .IsRequired();
 
             entity.Property(c => c.NewConfig)
                   .HasColumnName("new_config")
                   .HasColumnType("jsonb")
-                  .HasDefaultValue("{}")
+                  .HasDefaultValueSql("'{}'::jsonb")
                   .IsRequired();
 
             entity.Property(c => c.ChangeDescription)
@@ -1164,6 +1215,9 @@ public sealed class MarketplaceDbContext : DbContext
             entity.Property(c => c.CreatedAt)
                   .HasColumnName("created_at")
                   .HasDefaultValueSql("NOW()");
+
+            entity.HasIndex(c => c.CreatedAt)
+                  .HasDatabaseName("idx_config_change_log_created_at");
         });
     }
 
@@ -1236,6 +1290,13 @@ public sealed class MarketplaceDbContext : DbContext
 
             entity.HasIndex(a => a.AuthorId)
                   .HasDatabaseName("idx_appeals_author");
+
+            entity.HasIndex(a => a.Status)
+                  .HasDatabaseName("idx_appeals_status");
+
+            entity.ToTable(t => t.HasCheckConstraint(
+                "chk_appeals_status",
+                "status IN ('pending', 'approved', 'rejected')"));
         });
     }
 
@@ -1284,6 +1345,12 @@ public sealed class MarketplaceDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(sz => sz.PluginId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(sz => sz.OrgId)
+                  .HasDatabaseName("idx_safe_zone_org");
+
+            entity.HasIndex(sz => sz.PluginId)
+                  .HasDatabaseName("idx_safe_zone_plugin");
 
             // UNIQUE(org_id, plugin_id, plugin_version)
             entity.HasIndex(sz => new { sz.OrgId, sz.PluginId, sz.PluginVersion })
@@ -1366,7 +1433,7 @@ public sealed class MarketplaceDbContext : DbContext
             entity.Property(b => b.Requirements)
                   .HasColumnName("requirements")
                   .HasColumnType("jsonb")
-                  .HasDefaultValue("{}")
+                  .HasDefaultValueSql("'{}'::jsonb")
                   .IsRequired();
 
             entity.Property(b => b.CreatedAt)
@@ -1412,9 +1479,6 @@ public sealed class MarketplaceDbContext : DbContext
             entity.HasIndex(ab => new { ab.AuthorId, ab.BadgeId })
                   .IsUnique()
                   .HasDatabaseName("ix_author_badges_author_badge");
-
-            entity.HasIndex(ab => ab.AuthorId)
-                  .HasDatabaseName("idx_author_badges_author");
         });
     }
 
@@ -1440,7 +1504,7 @@ public sealed class MarketplaceDbContext : DbContext
             entity.Property(ar => ar.Badges)
                   .HasColumnName("badges")
                   .HasColumnType("jsonb")
-                  .HasDefaultValue("[]")
+                  .HasDefaultValueSql("'[]'::jsonb")
                   .IsRequired();
 
             entity.Property(ar => ar.CreatedAt)
@@ -1493,11 +1557,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .HasPrincipalKey(ar => ar.AuthorId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(e => e.AuthorId)
-                  .HasDatabaseName("idx_karma_events_author");
-
-            entity.HasIndex(e => e.CreatedAt)
-                  .HasDatabaseName("idx_karma_events_created");
+            entity.HasIndex(e => e.AuthorId);
         });
     }
 
@@ -1516,8 +1576,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .IsRequired();
 
             entity.Property(lc => lc.KarmaPoints)
-                  .HasColumnName("karma_points")
-                  .HasDefaultValue(0);
+                  .HasColumnName("karma_points");
 
             entity.Property(lc => lc.BadgeCount)
                   .HasColumnName("badge_count")
@@ -1542,6 +1601,10 @@ public sealed class MarketplaceDbContext : DbContext
 
             entity.HasIndex(lc => new { lc.Period, lc.OrgId, lc.Rank })
                   .HasDatabaseName("idx_leaderboard_cache_period_org_rank");
+
+            entity.ToTable(t => t.HasCheckConstraint(
+                "chk_leaderboard_cache_period",
+                "period IN ('weekly', 'monthly', 'all_time')"));
         });
     }
 
