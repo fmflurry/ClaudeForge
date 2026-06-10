@@ -53,6 +53,22 @@ public sealed class PluginEntity
     /// </summary>
     public Guid? OwnerUserId { get; set; }
 
+    /// <summary>
+    /// When <c>true</c> this plugin is shown in the landing-page showcase.
+    /// At most one plugin may be featured at a time (enforced by <c>ux_plugins_featured</c> partial unique index).
+    /// </summary>
+    public bool IsFeatured { get; set; }
+
+    /// <summary>
+    /// Overall security score from the latest completed analysis (0–100). Null until first analysis completes.
+    /// </summary>
+    public decimal? SecurityScore { get; set; }
+
+    /// <summary>
+    /// Security analysis status: "pending" | "processing" | "passed" | "failed" | "review". Null until first analysis.
+    /// </summary>
+    public string? SecurityStatus { get; set; }
+
     // Navigation properties
     public ICollection<PluginVersionEntity> Versions { get; set; } = [];
     public ICollection<PluginCategoryEntity> PluginCategories { get; set; } = [];

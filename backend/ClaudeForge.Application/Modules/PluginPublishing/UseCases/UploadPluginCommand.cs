@@ -13,4 +13,7 @@ public sealed record UploadPluginCommand(
     string ReleaseNotes,
     string Visibility = "public",
     Guid? OwnerOrgId = null,
-    Guid? OwnerUserId = null);
+    Guid? OwnerUserId = null,
+    IReadOnlyList<string>? Types = null,
+    IReadOnlyList<string>? Languages = null,
+    IReadOnlyList<string>? UseCaseTags = null);

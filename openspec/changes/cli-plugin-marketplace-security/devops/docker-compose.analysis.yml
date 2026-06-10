@@ -1,0 +1,62 @@
+name: claudeforge-analysis
+
+# ─── Usage ────────────────────────────────────────────────────────────────────
+# Deploy analysis workers alongside main stack:
+#   docker compose -f infra/docker-compose.yml -f devops/docker-compose.analysis.yml up -d
+#
+# Deploy workers only (standalone):
+#   docker compose -f devops/docker-compose.analysis.yml up -d
+#
+# Scale workers:
+#   docker compose -f devops/docker-compose.analysis.yml up -d --scale analysis-worker=4
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ─── Analysis Worker ─────────────────────────────────────────────────────────
+  analysis-worker:
+    build:
+      context: ../backend
+      dockerfile: ../openspec/changes/cli-plugin-marketplace-security/devops/Dockerfile.analysis-worker
+    container_name: cf-analysis-worker
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Postgres: "${CONNECTION_STRING}"
+      WORKER_ID: "worker-${HOSTNAME}"
+      # Metrics endpoint exposed on port 8080
+    ports:
+      - "8081:8080"
+    volumes:
+      # Mount Docker socket for sandbox container management
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Analysis workspace shared across workers (ephemeral)
+      - analysis-tmp:/tmp/analysis-workspace
+    networks:
+      - cf-net
+      - analysis-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "1.0"
+          memory: 512M
+
+volumes:
+  analysis-tmp:
+
+networks:
+  cf-net:
+    external: true
+    name: claudeforge-dev_cf-net
+  analysis-net:
+    driver: bridge

@@ -7,6 +7,7 @@ import {
   DiscoverPluginsParams,
   DiscoveryResultDto,
   DocPageDto,
+  FeaturedPluginEnvelope,
   GetVersionHistoryParams,
   IngestTelemetryRequestDto,
   ListPluginsParams,
@@ -146,6 +147,14 @@ export class ApiClient {
 
   getMarketplaceStats(): Observable<MarketplaceStatsDto> {
     return this.http.get<MarketplaceStatsDto>(`${this.baseUrl}/api/v1/stats`);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Featured Plugin
+  // ---------------------------------------------------------------------------
+
+  getFeaturedPlugin(): Observable<FeaturedPluginEnvelope> {
+    return this.http.get<FeaturedPluginEnvelope>(`${this.baseUrl}/api/v1/plugins/featured`);
   }
 
   // ---------------------------------------------------------------------------

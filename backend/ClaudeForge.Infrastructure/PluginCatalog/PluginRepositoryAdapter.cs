@@ -128,6 +128,31 @@ public sealed class PluginRepositoryAdapter : IPluginRepositoryPort, ICategoryRe
         return _context.Plugins.AnyAsync(p => p.NameNormalized == lower, ct);
     }
 
+    public async Task<FeaturedPluginDto?> GetFeaturedPluginAsync(CancellationToken ct = default)
+    {
+        PluginEntity? entity = await _context.Plugins
+            .Include(p => p.Versions)
+            .AsNoTracking()
+            .Where(p => p.IsFeatured)
+            .FirstOrDefaultAsync(ct);
+
+        if (entity is null)
+        {
+            return null;
+        }
+
+        string? latestVersion = entity.Versions
+            .FirstOrDefault(v => v.IsLatest)?.Version;
+
+        return new FeaturedPluginDto
+        {
+            PluginId = entity.Id.ToString(),
+            Name = entity.Name,
+            Slug = entity.Slug,
+            LatestVersion = latestVersion,
+        };
+    }
+
     // -------------------------------------------------------------------------
     // ICategoryRepositoryPort
     // -------------------------------------------------------------------------

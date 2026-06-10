@@ -1,0 +1,167 @@
+using ClaudeForge.Application.Modules.PluginCatalog.Ports;
+using ClaudeForge.Application.Modules.PluginCatalog.UseCases;
+using NSubstitute;
+
+namespace ClaudeForge.Tests.Unit.PluginCatalog;
+
+/// <summary>
+/// Unit tests for <see cref="GetFeaturedPluginUseCase"/>.
+///
+/// Verifies:
+///   - Returns the featured plugin when one is flagged.
+///   - Returns null (absence signal → 404) when no plugin is featured.
+///   - Never returns a non-featured plugin.
+///   - Single-featured invariant after rotation (only the new featured is returned).
+/// </summary>
+public sealed class GetFeaturedPluginUseCaseTests
+{
+    private static FeaturedPluginDto MakeFeatured(string slug) => new()
+    {
+        PluginId = Guid.NewGuid().ToString(),
+        Name = $"Plugin {slug}",
+        Slug = slug,
+        LatestVersion = "1.0.0",
+    };
+
+    // -------------------------------------------------------------------------
+    // Returns featured plugin
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetFeaturedPlugin_WhenOneFeatured_ReturnsThatPlugin()
+    {
+        // Arrange
+        IPluginRepositoryPort repo = Substitute.For<IPluginRepositoryPort>();
+        FeaturedPluginDto featured = MakeFeatured("typescript-linter");
+        repo.GetFeaturedPluginAsync(Arg.Any<CancellationToken>()).Returns(featured);
+
+        GetFeaturedPluginUseCase useCase = new(repo);
+
+        // Act
+        FeaturedPluginDto? result = await useCase.ExecuteAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("typescript-linter", result.Slug);
+        Assert.Equal("1.0.0", result.LatestVersion);
+    }
+
+    [Fact]
+    public async Task GetFeaturedPlugin_WhenFeatured_IncludesPluginIdNameSlugLatestVersion()
+    {
+        // Arrange
+        IPluginRepositoryPort repo = Substitute.For<IPluginRepositoryPort>();
+        string expectedId = Guid.NewGuid().ToString();
+        FeaturedPluginDto featured = new()
+        {
+            PluginId = expectedId,
+            Name = "TypeScript Linter",
+            Slug = "typescript-linter",
+            LatestVersion = "2.3.1",
+        };
+        repo.GetFeaturedPluginAsync(Arg.Any<CancellationToken>()).Returns(featured);
+
+        GetFeaturedPluginUseCase useCase = new(repo);
+
+        // Act
+        FeaturedPluginDto? result = await useCase.ExecuteAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedId, result.PluginId);
+        Assert.Equal("TypeScript Linter", result.Name);
+        Assert.Equal("typescript-linter", result.Slug);
+        Assert.Equal("2.3.1", result.LatestVersion);
+    }
+
+    // -------------------------------------------------------------------------
+    // Signals absence when none featured
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetFeaturedPlugin_WhenNoneFeatured_ReturnsNull()
+    {
+        // Arrange
+        IPluginRepositoryPort repo = Substitute.For<IPluginRepositoryPort>();
+        repo.GetFeaturedPluginAsync(Arg.Any<CancellationToken>()).Returns((FeaturedPluginDto?)null);
+
+        GetFeaturedPluginUseCase useCase = new(repo);
+
+        // Act
+        FeaturedPluginDto? result = await useCase.ExecuteAsync();
+
+        // Assert — null signals 404 to the endpoint handler
+        Assert.Null(result);
+    }
+
+    // -------------------------------------------------------------------------
+    // Never returns a non-featured plugin
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetFeaturedPlugin_RepositoryFiltersCorrectly_OnlyFeaturedIsReturned()
+    {
+        // Arrange: repository is correctly implemented and only returns the featured plugin.
+        // The use case itself must not add any logic that could introduce a non-featured plugin.
+        IPluginRepositoryPort repo = Substitute.For<IPluginRepositoryPort>();
+        FeaturedPluginDto onlyFeatured = MakeFeatured("featured-slug");
+        repo.GetFeaturedPluginAsync(Arg.Any<CancellationToken>()).Returns(onlyFeatured);
+
+        GetFeaturedPluginUseCase useCase = new(repo);
+
+        // Act
+        FeaturedPluginDto? result = await useCase.ExecuteAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("featured-slug", result.Slug);
+        // Use case must delegate entirely to the repository — one call, no additional filtering
+        await repo.Received(1).GetFeaturedPluginAsync(Arg.Any<CancellationToken>());
+    }
+
+    // -------------------------------------------------------------------------
+    // Single-featured invariant after rotation
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetFeaturedPlugin_AfterRotation_OnlyNewFeaturedIsReturned()
+    {
+        // Arrange: simulate rotation — before was plugin A, now is plugin B.
+        IPluginRepositoryPort repo = Substitute.For<IPluginRepositoryPort>();
+        FeaturedPluginDto pluginB = MakeFeatured("new-featured-plugin");
+        repo.GetFeaturedPluginAsync(Arg.Any<CancellationToken>()).Returns(pluginB);
+
+        GetFeaturedPluginUseCase useCase = new(repo);
+
+        // Act
+        FeaturedPluginDto? result = await useCase.ExecuteAsync();
+
+        // Assert: only the new featured plugin is returned (invariant: at most one)
+        Assert.NotNull(result);
+        Assert.Equal("new-featured-plugin", result.Slug);
+    }
+
+    [Fact]
+    public async Task GetFeaturedPlugin_LatestVersionNullable_WhenNoVersionsExist()
+    {
+        // Arrange
+        IPluginRepositoryPort repo = Substitute.For<IPluginRepositoryPort>();
+        FeaturedPluginDto featured = new()
+        {
+            PluginId = Guid.NewGuid().ToString(),
+            Name = "No Version Plugin",
+            Slug = "no-version",
+            LatestVersion = null,
+        };
+        repo.GetFeaturedPluginAsync(Arg.Any<CancellationToken>()).Returns(featured);
+
+        GetFeaturedPluginUseCase useCase = new(repo);
+
+        // Act
+        FeaturedPluginDto? result = await useCase.ExecuteAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.LatestVersion);
+    }
+}
