@@ -102,9 +102,9 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
             <a
               routerLink="/docs"
               z-button
-              zType="outline"
+              zType="default"
               zSize="lg"
-              class="lp-hero-cta-secondary"
+              class="lp-hero-cta-primary"
               [attr.aria-label]="i18n.t('home.aria.learn-publish')"
               >{{ i18n.t('home.publish-plugin') }}</a
             >
@@ -627,6 +627,9 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
 
       /* ── How it works ─────────────────────────────────────────────────── */
       .lp-how {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         padding: 1rem;
         background: var(--lp-cream-soft);
         border-radius: 1rem;
