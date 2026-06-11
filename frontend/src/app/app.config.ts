@@ -61,6 +61,9 @@ import { DeviceActivationFacade } from './features/device-activation/application
 import { MarketplaceStatsPort } from './features/home/domain/ports/marketplace-stats.port';
 import { MarketplaceStatsHttpAdapter } from './features/home/infrastructure/adapter/marketplace-stats-http.adapter';
 import { HomeMetricsFacade } from './features/home/application/facades/home-metrics.facade';
+import { FeaturedPluginPort } from './features/home/domain/ports/featured-plugin.port';
+import { FeaturedPluginHttpAdapter } from './features/home/infrastructure/adapter/featured-plugin-http.adapter';
+import { FeaturedPluginFacade } from './features/home/application/facades/featured-plugin.facade';
 import { provideZard } from './shared/core/provider/providezard';
 
 /**
@@ -101,17 +104,13 @@ function i18nInitializer(
     if (isPlatformBrowser(platformId)) {
       const stored = storage.read();
       if (stored) {
-        facade.setLanguage(stored);
-        await facade.load(stored);
+        await facade.setLanguage(stored);
         return;
       }
-      // Fall back to browser navigator languages
       const navigatorLangs = typeof navigator !== 'undefined' ? (navigator.languages as readonly string[]) : [];
       const detected = pickLanguage(navigatorLangs, LANG_VALUES, 'en');
-      facade.setLanguage(detected);
-      await facade.load(detected);
+      await facade.setLanguage(detected);
     } else {
-      // On SSR: prefer ?lang query param, then Accept-Language, fall back to SERVER_ACTIVE_LANG
       const urlLang = request ? (new URL(request.url).searchParams.get('lang') as Lang | null) : null;
       const chosenLang: Lang = (() => {
         if (urlLang && (LANG_VALUES as readonly string[]).includes(urlLang)) {
@@ -120,16 +119,7 @@ function i18nInitializer(
         const acceptLang = request?.headers?.get('accept-language') ?? null;
         return pickLanguage(parseAcceptLanguage(acceptLang), LANG_VALUES, serverLang);
       })();
-      facade.setLanguage(chosenLang);
-      // Guard against build-time prerender where the browser dist i18n files may
-      // not yet exist (route-extraction phase). At real SSR runtime, the browser
-      // dist is fully built and the load will succeed, fixing the raw-key bug.
-      try {
-        await facade.load(chosenLang);
-      } catch {
-        // Prerender/build context: i18n files not yet present — silently skip.
-        // This does NOT affect the runtime SSR server where files are available.
-      }
+      await facade.setLanguage(chosenLang);
     }
   };
 }
@@ -256,6 +246,14 @@ export const appConfig: ApplicationConfig = {
       useClass: MarketplaceStatsHttpAdapter,
     },
     HomeMetricsFacade,
+    // ---------------------------------------------------------------------------
+    // Featured Plugin
+    // ---------------------------------------------------------------------------
+    {
+      provide: FeaturedPluginPort,
+      useClass: FeaturedPluginHttpAdapter,
+    },
+    FeaturedPluginFacade,
   ],
 };
 

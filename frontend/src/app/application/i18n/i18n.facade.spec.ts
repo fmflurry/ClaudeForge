@@ -119,44 +119,44 @@ describe('I18nFacade — initial state', () => {
 // ---------------------------------------------------------------------------
 
 describe('I18nFacade — setLanguage("fr")', () => {
-  it('updates activeLang signal to "fr"', () => {
+  it('updates activeLang signal to "fr"', async () => {
     const { facade } = setup();
-    facade.setLanguage('fr');
+    await facade.setLanguage('fr');
     expect(facade.activeLang()).toBe('fr');
   });
 
-  it('calls storage.write("fr")', () => {
+  it('calls storage.write("fr")', async () => {
     const { facade, storageSpy } = setup();
-    facade.setLanguage('fr');
+    await facade.setLanguage('fr');
     expect(storageSpy.writeSpy).toHaveBeenCalledWith('fr');
   });
 
-  it('calls storage.write exactly once per setLanguage call', () => {
+  it('calls storage.write exactly once per setLanguage call', async () => {
     const { facade, storageSpy } = setup();
-    facade.setLanguage('fr');
+    await facade.setLanguage('fr');
     expect(storageSpy.writeSpy).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('I18nFacade — setLanguage("en") after "fr"', () => {
-  it('updates activeLang signal back to "en"', () => {
+  it('updates activeLang signal back to "en"', async () => {
     const { facade } = setup();
-    facade.setLanguage('fr');
-    facade.setLanguage('en');
+    await facade.setLanguage('fr');
+    await facade.setLanguage('en');
     expect(facade.activeLang()).toBe('en');
   });
 
-  it('calls storage.write twice (once per setLanguage call)', () => {
+  it('calls storage.write twice (once per setLanguage call)', async () => {
     const { facade, storageSpy } = setup();
-    facade.setLanguage('fr');
-    facade.setLanguage('en');
+    await facade.setLanguage('fr');
+    await facade.setLanguage('en');
     expect(storageSpy.writeSpy).toHaveBeenCalledTimes(2);
   });
 
-  it('last storage.write call was with "en"', () => {
+  it('last storage.write call was with "en"', async () => {
     const { facade, storageSpy } = setup();
-    facade.setLanguage('fr');
-    facade.setLanguage('en');
+    await facade.setLanguage('fr');
+    await facade.setLanguage('en');
     expect(storageSpy.writeSpy).toHaveBeenLastCalledWith('en');
   });
 });
@@ -166,9 +166,9 @@ describe('I18nFacade — setLanguage("en") after "fr"', () => {
 // ---------------------------------------------------------------------------
 
 describe('I18nFacade — TranslocoService integration', () => {
-  it('does not throw when setLanguage is called with valid lang', () => {
+  it('does not throw when setLanguage is called with valid lang', async () => {
     const { facade } = setup();
-    expect(() => facade.setLanguage('fr')).not.toThrow();
+    await expect(facade.setLanguage('fr')).resolves.not.toThrow();
   });
 
   it('activeLang() is a readonly Signal (not writable)', () => {

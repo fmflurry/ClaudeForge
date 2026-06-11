@@ -26,6 +26,7 @@ seed-plugins/
 # Frontend node_modules — Docker reinstalls inside the image
 frontend/node_modules/
 frontend/dist/
+frontend/.angular/
 
 # Local secrets / env
 *.pem

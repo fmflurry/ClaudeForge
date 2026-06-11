@@ -62,6 +62,14 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         color: var(--muted-foreground);
       }
 
+      :host {
+        --sb-cream: #fffdf1;
+        --sb-amber-rgb: 250 204 21;
+        --sb-slate: #0f172a;
+        --sb-mint-rgb: 34 197 94;
+        --sb-shadow: 0 22px 60px rgb(15 23 42 / 0.14);
+      }
+
       .sb-error {
         text-align: center;
         padding: 1.5rem;
@@ -84,12 +92,15 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
       }
 
       .sb-band {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        justify-content: center;
-        padding: 2rem 1.5rem;
-        background: var(--muted);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.875rem;
+        padding: 1rem;
+        background:
+          radial-gradient(circle at 12% 0%, rgb(var(--sb-amber-rgb) / 0.22), transparent 18rem),
+          radial-gradient(circle at 100% 100%, rgb(var(--sb-mint-rgb) / 0.16), transparent 18rem), var(--sb-slate);
+        border-radius: 1rem;
+        box-shadow: var(--sb-shadow);
       }
 
       .sb-stat-card {
@@ -98,12 +109,17 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         align-items: center;
         gap: 0.25rem;
         min-width: 8rem;
+        padding: 1rem;
+        border: 1px solid rgb(255 255 255 / 0.12);
+        border-radius: 0.875rem;
+        background: rgb(255 255 255 / 0.08);
+        backdrop-filter: blur(10px);
       }
 
       .sb-stat-card__label {
         margin: 0;
         font-size: 0.875rem;
-        color: var(--muted-foreground);
+        color: rgb(255 255 255 / 0.72);
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -112,7 +128,7 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         margin: 0;
         font-size: 1.75rem;
         font-weight: 700;
-        color: var(--foreground);
+        color: var(--sb-cream);
       }
     `,
   ],

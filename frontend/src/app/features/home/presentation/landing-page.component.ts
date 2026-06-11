@@ -2,24 +2,32 @@
  * Landing page for the ClaudeForge plugin marketplace.
  *
  * Sections:
- * - Hero: tagline, primary CTAs (browse, publish) and a sign-in placeholder
+ * - Hero: warm aurora surface, headline, install-showcase card (dark code block),
+ *   primary CTAs (browse, publish)
+ * - Stats band: marketplace-wide metrics
  * - Featured plugins: real data via CatalogFacade (top-6 by downloadCount)
  * - How-it-works: 4 value-prop cards
- * - Search entry: keyboard-accessible form that navigates to /search
- * - Footer: links to catalog and docs
+ * - Footer: links to catalog and docs (dark surface)
  *
- * NOTE: Sign-in CTA is rendered as a disabled button linked to /auth/login.
- * Auth is not yet implemented; the affordance signals the intent without
- * routing to a broken page (button is aria-disabled and tabIndex=-1).
- *
- * Phase 6 ZardUI migration:
- * - Hero CTAs: anchors/buttons use z-button attribute for ZardUI styling
- * - Plugin cards: z-card wraps each plugin card's body content
- * - Type/category badges: z-badge replaces cf-badge
- * - Hardcoded colors replaced with var(--token) semantic tokens
+ * Hero redesign (D3/D4):
+ * - Background: wellness-inspired warm cream + slate/mint aurora surface
+ * - Text: var(--foreground) — dark on light, WCAG AA compliant
+ * - The install code block is the ONLY dark element in the hero
+ * - Featured plugin slug drives the CLI command; falls back to generic placeholder
  */
 
-import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, Signal, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  OnInit,
+  PLATFORM_ID,
+  Signal,
+  signal,
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { CatalogFacade } from '../../catalog/application/facades/catalog.facade';
 import type { PluginSummary } from '../../catalog/domain/models/catalog.models';
@@ -32,9 +40,16 @@ import { StatsBandComponent } from './stats-band/stats-band.component';
 import { SeoMetadataService } from '../../../shared/infrastructure/seo/seo-metadata.service';
 import { StructuredDataService } from '../../../shared/infrastructure/seo/structured-data.service';
 import { I18nFacade } from '../../../application/i18n/i18n.facade';
+import { FeaturedPluginFacade } from '../application/facades/featured-plugin.facade';
+import type { FeaturedPlugin } from '../domain/models/featured-plugin.model';
+import { AuthFacade } from '../../auth/application/facades/auth.facade';
+import type { CurrentUser } from '../../auth/domain/models/auth.models';
 
 /** Number of plugins shown in the featured section. */
 const FEATURED_LIMIT = 6;
+
+/** Fallback CLI command identifier shown when no plugin is featured. */
+const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
 
 @Component({
   selector: 'cf-landing-page',
@@ -50,179 +65,204 @@ const FEATURED_LIMIT = 6;
   ],
   template: `
     <!-- ================================================================= -->
-    <!-- HERO                                                                -->
+    <!-- HERO (warm aurora surface)                                          -->
     <!-- ================================================================= -->
     <section class="lp-hero" aria-labelledby="lp-hero-title">
       <div class="lp-hero__inner">
-        <h1 id="lp-hero-title" class="lp-hero__title">{{ i18n.t('home.hero-title') }}</h1>
-        <p class="lp-hero__tagline">
-          {{ i18n.t('home.hero-tagline') }}
-        </p>
+        <div class="lp-hero__copy">
+          <h1 id="lp-hero-title" class="lp-hero__title">{{ i18n.t('home.hero-title') }}</h1>
+          <p class="lp-hero__tagline">
+            {{ i18n.t('home.hero-tagline') }}
+          </p>
 
-        <div class="lp-hero__ctas" role="group" [attr.aria-label]="i18n.t('home.aria.primary-actions')">
-          <a
-            routerLink="/catalog"
-            z-button
-            zType="default"
-            zSize="lg"
-            class="lp-hero-cta-primary"
-            [attr.aria-label]="i18n.t('home.aria.browse-all')"
-          >{{ i18n.t('home.browse-plugins') }}</a>
+          <form class="lp-search-entry" role="search" (submit)="onSearchSubmit($event)">
+            <label for="lp-search-input" class="lp-sr-only">{{ i18n.t('home.search-aria') }}</label>
+            <input
+              id="lp-search-input"
+              type="search"
+              class="lp-search-entry__input"
+              [placeholder]="i18n.t('home.search-placeholder')"
+              [value]="searchQuery()"
+              (input)="onSearchInput($event)"
+              autocomplete="off"
+              [attr.aria-label]="i18n.t('home.search-aria')"
+            />
+            <button
+              type="submit"
+              z-button
+              zType="default"
+              class="lp-search-entry__btn"
+              [attr.aria-label]="i18n.t('home.search-btn')"
+            >
+              {{ i18n.t('home.search-btn') }}
+            </button>
+          </form>
 
-          <a
-            routerLink="/docs"
-            z-button
-            zType="outline"
-            zSize="lg"
-            class="lp-hero-cta-secondary"
-            [attr.aria-label]="i18n.t('home.aria.learn-publish')"
-          >{{ i18n.t('home.publish-plugin') }}</a>
+          <div class="lp-hero__ctas" role="group" [attr.aria-label]="i18n.t('home.aria.primary-actions')">
+            <a
+              routerLink="/catalog"
+              z-button
+              zType="default"
+              zSize="lg"
+              class="lp-hero-cta-primary"
+              [attr.aria-label]="i18n.t('home.aria.browse-all')"
+              >{{ i18n.t('home.browse-plugins') }}</a
+            >
 
-          <!-- Sign-in CTA — intentionally disabled; auth is not yet implemented. -->
-          <button
-            type="button"
-            z-button
-            zType="ghost"
-            zSize="lg"
-            class="lp-hero-cta-ghost"
-            [zDisabled]="true"
-            tabindex="-1"
-            [title]="i18n.t('home.sign-in')"
-          >
-            {{ i18n.t('home.sign-in') }}
-          </button>
+            <a
+              routerLink="/docs"
+              z-button
+              zType="outline"
+              zSize="lg"
+              class="lp-hero-cta-secondary"
+              [attr.aria-label]="i18n.t('home.aria.learn-publish')"
+              >{{ i18n.t('home.publish-plugin') }}</a
+            >
+          </div>
+        </div>
+
+        <!-- Install Showcase Card -->
+        <div class="lp-showcase" [attr.aria-label]="i18n.t('home.install-showcase.heading')">
+          <p class="lp-showcase__heading">{{ i18n.t('home.install-showcase.heading') }}</p>
+          @if (featuredPlugin(); as plugin) {
+            <p class="lp-showcase__plugin">
+              <span>{{ plugin.name }}</span>
+              @if (plugin.latestVersion) {
+                <span>v{{ plugin.latestVersion }}</span>
+              }
+            </p>
+          }
+          <div class="lp-showcase__code-block" role="region" [attr.aria-label]="installCommand()">
+            <code class="lp-showcase__code">{{ installCommand() }}</code>
+            <button
+              type="button"
+              class="lp-showcase__copy-btn"
+              [attr.aria-label]="
+                copied() ? i18n.t('home.install-showcase.copied') : i18n.t('home.install-showcase.copy-btn')
+              "
+              (click)="copyInstallCommand()"
+            >
+              {{ copied() ? i18n.t('home.install-showcase.copied') : i18n.t('home.install-showcase.copy-btn') }}
+            </button>
+          </div>
+          <span class="lp-sr-only" aria-live="polite">{{
+            copied() ? i18n.t('home.install-showcase.copied') : ''
+          }}</span>
+          <a routerLink="/docs" class="lp-showcase__caption">{{ i18n.t('home.install-showcase.caption') }}</a>
         </div>
       </div>
     </section>
 
-    <!-- ================================================================= -->
-    <!-- SEARCH ENTRY                                                        -->
-    <!-- ================================================================= -->
-    <section class="lp-search-entry" [attr.aria-label]="i18n.t('home.search-aria')">
-      <form class="lp-search-entry__form" role="search" (submit)="onSearchSubmit($event)">
-        <label for="lp-search-input" class="lp-sr-only">{{ i18n.t('home.search-aria') }}</label>
-        <input
-          id="lp-search-input"
-          type="search"
-          class="lp-search-entry__input"
-          [placeholder]="i18n.t('home.search-placeholder')"
-          [value]="searchQuery()"
-          (input)="onSearchInput($event)"
-          autocomplete="off"
-          [attr.aria-label]="i18n.t('home.search-aria')"
-        />
-        <button
-          type="submit"
-          z-button
-          zType="default"
-          class="lp-search-entry__btn"
-          [attr.aria-label]="i18n.t('home.search-btn')"
-        >
-          {{ i18n.t('home.search-btn') }}
-        </button>
-      </form>
-    </section>
+    <div class="lp-supporting">
+      <!-- ================================================================= -->
+      <!-- STATS BAND                                                          -->
+      <!-- ================================================================= -->
+      <cf-stats-band />
 
-    <!-- ================================================================= -->
-    <!-- STATS BAND                                                          -->
-    <!-- ================================================================= -->
-    <cf-stats-band />
+      <!-- ================================================================= -->
+      <!-- FEATURED PLUGINS                                                    -->
+      <!-- ================================================================= -->
+      <section class="lp-featured" aria-labelledby="lp-featured-title">
+        <div class="lp-section-inner">
+          <h2 id="lp-featured-title" class="lp-section-title">
+            {{ i18n.t('home.popular-heading') }}
+          </h2>
 
-    <!-- ================================================================= -->
-    <!-- FEATURED PLUGINS                                                    -->
-    <!-- ================================================================= -->
-    <section class="lp-featured" aria-labelledby="lp-featured-title">
-      <div class="lp-section-inner">
-        <h2 id="lp-featured-title" class="lp-section-title">
-          {{ i18n.t('home.popular-heading') }}
-        </h2>
+          @if (isLoadingPlugins()) {
+            <div
+              class="lp-featured__loading"
+              aria-busy="true"
+              role="status"
+              [attr.aria-label]="i18n.t('home.aria.loading-plugins')"
+            >
+              {{ i18n.t('home.loading-plugins') }}
+            </div>
+          }
 
-        @if (isLoadingPlugins()) {
-          <div class="lp-featured__loading" aria-busy="true" role="status" [attr.aria-label]="i18n.t('home.aria.loading-plugins')">
-            {{ i18n.t('home.loading-plugins') }}
-          </div>
-        }
+          @if (!isLoadingPlugins() && hasError()) {
+            <div role="alert" class="lp-featured__error">
+              {{ i18n.t('home.error-plugins') }}
+              <a routerLink="/catalog" class="lp-link">{{ i18n.t('home.error.browse-catalog') }}</a
+              >.
+            </div>
+          }
 
-        @if (!isLoadingPlugins() && hasError()) {
-          <div role="alert" class="lp-featured__error">
-            {{ i18n.t('home.error-plugins') }}
-            <a routerLink="/catalog" class="lp-link">{{ i18n.t('home.error.browse-catalog') }}</a>.
-          </div>
-        }
+          @if (!isLoadingPlugins() && !hasError() && featuredPlugins().length === 0) {
+            <cf-empty-state [message]="i18n.t('home.empty-plugins')" />
+          }
 
-        @if (!isLoadingPlugins() && !hasError() && featuredPlugins().length === 0) {
-          <cf-empty-state [message]="i18n.t('home.empty-plugins')" />
-        }
-
-        @if (!isLoadingPlugins() && !hasError() && featuredPlugins().length > 0) {
-          <ul class="lp-featured__grid" role="list" [attr.aria-label]="i18n.t('home.aria.popular-plugins')">
-            @for (plugin of featuredPlugins(); track plugin.pluginId) {
-              <li class="lp-plugin-card">
-                <z-card class="lp-plugin-card__zcard">
-                  <div class="lp-plugin-card__header">
-                    <span class="lp-plugin-card__name">{{ plugin.name }}</span>
-                    @if (plugin.latestVersion) {
-                      <z-badge zType="secondary" zShape="pill">v{{ plugin.latestVersion }}</z-badge>
-                    }
-                  </div>
-                  <p class="lp-plugin-card__description">{{ plugin.description }}</p>
-                  <div class="lp-plugin-card__meta">
-                    <span class="lp-plugin-card__author">{{ i18n.t('home.plugin-card.by') }} {{ plugin.author }}</span>
-                    <span class="lp-plugin-card__downloads" [attr.aria-label]="i18n.t('home.aria.plugin-downloads', { count: plugin.downloadCount })">
-                      {{ formatDownloads(plugin.downloadCount) }} {{ i18n.t('home.plugin-card.downloads') }}
-                    </span>
-                  </div>
-                  @if (plugin.types.length > 0) {
-                    <div class="lp-plugin-card__tags" [attr.aria-label]="i18n.t('home.aria.plugin-types')">
-                      @for (type of plugin.types; track type) {
-                        <z-badge zType="outline">{{ type }}</z-badge>
+          @if (!isLoadingPlugins() && !hasError() && featuredPlugins().length > 0) {
+            <ul class="lp-featured__grid" role="list" [attr.aria-label]="i18n.t('home.aria.popular-plugins')">
+              @for (plugin of featuredPlugins(); track plugin.pluginId) {
+                <li class="lp-plugin-card">
+                  <z-card class="lp-plugin-card__zcard">
+                    <div class="lp-plugin-card__header">
+                      <span class="lp-plugin-card__name">{{ plugin.name }}</span>
+                      @if (plugin.latestVersion) {
+                        <z-badge zType="secondary" zShape="pill">v{{ plugin.latestVersion }}</z-badge>
                       }
                     </div>
-                  }
-                </z-card>
+                    <p class="lp-plugin-card__description">{{ plugin.description }}</p>
+                    <div class="lp-plugin-card__meta">
+                      <span class="lp-plugin-card__author"
+                        >{{ i18n.t('home.plugin-card.by') }} {{ plugin.author }}</span
+                      >
+                      <span
+                        class="lp-plugin-card__downloads"
+                        [attr.aria-label]="i18n.t('home.aria.plugin-downloads', { count: plugin.downloadCount })"
+                      >
+                        {{ formatDownloads(plugin.downloadCount) }} {{ i18n.t('home.plugin-card.downloads') }}
+                      </span>
+                    </div>
+                    @if (plugin.types.length > 0) {
+                      <div class="lp-plugin-card__tags" [attr.aria-label]="i18n.t('home.aria.plugin-types')">
+                        @for (type of plugin.types; track type) {
+                          <z-badge zType="outline">{{ type }}</z-badge>
+                        }
+                      </div>
+                    }
+                  </z-card>
+                </li>
+              }
+            </ul>
+
+            <div class="lp-featured__cta">
+              <a routerLink="/catalog" z-button zType="outline" zSize="lg">{{ i18n.t('home.view-all-plugins') }}</a>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- HOW IT WORKS                                                        -->
+      <!-- ================================================================= -->
+      <section class="lp-how" aria-labelledby="lp-how-title">
+        <div class="lp-section-inner">
+          <h2 id="lp-how-title" class="lp-section-title">{{ i18n.t('home.how-heading') }}</h2>
+          <ol class="lp-how__steps" role="list">
+            @for (step of howItWorksSteps; track step.titleKey) {
+              <li class="lp-how__step">
+                <span class="lp-how__icon" aria-hidden="true">{{ step.icon }}</span>
+                <h3 class="lp-how__step-title">{{ i18n.t(step.titleKey) }}</h3>
+                <p class="lp-how__step-desc">{{ i18n.t(step.descKey) }}</p>
               </li>
             }
-          </ul>
-
-          <div class="lp-featured__cta">
-            <a
-              routerLink="/catalog"
-              z-button
-              zType="outline"
-              zSize="lg"
-            >{{ i18n.t('home.view-all-plugins') }}</a>
-          </div>
-        }
-      </div>
-    </section>
+          </ol>
+        </div>
+      </section>
+    </div>
 
     <!-- ================================================================= -->
-    <!-- HOW IT WORKS                                                        -->
-    <!-- ================================================================= -->
-    <section class="lp-how" aria-labelledby="lp-how-title">
-      <div class="lp-section-inner">
-        <h2 id="lp-how-title" class="lp-section-title">{{ i18n.t('home.how-heading') }}</h2>
-        <ol class="lp-how__steps" role="list">
-          @for (step of howItWorksSteps; track step.titleKey) {
-            <li class="lp-how__step">
-              <span class="lp-how__icon" aria-hidden="true">{{ step.icon }}</span>
-              <h3 class="lp-how__step-title">{{ i18n.t(step.titleKey) }}</h3>
-              <p class="lp-how__step-desc">{{ i18n.t(step.descKey) }}</p>
-            </li>
-          }
-        </ol>
-      </div>
-    </section>
-
-    <!-- ================================================================= -->
-    <!-- FOOTER                                                              -->
+    <!-- FOOTER (dark accent — intentionally kept dark)                     -->
     <!-- ================================================================= -->
     <footer class="lp-footer" role="contentinfo">
       <nav class="lp-footer__nav" [attr.aria-label]="i18n.t('home.aria.footer-nav')">
         <a routerLink="/catalog" class="lp-footer__link">{{ i18n.t('home.footer-catalog') }}</a>
         <a routerLink="/docs" class="lp-footer__link">{{ i18n.t('home.footer-docs') }}</a>
         <a routerLink="/search" class="lp-footer__link">{{ i18n.t('home.footer-search') }}</a>
-        <a routerLink="/dashboard" class="lp-footer__link">{{ i18n.t('home.footer-my-plugins') }}</a>
+        @if (currentUser()) {
+          <a routerLink="/dashboard" class="lp-footer__link">{{ i18n.t('home.footer-my-plugins') }}</a>
+        }
       </nav>
       <p class="lp-footer__copy">&copy; {{ currentYear }} {{ i18n.t('home.footer-copy') }}</p>
     </footer>
@@ -240,12 +280,30 @@ const FEATURED_LIMIT = 6;
         white-space: nowrap;
         border-width: 0;
       }
+
+      :host {
+        --lp-footer-reserved-block-size: 5.75rem;
+        --lp-cream: #fff8ee;
+        --lp-cream-soft: #fffdf1;
+        --lp-amber-soft: #fff7c2;
+        --lp-amber-rgb: 250 204 21;
+        --lp-slate: #0f172a;
+        --lp-slate-soft: #334155;
+        --lp-mint-rgb: 34 197 94;
+        --lp-coral-rgb: 251 140 90;
+        --lp-border: color-mix(in oklch, var(--lp-slate) 14%, transparent);
+        --lp-shadow-soft: 0 18px 45px rgb(15 23 42 / 0.07);
+        --lp-shadow-lifted: 0 28px 80px rgb(15 23 42 / 0.13);
+        display: block;
+        padding-bottom: calc(var(--lp-footer-reserved-block-size) + env(safe-area-inset-bottom));
+      }
+
       .lp-link {
         color: var(--primary);
         text-decoration: underline;
       }
       .lp-link:hover {
-        color: var(--primary-foreground);
+        color: color-mix(in oklch, var(--primary) 80%, black);
       }
 
       .lp-section-inner {
@@ -254,117 +312,258 @@ const FEATURED_LIMIT = 6;
         padding: 0 1.5rem;
       }
       .lp-section-title {
-        font-size: 1.625rem;
+        font-size: 1.25rem;
         font-weight: 700;
         color: var(--foreground);
-        margin: 0 0 2rem;
+        margin: 0 0 1rem;
         letter-spacing: -0.02em;
       }
 
-      /* ── Hero ─────────────────────────────────────────────────────────── */
+      /* ── Hero (warm aurora surface) ───────────────────────────────────── */
       .lp-hero {
-        background: var(--foreground);
-        color: var(--background);
-        padding: 5rem 1.5rem 4rem;
-        text-align: center;
+        position: relative;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 14% 18%, rgb(var(--lp-amber-rgb) / 0.48), transparent 24rem),
+          radial-gradient(circle at 78% 16%, rgb(var(--lp-mint-rgb) / 0.16), transparent 23rem),
+          radial-gradient(circle at 55% 95%, rgb(var(--lp-coral-rgb) / 0.13), transparent 25rem),
+          linear-gradient(135deg, var(--lp-cream-soft) 0%, var(--lp-cream) 48%, #ffffff 100%);
+        color: var(--foreground);
+        padding: 1.5rem 1.5rem 1.25rem;
+      }
+      .lp-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgb(148 163 184 / 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgb(148 163 184 / 0.08) 1px, transparent 1px);
+        background-size: 36px 36px;
+        opacity: 0.55;
       }
       .lp-hero__inner {
-        max-width: 56rem;
+        position: relative;
+        z-index: 1;
+        max-width: 84rem;
         margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 2rem;
+        align-items: center;
+      }
+      .lp-hero__copy {
+        min-width: 0;
       }
       .lp-hero__title {
-        font-size: clamp(2rem, 5vw, 3.25rem);
+        font-size: clamp(2rem, 3vw, 2.75rem);
         font-weight: 800;
         line-height: 1.1;
         letter-spacing: -0.03em;
-        margin: 0 0 1.25rem;
+        margin: 0 0 0.875rem;
+        color: var(--lp-slate);
       }
       .lp-hero__tagline {
-        font-size: 1.125rem;
-        color: color-mix(in oklch, var(--background) 78%, transparent);
+        font-size: 1rem;
+        color: var(--lp-slate-soft);
         max-width: 40rem;
-        margin: 0 auto 2.5rem;
-        line-height: 1.7;
+        margin: 0 0 1rem;
+        line-height: 1.45;
       }
       .lp-hero__ctas {
         display: flex;
         flex-wrap: wrap;
         gap: 0.875rem;
-        justify-content: center;
       }
 
-      /* Override z-button defaults for hero CTAs */
+      /* ── Search entry ─────────────────────────────────────────────────── */
+      .lp-search-entry {
+        display: flex;
+        gap: 0.625rem;
+        width: 100%;
+        max-width: 40rem;
+        margin: 0 0 1rem;
+        padding: 0.375rem;
+        box-sizing: border-box;
+        border: 1px solid rgb(255 255 255 / 0.82);
+        border-radius: 0.875rem;
+        background: rgb(255 255 255 / 0.72);
+        box-shadow: var(--lp-shadow-soft);
+        backdrop-filter: blur(14px);
+      }
+      .lp-search-entry__input {
+        flex: 1;
+        min-width: 0;
+        padding: 0.625rem 0.75rem;
+        border: 1px solid transparent;
+        border-radius: 0.625rem;
+        background: var(--lp-cream-soft);
+        color: var(--lp-slate);
+        font-size: 0.9375rem;
+        outline: none;
+      }
+      .lp-search-entry__input:focus {
+        border-color: var(--ring);
+        box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 22%, transparent);
+      }
+      .lp-search-entry__btn {
+        flex-shrink: 0;
+        background: var(--lp-slate);
+        color: var(--lp-cream-soft);
+        border-color: var(--lp-slate);
+      }
+      .lp-search-entry__btn:hover {
+        background: #1e293b;
+        border-color: #1e293b;
+      }
+
+      /* Override z-button defaults for hero CTAs on light background */
       .lp-hero .lp-hero-cta-primary {
-        background: var(--primary);
-        color: var(--primary-foreground);
-        border-color: var(--primary);
+        background: var(--lp-slate);
+        color: var(--lp-cream-soft);
+        border-color: var(--lp-slate);
+        box-shadow: 0 18px 40px rgb(15 23 42 / 0.18);
       }
       .lp-hero .lp-hero-cta-primary:hover {
-        background: color-mix(in oklch, var(--primary) 85%, black);
-        border-color: color-mix(in oklch, var(--primary) 85%, black);
+        background: #1e293b;
+        border-color: #1e293b;
       }
       .lp-hero .lp-hero-cta-primary:focus-visible {
         outline: 3px solid var(--ring);
         outline-offset: 2px;
       }
       .lp-hero .lp-hero-cta-secondary {
-        color: var(--background);
-        border-color: color-mix(in oklch, var(--background) 55%, transparent);
-        background: transparent;
+        color: var(--lp-slate);
+        border-color: rgb(255 255 255 / 0.8);
+        background: rgb(255 255 255 / 0.72);
+        box-shadow: var(--lp-shadow-soft);
+        backdrop-filter: blur(14px);
       }
       .lp-hero .lp-hero-cta-secondary:hover {
-        background: color-mix(in oklch, var(--background) 10%, transparent);
+        border-color: var(--lp-amber-soft);
+        background: var(--lp-cream-soft);
       }
       .lp-hero .lp-hero-cta-secondary:focus-visible {
         outline: 3px solid var(--ring);
         outline-offset: 2px;
       }
-      .lp-hero .lp-hero-cta-ghost {
-        color: color-mix(in oklch, var(--background) 75%, transparent);
-        border-color: color-mix(in oklch, var(--background) 45%, transparent);
-        background: transparent;
-        cursor: pointer;
+      /* ── Install Showcase Card (dark code block — only dark element in hero) */
+      .lp-showcase {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        max-width: 100%;
+        min-width: 0;
+        text-align: center;
       }
-      .lp-hero .lp-hero-cta-ghost:hover {
-        background: color-mix(in oklch, var(--background) 10%, transparent);
+      .lp-showcase__heading {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--lp-slate);
+        margin: 0 0 0.375rem;
+      }
+      .lp-showcase__plugin {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: -0.25rem 0 0.125rem;
+        color: var(--lp-slate-soft);
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+      .lp-showcase__code-block {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        overflow-x: auto;
+        background: var(--lp-slate);
+        color: var(--lp-cream-soft);
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+        box-shadow: var(--lp-shadow-lifted);
+      }
+      .lp-showcase__code {
+        display: block;
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: auto;
+        font-size: 0.9375rem;
+        color: inherit;
+        user-select: all;
+        white-space: nowrap;
+      }
+      .lp-showcase__copy-btn {
+        flex-shrink: 0;
+        padding: 0.25rem 0.625rem;
+        border: 1px solid color-mix(in oklch, var(--background) 35%, transparent);
+        border-radius: 0.25rem;
+        background: color-mix(in oklch, var(--background) 12%, transparent);
+        color: var(--background);
+        font-size: 0.8125rem;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        line-height: 1.4;
+      }
+      .lp-showcase__copy-btn:hover {
+        background: color-mix(in oklch, var(--background) 22%, transparent);
+      }
+      .lp-showcase__copy-btn:focus-visible {
+        outline: 2px solid var(--background);
+        outline-offset: 2px;
+      }
+      .lp-showcase__caption {
+        font-size: 0.8125rem;
+        color: color-mix(in oklch, var(--lp-slate) 62%, transparent);
+        margin: 0;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        transition: color 0.15s;
+      }
+      .lp-showcase__caption:hover {
+        color: var(--lp-slate);
+      }
+      .lp-showcase__caption:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+        border-radius: 2px;
       }
 
-      /* ── Search entry ─────────────────────────────────────────────────── */
-      .lp-search-entry {
-        background: var(--muted);
-        padding: 2rem 1.5rem;
-      }
-      .lp-search-entry__form {
-        max-width: 48rem;
+      .lp-supporting {
+        max-width: 84rem;
         margin: 0 auto;
-        display: flex;
-        gap: 0.625rem;
-      }
-      .lp-search-entry__input {
-        flex: 1;
-        padding: 0.625rem 1rem;
-        border: 2px solid var(--border);
-        border-radius: 0.375rem;
-        font-size: 0.9375rem;
+        padding: 0.75rem 1.5rem 1.5rem;
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+        gap: 1rem 1.5rem;
         background: var(--background);
-        color: var(--foreground);
-        transition: border-color 0.2s;
-        outline: none;
       }
-      .lp-search-entry__input:focus {
-        border-color: var(--ring);
-        box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 20%, transparent);
+      .lp-supporting cf-stats-band {
+        grid-column: 1 / -1;
+      }
+      .lp-supporting .lp-section-inner {
+        max-width: none;
+        padding: 0;
       }
 
       /* ── Featured plugins ─────────────────────────────────────────────── */
       .lp-featured {
-        padding: 4rem 0;
+        padding: 0;
         background: var(--background);
       }
       .lp-featured__loading,
       .lp-featured__error {
         text-align: center;
-        padding: 3rem 0;
+        padding: 1rem 0;
         color: var(--muted-foreground);
         font-size: 0.9375rem;
       }
@@ -373,10 +572,10 @@ const FEATURED_LIMIT = 6;
       }
       .lp-featured__grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+        gap: 0.75rem;
         list-style: none;
-        margin: 0 0 2.5rem;
+        margin: 0 0 1rem;
         padding: 0;
       }
       .lp-featured__cta {
@@ -388,11 +587,15 @@ const FEATURED_LIMIT = 6;
         display: contents;
       }
       .lp-plugin-card__zcard {
-        /* z-card provides bg-card, border, rounded-xl, shadow-sm, px-6, py-6 via Tailwind */
-        transition: box-shadow 0.2s;
+        border-color: var(--lp-border);
+        box-shadow: var(--lp-shadow-soft);
+        transition:
+          box-shadow 0.2s,
+          transform 0.2s;
       }
       .lp-plugin-card__zcard:hover {
-        box-shadow: 0 4px 16px color-mix(in oklch, var(--foreground) 8%, transparent);
+        transform: translateY(-1px);
+        box-shadow: var(--lp-shadow-lifted);
       }
       .lp-plugin-card__header {
         display: flex;
@@ -430,13 +633,20 @@ const FEATURED_LIMIT = 6;
 
       /* ── How it works ─────────────────────────────────────────────────── */
       .lp-how {
-        padding: 4rem 0;
-        background: var(--muted);
+        padding: 1rem;
+        background:
+          radial-gradient(circle at 12% 0%, rgb(var(--lp-amber-rgb) / 0.2), transparent 18rem),
+          radial-gradient(circle at 100% 100%, rgb(var(--lp-mint-rgb) / 0.14), transparent 18rem), var(--lp-slate);
+        border-radius: 1rem;
+        box-shadow: var(--lp-shadow-lifted);
+      }
+      .lp-how .lp-section-title {
+        color: #ffffff;
       }
       .lp-how__steps {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+        gap: 1rem;
         list-style: none;
         margin: 0;
         padding: 0;
@@ -444,30 +654,71 @@ const FEATURED_LIMIT = 6;
       .lp-how__step {
         display: flex;
         flex-direction: column;
-        gap: 0.625rem;
+        gap: 0.375rem;
+        min-height: 100%;
+        padding: 0.875rem;
+        border: 1px solid rgb(255 255 255 / 0.12);
+        border-radius: 0.875rem;
+        background: rgb(255 255 255 / 0.08);
+        backdrop-filter: blur(10px);
       }
       .lp-how__icon {
-        font-size: 2rem;
+        font-size: 1.5rem;
         line-height: 1;
+        width: 2.25rem;
+        height: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, var(--lp-amber-soft), rgb(var(--lp-mint-rgb) / 0.18));
       }
       .lp-how__step-title {
         font-size: 1.0625rem;
         font-weight: 700;
-        color: var(--foreground);
+        color: #ffffff;
         margin: 0;
       }
       .lp-how__step-desc {
         font-size: 0.9375rem;
-        color: var(--muted-foreground);
+        color: rgb(255 255 255 / 0.72);
         line-height: 1.6;
         margin: 0;
       }
+      @media (min-width: 900px) {
+        .lp-how__steps {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 0.5rem;
+        }
+        .lp-how__step {
+          gap: 0.25rem;
+          padding: 0.75rem;
+        }
+        .lp-how__icon {
+          font-size: 1.25rem;
+        }
+        .lp-how__step-title {
+          font-size: 0.875rem;
+        }
+        .lp-how__step-desc {
+          font-size: 0.8125rem;
+          line-height: 1.35;
+        }
+      }
 
-      /* ── Footer ───────────────────────────────────────────────────────── */
+      /* ── Footer (dark accent — intentional) ───────────────────────────── */
       .lp-footer {
-        background: var(--foreground);
-        color: color-mix(in oklch, var(--background) 75%, transparent);
-        padding: 2.5rem 1.5rem;
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 20;
+        width: 100%;
+        min-height: var(--lp-footer-reserved-block-size);
+        box-sizing: border-box;
+        background: var(--lp-slate);
+        color: var(--lp-amber-soft);
+        padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom));
         text-align: center;
       }
       .lp-footer__nav {
@@ -475,16 +726,16 @@ const FEATURED_LIMIT = 6;
         flex-wrap: wrap;
         justify-content: center;
         gap: 0.25rem 1.5rem;
-        margin-bottom: 1.25rem;
+        margin-bottom: 0.625rem;
       }
       .lp-footer__link {
-        color: color-mix(in oklch, var(--background) 75%, transparent);
+        color: var(--lp-amber-soft);
         text-decoration: none;
         font-size: 0.9375rem;
         transition: color 0.2s ease;
       }
       .lp-footer__link:hover {
-        color: var(--background);
+        color: #ffffff;
       }
       .lp-footer__link:focus-visible {
         outline: 2px solid var(--ring);
@@ -494,24 +745,53 @@ const FEATURED_LIMIT = 6;
       .lp-footer__copy {
         font-size: 0.8125rem;
         margin: 0;
-        color: color-mix(in oklch, var(--background) 50%, transparent);
+        color: rgb(255 255 255 / 0.64);
       }
 
       /* ── Responsive ───────────────────────────────────────────────────── */
       @media (max-width: 640px) {
+        :host {
+          --lp-footer-reserved-block-size: 7.75rem;
+        }
         .lp-hero {
           padding: 3rem 1rem 2.5rem;
+        }
+        .lp-hero__inner,
+        .lp-supporting {
+          grid-template-columns: 1fr;
+        }
+        .lp-hero__inner {
+          text-align: center;
         }
         .lp-hero__ctas {
           flex-direction: column;
           align-items: center;
         }
-        .lp-search-entry__form {
+        .lp-search-entry {
           flex-direction: column;
+          margin-inline: auto;
+        }
+        .lp-showcase {
+          margin: 0 auto;
+        }
+        .lp-showcase__code-block {
+          flex-direction: column;
+          gap: 0.5rem;
+          text-align: center;
+          width: 100%;
         }
         .lp-featured__grid,
         .lp-how__steps {
           grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 420px) {
+        :host {
+          --lp-footer-reserved-block-size: 9rem;
+        }
+        .lp-footer__nav {
+          row-gap: 0.5rem;
         }
       }
     `,
@@ -519,19 +799,35 @@ const FEATURED_LIMIT = 6;
 })
 export class LandingPageComponent implements OnInit {
   private readonly catalogFacade = inject(CatalogFacade);
+  private readonly featuredPluginFacade = inject(FeaturedPluginFacade);
+  private readonly authFacade = inject(AuthFacade);
   private readonly router = inject(Router);
   private readonly seoMetadata = inject(SeoMetadataService);
   private readonly structuredData = inject(StructuredDataService);
+  private readonly platformId = inject(PLATFORM_ID);
   protected readonly i18n = inject(I18nFacade);
 
   readonly isLoadingPlugins: Signal<boolean> = this.catalogFacade.isLoadingPlugins;
   readonly hasError: Signal<boolean> = computed(() => this.catalogFacade.pluginsError() !== undefined);
+  readonly currentUser: Signal<CurrentUser | undefined> = this.authFacade.currentUser;
+  readonly featuredPlugin: Signal<FeaturedPlugin | null> = this.featuredPluginFacade.featuredPlugin;
 
   readonly featuredPlugins: Signal<PluginSummary[]> = computed(() => {
     const all = this.catalogFacade.plugins();
     return [...all].sort((a, b) => b.downloadCount - a.downloadCount).slice(0, FEATURED_LIMIT);
   });
 
+  /**
+   * The CLI install command to display in the showcase.
+   * Uses the featured plugin's slug when available; otherwise a generic fallback.
+   */
+  readonly installCommand: Signal<string> = computed(() => {
+    const plugin = this.featuredPlugin();
+    const identifier = plugin?.slug ?? FALLBACK_PLUGIN_SLUG;
+    return `claude-plugin install ${identifier}`;
+  });
+
+  readonly copied = signal(false);
   readonly searchQuery = signal('');
 
   readonly currentYear: number = new Date().getFullYear();
@@ -574,6 +870,7 @@ export class LandingPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.catalogFacade.loadPlugins({ sort: 'downloadCount', order: 'desc' });
+    this.featuredPluginFacade.load();
 
     this.seoMetadata.setMetadata({
       title: this.i18n.t('home.seo.title'),
@@ -597,8 +894,10 @@ export class LandingPageComponent implements OnInit {
   }
 
   onSearchInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.searchQuery.set(input.value);
+    const target = event.target;
+    if (target instanceof HTMLInputElement) {
+      this.searchQuery.set(target.value);
+    }
   }
 
   onSearchSubmit(event: Event): void {
@@ -606,8 +905,25 @@ export class LandingPageComponent implements OnInit {
     const q = this.searchQuery().trim();
     if (q.length > 0) {
       void this.router.navigate(['/search'], { queryParams: { q } });
-    } else {
-      void this.router.navigate(['/search']);
+      return;
+    }
+    void this.router.navigate(['/search']);
+  }
+
+  /**
+   * Copies the install command to clipboard.
+   * SSR-safe: guards navigator.clipboard usage behind isPlatformBrowser.
+   */
+  copyInstallCommand(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    const command = this.installCommand();
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      void navigator.clipboard.writeText(command).then(() => {
+        this.copied.set(true);
+        setTimeout(() => this.copied.set(false), 2000);
+      });
     }
   }
 

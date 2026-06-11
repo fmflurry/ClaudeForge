@@ -1,12 +1,9 @@
-# ─── Dev Dockerfile for Angular SSR frontend (production-parity live reload) ──
-# Runs `ng build --watch` + nodemon to restart the SSR Node server on rebuild.
+# ─── Dev Dockerfile for Angular frontend (ng serve / HMR hot reload) ─────────
+# Runs `ng serve` — Angular's native dev server with live reload and HMR.
 # This is dev-only — for production use frontend/Dockerfile (multi-stage).
 #
 # Build context: repo root (required — frontend is an npm workspace; the
 # authoritative package-lock.json lives at the repo root, not in frontend/).
-#
-# devDependencies (concurrently, nodemon, @angular/cli) are installed because
-# they are needed at container runtime by the `dev:ssr` npm script.
 #
 # Usage (via docker compose): docker compose up web
 # ─────────────────────────────────────────────────────────────────────────────
@@ -20,7 +17,6 @@ COPY package.json package-lock.json* ./
 COPY frontend/package.json ./frontend/
 
 # Install ALL dependencies (including devDeps) from the authoritative root lockfile.
-# concurrently, nodemon, and @angular/cli are required at runtime by dev:ssr.
 # --legacy-peer-deps: angular-eslint@21 peer constraint on @angular/cli <22 is
 # benign and pre-existing; same flag used in the production Dockerfile.
 RUN npm ci --workspace=frontend --legacy-peer-deps
@@ -31,9 +27,13 @@ COPY frontend/ ./frontend/
 
 WORKDIR /repo/frontend
 
+# ng serve default port
 EXPOSE 4000
 
-# ng build --watch polls for file changes (CHOKIDAR_USEPOLLING is set by compose
-# as the primary mechanism; --poll=1000 here is a belt-and-suspenders fallback).
-# nodemon watches dist/frontend/server and restarts the SSR Node server on rebuild.
-CMD ["npm", "run", "dev:ssr"]
+# Run Angular's native dev server using the "docker" Angular configuration, which
+# sets host=0.0.0.0, port=4000, poll=500, allowedHosts=true, and routes /api
+# through proxy.conf.docker.json to the api service (http://api:8080).
+# allowedHosts=true is a typed boolean in angular.json — the former CLI flag
+# `--allowed-hosts all` was invalid (string "all" was parsed as the positional
+# [project] arg), causing "Invalid values: Argument: project, Given: all".
+CMD ["npx", "ng", "serve", "--configuration", "docker"]

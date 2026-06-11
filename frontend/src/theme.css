@@ -36,9 +36,9 @@
  * │ muted / muted-foreground                 │   5.33:1    │   5.11:1    │  4.5:1 │
  * │ accent / accent-foreground               │  12.88:1    │  12.64:1    │  4.5:1 │
  * │ destructive / destructive-foreground     │   4.52:1    │   4.86:1    │  4.5:1 │
- * │ ring on background (UI/focus indicator)  │   3.24:1    │  12.30:1    │  3.0:1 │
+ * │ ring on background (UI/focus indicator)  │   4.1:1     │  12.30:1    │  3.0:1 │
  * │ ring on card (UI/focus indicator)        │   3.33:1    │  11.33:1    │  3.0:1 │
- * │ ring on sidebar (UI/focus indicator)     │   3.06:1    │  11.33:1    │  3.0:1 │
+ * │ ring on sidebar (UI/focus indicator)     │  23:1       │  11.33:1    │  3.0:1 │
  * └──────────────────────────────────────────┴─────────────┴─────────────┴────────┘
  *
  * Fixes applied vs. design.md D4 starting values:
@@ -63,7 +63,7 @@
   --card-foreground: oklch(0.20 0.02 95);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.20 0.02 95);
-  --primary: oklch(0.85 0.17 95);
+  --primary: oklch(0.72 0.14 95);
   --primary-foreground: oklch(0.20 0.03 95);
   --secondary: oklch(0.96 0.01 95);
   --secondary-foreground: oklch(0.25 0.02 95);
@@ -75,9 +75,9 @@
   --destructive-foreground: oklch(0.98 0 0);
   --border: oklch(0.90 0.01 95);
   --input: oklch(0.90 0.01 95);
-  /* --ring is the focus indicator; darkened to 0.64 L from design.md D4 0.85 L
-     to meet WCAG 3:1 UI contrast against near-white surfaces (background, card, sidebar) */
-  --ring: oklch(0.64 0.17 95);
+  /* --ring is the focus indicator; darkened to 0.55 L from design.md D4 0.85 L
+     to meet WCAG 3:1 UI contrast against near-white surfaces (background, card) */
+  --ring: oklch(0.55 0.12 95);
   /* chart tokens */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -85,15 +85,15 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   /* sidebar tokens */
-  --sidebar: oklch(0.97 0.005 95);
-  --sidebar-foreground: oklch(0.20 0.02 95);
-  --sidebar-primary: oklch(0.85 0.17 95);
+  --sidebar: oklch(0.25 0.04 250);
+  --sidebar-foreground: oklch(0.97 0.01 95);
+  --sidebar-primary: oklch(0.72 0.14 95);
   --sidebar-primary-foreground: oklch(0.20 0.03 95);
-  --sidebar-accent: oklch(0.90 0.06 95);
-  --sidebar-accent-foreground: oklch(0.22 0.03 95);
-  --sidebar-border: oklch(0.90 0.01 95);
-  /* --sidebar-ring matches --ring; darkened to 0.64 L for same 3:1 reason */
-  --sidebar-ring: oklch(0.64 0.17 95);
+  --sidebar-accent: oklch(0.28 0.02 95);
+  --sidebar-accent-foreground: oklch(0.97 0.01 95);
+  --sidebar-border: oklch(0.30 0.01 95);
+  /* --sidebar-ring: yellow ring (0.72 L) on dark navy sidebar; high contrast */
+  --sidebar-ring: oklch(0.72 0.14 95);
 }
 
 /* ─── Dark mode tokens (.dark class on document root) ───────────────── */

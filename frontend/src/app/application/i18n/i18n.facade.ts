@@ -43,7 +43,22 @@ export class I18nFacade {
     return this.transloco.translate(key, params, this.transloco.activeLang());
   }
 
-  setLanguage(lang: Lang): void {
+  /**
+   * Switches the active language. Loads translations FIRST, then activates
+   * the language so the UI never shows raw keys during the network request.
+   * Persists the selection and updates the active-lang signal.
+   *
+   * SSR-safe: if `transloco.load()` throws (e.g. i18n dist files missing at
+   * build-time), the error is swallowed; active lang still gets set and
+   * translations resolve at runtime.
+   */
+  async setLanguage(lang: Lang): Promise<void> {
+    try {
+      await firstValueFrom(this.transloco.load(lang));
+    } catch {
+      // SSR build-time: browser i18n dist files may not exist yet.
+      // Active lang still gets set; translations resolve at runtime.
+    }
     this.transloco.setActiveLang(lang);
     this.storage.write(lang);
     this._activeLang.set(lang);

@@ -1,48 +1,15 @@
 /**
- * Spec — shell-layout.component.ts (Wave 1 i18n RED)
+ * Spec — shell-layout.component.ts (Wave 1 i18n + optimize-landing-page-layout)
  *
- * Establishes the Transloco test-harness pattern for all i18n waves.
+ * Changes from optimize-landing-page-layout:
+ *   - shell.nav.catalog now resolves to "Plugins" (EN) / "Plugins" (FR)
+ *   - The Search nav item has been removed from the shell
+ *   - Tableau de bord (Dashboard) is auth-gated (@if currentUser())
  *
- * GREEN contract for the coder:
- *
- *   The shell layout template must be migrated to use Transloco for all
- *   user-visible strings EXCEPT the brand name "ClaudeForge" which stays
- *   literal. Keys live in the ROOT scope (no provideTranslocoScope needed).
- *
- *   Key list (en value / fr value):
- *     shell.nav-aria          → "Main navigation" / "Navigation principale"
- *     shell.nav.catalog       → "Catalog"          / "Catalogue"
- *     shell.nav.search        → "Search"            / "Rechercher"
- *     shell.nav.dashboard     → "Dashboard"         / "Tableau de bord"
- *     shell.nav.docs          → "Docs"              / "Documentation"
- *     shell.auth.sign-in      → "Sign in"           / "Se connecter"
- *     shell.auth.sign-out     → "Sign out"          / "Se déconnecter"
- *
- *   Template approach:
- *     - Use `| transloco` pipe for aria-label attributes:
- *         [attr.aria-label]="'shell.nav-aria' | transloco"
- *     - Interpolate link text via pipe or *transloco directive:
- *         {{ 'shell.nav.catalog' | transloco }}
- *     - Brand "ClaudeForge" stays as a literal string (NOT translated).
- *     - Component must NOT inject TranslocoService directly; use I18nFacade
- *       for any TS-side i18n needs (template only uses pipe/directive).
- *
- *   The ShellLayoutComponent must import TranslocoPipe (or TranslocoModule)
- *   in its `imports` array.
- *
- * TEST HARNESS PATTERN (canonical for all subsequent waves):
- *
- *   TranslocoTestingModule.forRoot({
- *     langs: {
- *       en: { 'key': 'English literal' },  // flat dot-delimited keys
- *       fr: { 'key': 'French translation' },
- *     },
- *     translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
- *     preloadLangs: true,
- *   })
- *
- *   En map returns EXACT current literals → all existing assertions stay green.
- *   Fr map returns French → fr-language assertions are RED until migration done.
+ * GREEN contract (already implemented):
+ *   - Nav links: Plugins, [Dashboard — auth only], Documentation
+ *   - No Search nav link
+ *   - shell.nav.catalog → "Plugins" in both EN and FR
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -62,14 +29,14 @@ import { I18nFacade } from '../application/i18n/i18n.facade';
 import { LanguageStoragePort } from '../core/i18n/language-storage.port';
 
 // ---------------------------------------------------------------------------
-// Transloco test langs — en returns EXACT current literals so existing
-// assertions keep passing; fr returns French translations (RED until migrated)
+// Transloco test langs — reflects the optimize-landing-page-layout change:
+//   shell.nav.catalog  → "Plugins"  (was "Catalog" / "Catalogue")
+//   shell.nav.search   → removed (key kept in map for backward compat but no link rendered)
 // ---------------------------------------------------------------------------
 
 const EN_SHELL_LANGS: Record<string, string> = {
   'shell.nav-aria': 'Main navigation',
-  'shell.nav.catalog': 'Catalog',
-  'shell.nav.search': 'Search',
+  'shell.nav.catalog': 'Plugins',
   'shell.nav.dashboard': 'Dashboard',
   'shell.nav.docs': 'Docs',
   'shell.auth.sign-in': 'Sign in',
@@ -78,8 +45,7 @@ const EN_SHELL_LANGS: Record<string, string> = {
 
 const FR_SHELL_LANGS: Record<string, string> = {
   'shell.nav-aria': 'Navigation principale',
-  'shell.nav.catalog': 'Catalogue',
-  'shell.nav.search': 'Rechercher',
+  'shell.nav.catalog': 'Plugins',
   'shell.nav.dashboard': 'Tableau de bord',
   'shell.nav.docs': 'Documentation',
   'shell.auth.sign-in': 'Se connecter',
@@ -147,8 +113,7 @@ function setup(): {
       }),
     ],
     // NO_ERRORS_SCHEMA suppresses unknown-element errors so we don't need
-    // to declare the child components. Combined with overrideComponent below,
-    // this lets us test only the shell's own template i18n strings.
+    // to declare the child components.
     schemas: [NO_ERRORS_SCHEMA],
     providers: [
       provideRouter([]),
@@ -157,20 +122,13 @@ function setup(): {
       { provide: AuthFacade, useValue: authStub },
       { provide: OrgContextFacade, useValue: orgStub },
       { provide: CatalogFacade, useValue: catalogStub },
-      // Real I18nFacade — injects TranslocoService from the testing module above.
-      // translocoService.setActiveLang('fr') causes i18n.t() to re-evaluate
-      // because the facade reads transloco.activeLang() internally.
       I18nFacade,
       { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
     ],
   });
 
   // Override the component's imports and providers so Angular doesn't try to
-  // instantiate the full DI trees of child components (TeamSwitcher, OrgSwitcher,
-  // TelemetrySettings, LanguageSwitcher). RouterOutlet/RouterLink/RouterLinkActive
-  // are kept for routing assertions. NO_ERRORS_SCHEMA suppresses unknown-element
-  // errors for the stripped children's selectors.
-  // Note: no TranslocoPipe needed — the facade's i18n.t() handles all translations.
+  // instantiate the full DI trees of child components.
   TestBed.overrideComponent(ShellLayoutComponent, {
     set: {
       imports: [RouterOutlet, RouterLink, RouterLinkActive],
@@ -187,8 +145,7 @@ function setup(): {
 }
 
 // ---------------------------------------------------------------------------
-// Tests — EN (all should pass once migration is done AND right now if not
-// yet migrated since en literals match hardcoded strings)
+// Tests — EN (anonymous user — no Dashboard link)
 // ---------------------------------------------------------------------------
 
 describe('ShellLayoutComponent — EN rendering (stays green through migration)', () => {
@@ -207,25 +164,19 @@ describe('ShellLayoutComponent — EN rendering (stays green through migration)'
     expect(brandLink?.getAttribute('href')).toBe('/');
   });
 
-  it('renders Catalog nav link', () => {
+  // Task 4.1 — shell.nav.catalog now resolves to "Plugins"
+  it('renders Plugins nav link (task 4.1: shell.nav.catalog → Plugins)', () => {
     const { fixture } = setup();
     const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
     const texts = Array.from(links).map((l) => l.textContent?.trim());
-    expect(texts).toContain('Catalog');
+    expect(texts).toContain('Plugins');
   });
 
-  it('renders Search nav link', () => {
+  it('does NOT render Search nav link (removed)', () => {
     const { fixture } = setup();
     const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
     const texts = Array.from(links).map((l) => l.textContent?.trim());
-    expect(texts).toContain('Search');
-  });
-
-  it('renders Dashboard nav link', () => {
-    const { fixture } = setup();
-    const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
-    const texts = Array.from(links).map((l) => l.textContent?.trim());
-    expect(texts).toContain('Dashboard');
+    expect(texts).not.toContain('Search');
   });
 
   it('renders Docs nav link', () => {
@@ -260,47 +211,101 @@ describe('ShellLayoutComponent — EN rendering (stays green through migration)'
     expect(nav?.getAttribute('aria-label')).toContain('Main navigation');
   });
 
-  it('renders exactly 4 nav links', () => {
+  // Anonymous: Plugins + Docs = 2 nav links
+  it('renders exactly 2 nav links when user is NOT authenticated', () => {
     const { fixture } = setup();
     const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
-    expect(links.length).toBe(4);
+    expect(links.length).toBe(2);
+  });
+
+  // Task 4.2 — auth-gated Dashboard
+  it('does NOT render Dashboard nav link when user is NOT authenticated', () => {
+    const { fixture } = setup();
+    const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
+    const texts = Array.from(links).map((l) => l.textContent?.trim());
+    expect(texts).not.toContain('Dashboard');
+  });
+
+  it('renders exactly 3 nav links when user IS authenticated (Plugins + Dashboard + Docs)', () => {
+    const { fixture, authStub } = setup();
+    authStub.setUser({
+      userId: 'u1',
+      email: 'user@example.com',
+      displayName: 'Test User',
+      orgMemberships: [],
+    } satisfies CurrentUser);
+    fixture.detectChanges();
+    const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
+    expect(links.length).toBe(3);
+  });
+
+  it('renders Dashboard nav link when user IS authenticated (task 4.2)', () => {
+    const { fixture, authStub } = setup();
+    authStub.setUser({
+      userId: 'u1',
+      email: 'user@example.com',
+      displayName: 'Test User',
+      orgMemberships: [],
+    } satisfies CurrentUser);
+    fixture.detectChanges();
+    const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
+    const texts = Array.from(links).map((l) => l.textContent?.trim());
+    expect(texts).toContain('Dashboard');
   });
 });
 
 // ---------------------------------------------------------------------------
-// Tests — FR (RED: these will fail until the template uses Transloco keys
-// and the component is properly migrated)
+// Tests — FR (RED: fail until template is migrated to use Transloco i18n.t())
 // ---------------------------------------------------------------------------
 
 describe('ShellLayoutComponent — FR rendering (RED — fails until migration)', () => {
-  it('renders Catalogue (FR) nav link when lang is fr', () => {
+  // Task 4.1 — shell.nav.catalog in FR → "Plugins" (same in both languages per spec)
+  it('renders Plugins (FR) nav link when lang is fr (task 4.1)', () => {
     const { fixture, translocoService } = setup();
     translocoService.setActiveLang('fr');
     fixture.detectChanges();
 
     const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
     const texts = Array.from(links).map((l) => l.textContent?.trim());
-    expect(texts).toContain('Catalogue');
+    expect(texts).toContain('Plugins');
   });
 
-  it('renders Rechercher (FR) nav link when lang is fr', () => {
+  it('does NOT render Rechercher (FR) nav link when lang is fr (Search nav removed)', () => {
     const { fixture, translocoService } = setup();
     translocoService.setActiveLang('fr');
     fixture.detectChanges();
 
     const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
     const texts = Array.from(links).map((l) => l.textContent?.trim());
-    expect(texts).toContain('Rechercher');
+    expect(texts).not.toContain('Rechercher');
   });
 
-  it('renders Tableau de bord (FR) nav link when lang is fr', () => {
-    const { fixture, translocoService } = setup();
+  // Task 4.2 — auth-gated Tableau de bord in FR
+  it('renders Tableau de bord (FR) nav link when lang is fr and user is authenticated (task 4.2)', () => {
+    const { fixture, authStub, translocoService } = setup();
+    authStub.setUser({
+      userId: 'u1',
+      email: 'user@example.com',
+      displayName: 'Test User',
+      orgMemberships: [],
+    } satisfies CurrentUser);
+    fixture.detectChanges();
     translocoService.setActiveLang('fr');
     fixture.detectChanges();
 
     const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
     const texts = Array.from(links).map((l) => l.textContent?.trim());
     expect(texts).toContain('Tableau de bord');
+  });
+
+  it('does NOT render Tableau de bord (FR) nav link when user is NOT authenticated', () => {
+    const { fixture, translocoService } = setup();
+    translocoService.setActiveLang('fr');
+    fixture.detectChanges();
+
+    const links: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.cf-shell__nav-link');
+    const texts = Array.from(links).map((l) => l.textContent?.trim());
+    expect(texts).not.toContain('Tableau de bord');
   });
 
   it('renders Documentation (FR) nav link when lang is fr', () => {
@@ -346,8 +351,6 @@ describe('ShellLayoutComponent — FR rendering (RED — fails until migration)'
     const nav = fixture.nativeElement.querySelector('nav') as HTMLElement | null;
     expect(nav?.getAttribute('aria-label')).toBe('Navigation principale');
   });
-
-
 });
 
 // ---------------------------------------------------------------------------

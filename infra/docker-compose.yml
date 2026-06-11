@@ -95,24 +95,15 @@ services:
           cpus: "2.0"
           memory: 1G
 
-  # ─── Angular SSR Frontend (dev: live-rebuild via ng build --watch + nodemon) ─
+  # ─── Angular Frontend (dev: ng serve with native HMR / live reload) ─────────
   web:
     build:
       context: ..                      # repo root — frontend is an npm workspace; root
       dockerfile: frontend/Dockerfile.dev  # package-lock.json is the authoritative lockfile
     container_name: cf-web
     environment:
-      PORT: "4000"
-      # Internal API URL used by the SSR server for server-side HTTP requests
-      SSR_API_BASE_URL: "http://api:8080"
-      # Allowed Host header values (prevent host-header injection)
-      NG_ALLOWED_HOSTS: "localhost,127.0.0.1"
-      # ── File-watching across Docker Desktop bind-mounts ────────────────────
-      # Native inotify events do NOT propagate through Docker Desktop bind-mounts
-      # on macOS/Windows. CHOKIDAR_USEPOLLING tells both ng build --watch (which
-      # uses chokidar internally via esbuild) to poll instead of relying on inotify.
-      CHOKIDAR_USEPOLLING: "true"
-      CHOKIDAR_INTERVAL: "1000"
+      # Allow the V8 heap to grow — esbuild incremental builds can be memory-hungry.
+      NODE_OPTIONS: "--max-old-space-size=2048"
     ports:
       - "4000:4000"
     depends_on:
@@ -120,22 +111,21 @@ services:
         condition: service_healthy
     volumes:
       # Bind-mount frontend source so host edits are immediately visible inside
-      # the container to ng build --watch.
+      # the container to ng serve's file watcher (polling via --poll=500 in CMD).
       - ../frontend:/repo/frontend
       # Anonymous volumes shadow directories that must NOT be overwritten by the
       # host bind-mount above. Without these, docker would overlay the empty host
       # paths on top of the container-installed modules/build output.
       #
       # Workspace root node_modules: installed by npm ci inside the image; must
-      # not be clobbered by the ../frontend bind-mount (which only overlays
-      # /repo/frontend, but we also protect /repo/node_modules explicitly).
+      # not be clobbered by the ../frontend bind-mount.
       - /repo/node_modules
       # Frontend-local node_modules (hoisted workspace packages may land here).
       - /repo/frontend/node_modules
-      # Build output lives entirely inside the container. This avoids polluting
-      # the host tree AND eliminates macOS bind-mount fs-event latency for the
-      # nodemon watcher (which watches /repo/frontend/dist with native inotify).
-      - /repo/frontend/dist
+      # Angular persistent build cache must stay inside the container — the host's
+      # cache is built with a different (darwin) esbuild binary and would corrupt
+      # the linux/musl incremental compilation.
+      - /repo/frontend/.angular
     networks:
       - cf-net
     restart: unless-stopped
@@ -144,14 +134,13 @@ services:
       interval: 15s
       timeout: 5s
       retries: 8
-      # First startup requires a full in-container ng build before the SSR server
-      # can start — allow extra time compared with the prod image (prebuilt bundle).
-      start_period: 120s
+      # ng serve performs an initial build before it starts serving; allow time.
+      start_period: 90s
     deploy:
       resources:
         limits:
-          cpus: "1.0"
-          memory: 512M
+          cpus: "2.0"
+          memory: 2G
 
   # ─── PostgreSQL 16 ────────────────────────────────────────────────────────
   postgres:

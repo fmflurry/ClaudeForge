@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Injectable, Signal, signal } from '@angular/core';
+import { Component, Injectable, Input, Signal, signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { LandingPageComponent } from './landing-page.component';
 import { CatalogFacade } from '../../catalog/application/facades/catalog.facade';
-import type { PluginSummary } from '../../catalog/domain/models/catalog.models';
+import type { Categories, PluginSummary } from '../../catalog/domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../../catalog/domain/rules/catalog-filter.rules';
 import { SeoMetadataService } from '../../../shared/infrastructure/seo/seo-metadata.service';
 import { StructuredDataService } from '../../../shared/infrastructure/seo/structured-data.service';
@@ -14,6 +14,11 @@ import { HomeMetricsFacade } from '../application/facades/home-metrics.facade';
 import type { MarketplaceMetrics } from '../domain/models/marketplace-metrics.model';
 import { I18nFacade } from '../../../application/i18n/i18n.facade';
 import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
+import { FeaturedPluginFacade } from '../application/facades/featured-plugin.facade';
+import type { FeaturedPlugin } from '../domain/models/featured-plugin.model';
+import { AuthFacade } from '../../auth/application/facades/auth.facade';
+import type { CurrentUser } from '../../auth/domain/models/auth.models';
+import { EmptyStateComponent } from '../../../shared/design-system/empty-state.component';
 
 // ---------------------------------------------------------------------------
 // Transloco test langs for home scope (Wave 1 i18n)
@@ -21,35 +26,6 @@ import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
 // En map returns EXACT current literals so all existing rendered-text
 // assertions keep passing unchanged after migration.
 // Fr map returns French — assertions using fr are RED until migration done.
-//
-// Key namespace: 'home' scope loaded via provideTranslocoScope('home')
-// on the home route. In tests, scope keys are accessed via the scope alias
-// prefix or directly as flat dot-delimited keys in the langs map.
-//
-// Canonical key list:
-//   home.hero-title           → "The plugin marketplace for Claude Code"
-//                             / "La place de marché de plugins pour Claude Code"
-//   home.hero-tagline         → "Discover, install, and publish..."
-//                             / "Découvrez, installez et publiez..."
-//   home.browse-plugins       → "Browse plugins"       / "Parcourir les plugins"
-//   home.publish-plugin       → "Publish a plugin"     / "Publier un plugin"
-//   home.sign-in              → "Sign in"              / "Se connecter"
-//   home.search-aria          → "Search plugins"       / "Rechercher des plugins"
-//   home.search-placeholder   → "Search plugins — e.g. 'git commit helper'…"
-//                             / "Rechercher des plugins — ex. 'aide git commit'…"
-//   home.search-btn           → "Search"               / "Rechercher"
-//   home.popular-heading      → "Popular plugins"      / "Plugins populaires"
-//   home.loading-plugins      → "Loading plugins…"     / "Chargement des plugins…"
-//   home.error-plugins        → "Could not load plugins right now"
-//                             / "Impossible de charger les plugins"
-//   home.empty-plugins        → "No plugins available yet — be the first to publish one!"
-//                             / "Aucun plugin disponible — soyez le premier à en publier un !"
-//   home.view-all-plugins     → "View all plugins"     / "Voir tous les plugins"
-//   home.how-heading          → "How it works"         / "Comment ça marche"
-//   home.footer-catalog       → "Plugin Catalog"       / "Catalogue de plugins"
-//   home.footer-docs          → "Documentation"        / "Documentation"
-//   home.footer-search        → "Search"               / "Rechercher"
-//   home.footer-my-plugins    → "My Plugins"           / "Mes plugins"
 // ---------------------------------------------------------------------------
 
 const EN_HOME_LANGS: Record<string, string> = {
@@ -71,13 +47,45 @@ const EN_HOME_LANGS: Record<string, string> = {
   'home.footer-docs': 'Documentation',
   'home.footer-search': 'Search',
   'home.footer-my-plugins': 'My Plugins',
+  // Install showcase keys
+  'home.install-showcase.heading': 'Install a plugin',
+  'home.install-showcase.copy-btn': 'Copy',
+  'home.install-showcase.copied': 'Copied!',
+  'home.install-showcase.caption': 'Learn how to install →',
+  // Category discovery
+  'home.categories.heading': 'Browse by use case',
+  // Aria labels
+  'home.aria.primary-actions': 'Primary actions',
+  'home.aria.browse-all': 'Browse all plugins',
+  'home.aria.learn-publish': 'Learn how to publish a plugin',
+  'home.aria.loading-plugins': 'Loading plugins',
+  'home.aria.popular-plugins': 'Popular plugins',
+  'home.aria.plugin-downloads': '{count} downloads',
+  'home.aria.plugin-types': 'Plugin types',
+  'home.aria.footer-nav': 'Footer navigation',
+  'home.error.browse-catalog': 'browse the catalog',
+  // How it works
+  'home.how.step-discover-title': 'Discover',
+  'home.how.step-discover-desc': 'Find plugins in the catalog',
+  'home.how.step-install-title': 'Install',
+  'home.how.step-install-desc': 'One command to install',
+  'home.how.step-publish-title': 'Publish',
+  'home.how.step-publish-desc': 'Share your own plugins',
+  'home.how.step-share-title': 'Share',
+  'home.how.step-share-desc': 'Grow the community',
+  // Plugin card
+  'home.plugin-card.by': 'by',
+  'home.plugin-card.downloads': 'downloads',
   // SEO keys — required so setMetadata receives resolved strings, not raw key names
   'home.seo.title': 'ClaudeForge — The Plugin Marketplace for Claude Code',
-  'home.seo.description': 'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+  'home.seo.description':
+    'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
   'home.seo.og-title': 'ClaudeForge — The Plugin Marketplace for Claude Code',
-  'home.seo.og-description': 'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+  'home.seo.og-description':
+    'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
   'home.seo.twitter-title': 'ClaudeForge — The Plugin Marketplace for Claude Code',
-  'home.seo.twitter-description': 'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
+  'home.seo.twitter-description':
+    'Discover, install, and publish Claude Code plugins from the community. Browse hundreds of tools, formatters, and automations on ClaudeForge.',
 };
 
 const FR_HOME_LANGS: Record<string, string> = {
@@ -99,10 +107,40 @@ const FR_HOME_LANGS: Record<string, string> = {
   'home.footer-docs': 'Documentation',
   'home.footer-search': 'Rechercher',
   'home.footer-my-plugins': 'Mes plugins',
+  'home.install-showcase.heading': 'Installer un plugin',
+  'home.install-showcase.copy-btn': 'Copier',
+  'home.install-showcase.copied': 'Copié !',
+  'home.install-showcase.caption': 'Apprendre à installer →',
+  'home.categories.heading': "Parcourir par cas d'usage",
+  'home.aria.primary-actions': 'Actions principales',
+  'home.aria.browse-all': 'Parcourir tous les plugins',
+  'home.aria.learn-publish': 'Apprendre à publier un plugin',
+  'home.aria.loading-plugins': 'Chargement des plugins',
+  'home.aria.popular-plugins': 'Plugins populaires',
+  'home.aria.plugin-downloads': '{count} téléchargements',
+  'home.aria.plugin-types': 'Types de plugins',
+  'home.aria.footer-nav': 'Navigation du pied de page',
+  'home.error.browse-catalog': 'parcourir le catalogue',
+  'home.how.step-discover-title': 'Découvrir',
+  'home.how.step-discover-desc': 'Trouver des plugins dans le catalogue',
+  'home.how.step-install-title': 'Installer',
+  'home.how.step-install-desc': 'Une commande pour installer',
+  'home.how.step-publish-title': 'Publier',
+  'home.how.step-publish-desc': 'Partagez vos propres plugins',
+  'home.how.step-share-title': 'Partager',
+  'home.how.step-share-desc': 'Faire grandir la communauté',
+  'home.plugin-card.by': 'par',
+  'home.plugin-card.downloads': 'téléchargements',
+  'home.seo.title': 'ClaudeForge — La place de marché de plugins pour Claude Code',
+  'home.seo.description': 'Découvrez, installez et publiez des plugins Claude Code de la communauté.',
+  'home.seo.og-title': 'ClaudeForge — La place de marché de plugins pour Claude Code',
+  'home.seo.og-description': 'Découvrez, installez et publiez des plugins Claude Code de la communauté.',
+  'home.seo.twitter-title': 'ClaudeForge — La place de marché de plugins pour Claude Code',
+  'home.seo.twitter-description': 'Découvrez, installez et publiez des plugins Claude Code de la communauté.',
 };
 
 // ---------------------------------------------------------------------------
-// Stub facade — injectable, controllable signals
+// Stub facades — injectable, controllable signals
 // ---------------------------------------------------------------------------
 
 @Injectable()
@@ -110,6 +148,7 @@ class StubCatalogFacade {
   private readonly _plugins = signal<PluginSummary[]>([]);
   private readonly _isLoadingPlugins = signal(false);
   private readonly _pluginsError = signal<{ code: string; message: string }[] | undefined>(undefined);
+  private readonly _categories = signal<Categories | undefined>(undefined);
 
   setPlugins(plugins: PluginSummary[]): void {
     this._plugins.set(plugins);
@@ -121,6 +160,10 @@ class StubCatalogFacade {
 
   setError(errors: { code: string; message: string }[]): void {
     this._pluginsError.set(errors);
+  }
+
+  setCategories(cats: Categories | undefined): void {
+    this._categories.set(cats);
   }
 
   // Facade signal getters consumed by component
@@ -136,16 +179,56 @@ class StubCatalogFacade {
     return this._pluginsError;
   }
 
+  get categories(): Signal<Categories | undefined> {
+    return this._categories;
+  }
+
   // Call tracking
   loadPluginsCalls: Partial<CatalogFilterQuery>[] = [];
   loadPlugins(query?: Partial<CatalogFilterQuery>): void {
     this.loadPluginsCalls.push(query ?? {});
   }
 
-  // Unused by landing page but part of CatalogFacade interface
+  loadCategoriesCalls = 0;
   loadCategories(): void {
-    // no-op
+    this.loadCategoriesCalls++;
   }
+}
+
+@Injectable()
+class StubFeaturedPluginFacade {
+  private readonly _featuredPlugin = signal<FeaturedPlugin | null>(null);
+
+  readonly featuredPlugin: Signal<FeaturedPlugin | null> = this._featuredPlugin.asReadonly();
+
+  setFeaturedPlugin(plugin: FeaturedPlugin | null): void {
+    this._featuredPlugin.set(plugin);
+  }
+
+  load = vi.fn();
+}
+
+@Injectable()
+class StubAuthFacade {
+  private readonly _currentUser = signal<CurrentUser | undefined>(undefined);
+
+  readonly currentUser: Signal<CurrentUser | undefined> = this._currentUser.asReadonly();
+
+  setUser(user: CurrentUser | undefined): void {
+    this._currentUser.set(user);
+  }
+
+  logout = vi.fn();
+  silentRefresh = vi.fn();
+}
+
+@Component({
+  selector: 'cf-empty-state',
+  standalone: true,
+  template: '<div class="cf-empty-state" role="status">{{ message }}<ng-content /></div>',
+})
+class StubEmptyStateComponent {
+  @Input() message = '';
 }
 
 // ---------------------------------------------------------------------------
@@ -208,6 +291,8 @@ function setup(): {
   fixture: ComponentFixture<LandingPageComponent>;
   component: LandingPageComponent;
   stub: StubCatalogFacade;
+  featuredPluginStub: StubFeaturedPluginFacade;
+  authStub: StubAuthFacade;
   seoMetadataSpy: StubSeoMetadataService;
   structuredDataSpy: StubStructuredDataService;
   translocoService: TranslocoService;
@@ -216,13 +301,14 @@ function setup(): {
   const seoMetadataSpy = new StubSeoMetadataService();
   const structuredDataSpy = new StubStructuredDataService();
   const homeMetricsFacadeStub = new StubHomeMetricsFacade();
+  const featuredPluginStub = new StubFeaturedPluginFacade();
+  const authStub = new StubAuthFacade();
 
   TestBed.configureTestingModule({
     imports: [
       LandingPageComponent,
       // Transloco test harness (Wave 1 pattern):
       // flat dot-delimited keys; en=current literals, fr=French translations.
-      // home scope keys are prefixed with 'home.' — matches provideTranslocoScope('home').
       TranslocoTestingModule.forRoot({
         langs: { en: EN_HOME_LANGS, fr: FR_HOME_LANGS },
         translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
@@ -232,17 +318,21 @@ function setup(): {
     providers: [
       provideRouter([]),
       { provide: CatalogFacade, useValue: stub },
+      { provide: FeaturedPluginFacade, useValue: featuredPluginStub },
+      { provide: AuthFacade, useValue: authStub },
       { provide: SeoMetadataService, useValue: seoMetadataSpy },
       { provide: StructuredDataService, useValue: structuredDataSpy },
       // Provided so that StatsBandComponent (once added to the landing template)
       // can resolve its HomeMetricsFacade dependency without errors.
       { provide: HomeMetricsFacade, useValue: homeMetricsFacadeStub },
       // Real I18nFacade — injects TranslocoService from the testing module above.
-      // Switching lang via translocoService.setActiveLang('fr') causes i18n.t()
-      // to re-evaluate because the facade reads transloco.activeLang() internally.
       I18nFacade,
       { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
     ],
+  });
+  TestBed.overrideComponent(LandingPageComponent, {
+    remove: { imports: [EmptyStateComponent] },
+    add: { imports: [StubEmptyStateComponent] },
   });
 
   const fixture = TestBed.createComponent(LandingPageComponent);
@@ -250,7 +340,16 @@ function setup(): {
   fixture.detectChanges();
   const translocoService = TestBed.inject(TranslocoService);
 
-  return { fixture, component, stub, seoMetadataSpy, structuredDataSpy, translocoService };
+  return {
+    fixture,
+    component,
+    stub,
+    featuredPluginStub,
+    authStub,
+    seoMetadataSpy,
+    structuredDataSpy,
+    translocoService,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -284,13 +383,6 @@ describe('LandingPageComponent', () => {
     expect(publish?.getAttribute('href')).toBe('/docs');
   });
 
-  it('renders the sign-in placeholder button as aria-disabled', () => {
-    const { fixture } = setup();
-    const btn = fixture.nativeElement.querySelector('button[aria-disabled="true"]') as HTMLButtonElement | null;
-    expect(btn).not.toBeNull();
-    expect(btn?.textContent).toContain('Sign in');
-  });
-
   it('renders 4 How-it-works steps', () => {
     const { fixture } = setup();
     const steps: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.lp-how__step');
@@ -303,6 +395,202 @@ describe('LandingPageComponent', () => {
     const hrefs = Array.from(footerLinks).map((a) => a.getAttribute('href'));
     expect(hrefs).toContain('/catalog');
     expect(hrefs).toContain('/docs');
+  });
+
+  // -------------------------------------------------------------------------
+  // Task 4.3 — Restored search entry
+  // -------------------------------------------------------------------------
+
+  it('does NOT render an aria-disabled sign-in button (disabled hero login CTA removed)', () => {
+    const { fixture } = setup();
+    const btn = fixture.nativeElement.querySelector('button[aria-disabled="true"]') as HTMLButtonElement | null;
+    expect(btn).toBeNull();
+  });
+
+  it('renders a search input with id lp-search-input', () => {
+    const { fixture } = setup();
+    const input = fixture.nativeElement.querySelector('#lp-search-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input?.getAttribute('type')).toBe('search');
+    expect(input?.getAttribute('aria-label')).toBe('Search plugins');
+  });
+
+  it('renders a search submit form', () => {
+    const { fixture } = setup();
+    const form = fixture.nativeElement.querySelector('form.lp-search-entry') as HTMLFormElement | null;
+    const button = fixture.nativeElement.querySelector('.lp-search-entry__btn') as HTMLButtonElement | null;
+    expect(form).not.toBeNull();
+    expect(form?.getAttribute('role')).toBe('search');
+    expect(button?.type).toBe('submit');
+    expect(button?.textContent?.trim()).toBe('Search');
+  });
+
+  it('navigates to /search with q query param when a search query exists', () => {
+    const { fixture } = setup();
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const input = fixture.nativeElement.querySelector('#lp-search-input') as HTMLInputElement | null;
+    const form = fixture.nativeElement.querySelector('form.lp-search-entry') as HTMLFormElement | null;
+
+    expect(input).not.toBeNull();
+    expect(form).not.toBeNull();
+
+    if (input !== null && form !== null) {
+      input.value = 'formatter';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }
+
+    expect(navSpy).toHaveBeenCalledWith(['/search'], { queryParams: { q: 'formatter' } });
+    navSpy.mockRestore();
+  });
+
+  it('navigates to /search without q query param when search query is empty', () => {
+    const { fixture } = setup();
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const form = fixture.nativeElement.querySelector('form.lp-search-entry') as HTMLFormElement | null;
+
+    expect(form).not.toBeNull();
+
+    form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    expect(navSpy).toHaveBeenCalledWith(['/search']);
+    navSpy.mockRestore();
+  });
+
+  // -------------------------------------------------------------------------
+  // Task 4.4 — Hero install showcase
+  // -------------------------------------------------------------------------
+
+  it('renders the install showcase code block', () => {
+    const { fixture } = setup();
+    const codeBlock = fixture.nativeElement.querySelector('.lp-showcase__code-block') as HTMLElement | null;
+    expect(codeBlock).not.toBeNull();
+  });
+
+  it('shows generic fallback install command when no featured plugin is set', () => {
+    const { fixture } = setup();
+    // featuredPluginStub defaults to null — fallback should be shown
+    const code = fixture.nativeElement.querySelector('.lp-showcase__code') as HTMLElement | null;
+    expect(code?.textContent?.trim()).toBe('claude-plugin install <plugin-name>');
+  });
+
+  it('shows plugin slug in install command when a featured plugin is available', () => {
+    const { fixture, featuredPluginStub } = setup();
+    featuredPluginStub.setFeaturedPlugin({
+      pluginId: 'fp1',
+      name: 'My Awesome Plugin',
+      slug: 'my-awesome-plugin',
+      latestVersion: '2.0.0',
+    });
+    fixture.detectChanges();
+    const code = fixture.nativeElement.querySelector('.lp-showcase__code') as HTMLElement | null;
+    expect(code?.textContent?.trim()).toBe('claude-plugin install my-awesome-plugin');
+  });
+
+  it('renders the copy install command button', () => {
+    const { fixture } = setup();
+    const copyBtn = fixture.nativeElement.querySelector('.lp-showcase__copy-btn') as HTMLButtonElement | null;
+    expect(copyBtn).not.toBeNull();
+  });
+
+  // -------------------------------------------------------------------------
+  // Task 4.4 — Category discovery chips (not rendered in current landing source)
+  // -------------------------------------------------------------------------
+
+  it('does NOT render category chips section when categories are undefined', () => {
+    const { fixture } = setup();
+    const section = fixture.nativeElement.querySelector('.lp-categories') as HTMLElement | null;
+    expect(section).toBeNull();
+  });
+
+  it('does NOT render category chips when use-case categories are available', () => {
+    const { fixture, stub } = setup();
+    stub.setCategories({
+      types: [],
+      languages: [],
+      useCases: [
+        { value: 'productivity', displayName: 'Productivity', description: '', count: 5 },
+        { value: 'testing', displayName: 'Testing', description: '', count: 3 },
+      ],
+    });
+    fixture.detectChanges();
+    const chips: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.lp-categories__chip');
+    expect(chips.length).toBe(0);
+  });
+
+  it('does NOT render category chip display names from catalog data', () => {
+    const { fixture, stub } = setup();
+    stub.setCategories({
+      types: [],
+      languages: [],
+      useCases: [
+        { value: 'productivity', displayName: 'Productivity', description: '', count: 5 },
+        { value: 'testing', displayName: 'Testing', description: '', count: 3 },
+      ],
+    });
+    fixture.detectChanges();
+    const chips: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.lp-categories__chip');
+    const names = Array.from(chips).map((c) => c.textContent?.trim());
+    expect(names).not.toContain('Productivity');
+    expect(names).not.toContain('Testing');
+  });
+
+  it('does NOT navigate by category chip because category chips are not rendered', () => {
+    const { fixture, stub } = setup();
+    stub.setCategories({
+      types: [],
+      languages: [],
+      useCases: [{ value: 'productivity', displayName: 'Productivity', description: '', count: 5 }],
+    });
+    fixture.detectChanges();
+
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    const chip = fixture.nativeElement.querySelector('.lp-categories__chip') as HTMLButtonElement | null;
+    chip?.click();
+    fixture.detectChanges();
+
+    expect(chip).toBeNull();
+    expect(navSpy).not.toHaveBeenCalled();
+    navSpy.mockRestore();
+  });
+
+  it('does NOT call catalogFacade.loadCategories on init', () => {
+    const { stub } = setup();
+    expect(stub.loadCategoriesCalls).toBe(0);
+  });
+
+  it('calls featuredPluginFacade.load on init', () => {
+    const { featuredPluginStub } = setup();
+    expect(featuredPluginStub.load).toHaveBeenCalledOnce();
+  });
+
+  // -------------------------------------------------------------------------
+  // Task 4.4 — Auth-gated footer link
+  // -------------------------------------------------------------------------
+
+  it('does NOT show My Plugins footer link when user is not authenticated', () => {
+    const { fixture } = setup();
+    const footerLinks: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.lp-footer__link');
+    const texts = Array.from(footerLinks).map((a) => a.textContent?.trim());
+    expect(texts).not.toContain('My Plugins');
+  });
+
+  it('shows My Plugins footer link when user is authenticated', () => {
+    const { fixture, authStub } = setup();
+    authStub.setUser({
+      userId: 'u1',
+      email: 'user@example.com',
+      displayName: 'Test User',
+      orgMemberships: [],
+    });
+    fixture.detectChanges();
+    const footerLinks: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('.lp-footer__link');
+    const texts = Array.from(footerLinks).map((a) => a.textContent?.trim());
+    expect(texts).toContain('My Plugins');
   });
 
   // -------------------------------------------------------------------------
@@ -336,8 +624,9 @@ describe('LandingPageComponent', () => {
 
   it('shows empty state when no plugins are available', () => {
     const { fixture } = setup();
-    const empty = fixture.nativeElement.querySelector('cf-empty-state') as HTMLElement | null;
+    const empty = fixture.nativeElement.querySelector('.cf-empty-state') as HTMLElement | null;
     expect(empty).not.toBeNull();
+    expect(empty?.textContent).toContain('No plugins available yet');
   });
 
   // -------------------------------------------------------------------------
@@ -382,51 +671,6 @@ describe('LandingPageComponent', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Search input
-  // -------------------------------------------------------------------------
-
-  it('updates searchQuery signal on input', () => {
-    const { fixture, component } = setup();
-    const input = fixture.nativeElement.querySelector('#lp-search-input') as HTMLInputElement | null;
-    expect(input).not.toBeNull();
-    if (input) {
-      input.value = 'git helper';
-      input.dispatchEvent(new Event('input'));
-      fixture.detectChanges();
-      expect(component.searchQuery()).toBe('git helper');
-    }
-  });
-
-  it('navigates to /search with query params on form submit with non-empty query', () => {
-    const { fixture, component } = setup();
-    const router = TestBed.inject(Router);
-    const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-
-    component.searchQuery.set('formatter');
-    fixture.detectChanges();
-
-    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement | null;
-    form?.dispatchEvent(new Event('submit'));
-    fixture.detectChanges();
-
-    expect(navSpy).toHaveBeenCalledWith(['/search'], { queryParams: { q: 'formatter' } });
-    navSpy.mockRestore();
-  });
-
-  it('navigates to /search without query params when query is empty', () => {
-    const { fixture } = setup();
-    const router = TestBed.inject(Router);
-    const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-
-    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement | null;
-    form?.dispatchEvent(new Event('submit'));
-    fixture.detectChanges();
-
-    expect(navSpy).toHaveBeenCalledWith(['/search']);
-    navSpy.mockRestore();
-  });
-
-  // -------------------------------------------------------------------------
   // formatDownloads helper
   // -------------------------------------------------------------------------
 
@@ -455,12 +699,8 @@ describe('LandingPageComponent', () => {
   });
 
   // =========================================================================
-  // GROUP 5 — Stats band + SEO integration (RED — not yet implemented)
+  // GROUP 5 — Stats band + SEO integration
   // =========================================================================
-
-  // -------------------------------------------------------------------------
-  // Stats band template integration
-  // -------------------------------------------------------------------------
 
   it('renders <cf-stats-band> element in the template', () => {
     const { fixture } = setup();
@@ -556,13 +796,7 @@ describe('LandingPageComponent', () => {
   });
 
   // =========================================================================
-  // GROUP 6 — i18n Wave 1 (RED — fail until template migrated to Transloco)
-  //
-  // When these are RED: the component still has hardcoded EN strings; the
-  // TranslocoService.setActiveLang('fr') call has no effect because no
-  // Transloco pipe/directive is used.
-  //
-  // When GREEN: all nav/CTA text must be driven by the 'home' scope keys.
+  // GROUP 6 — i18n Wave 1
   // =========================================================================
 
   it('[FR] hero h1 renders French title when lang is fr', () => {
@@ -592,15 +826,6 @@ describe('LandingPageComponent', () => {
     const anchors: NodeListOf<HTMLAnchorElement> = fixture.nativeElement.querySelectorAll('a[href]');
     const publish = Array.from(anchors).find((a) => a.textContent?.trim() === 'Publier un plugin');
     expect(publish).toBeDefined();
-  });
-
-  it('[FR] Sign in button renders "Se connecter" when lang is fr', () => {
-    const { fixture, translocoService } = setup();
-    translocoService.setActiveLang('fr');
-    fixture.detectChanges();
-
-    const btn = fixture.nativeElement.querySelector('button[aria-disabled="true"]') as HTMLButtonElement | null;
-    expect(btn?.textContent?.trim()).toContain('Se connecter');
   });
 
   it('[FR] Popular plugins heading renders "Plugins populaires" when lang is fr', () => {

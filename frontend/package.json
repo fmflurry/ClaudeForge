@@ -12,7 +12,8 @@
     "format": "prettier --write \"src/**/*.{ts,html,scss,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\"",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs",
-    "dev:ssr": "ng build --configuration development && concurrently \"ng build --watch --configuration development --poll=1000\" \"nodemon\""
+    "dev:ssr": "ng build --configuration development && concurrently \"ng build --watch --configuration development --poll=1000\" \"nodemon\"",
+    "dev:docker": "ng serve --configuration docker"
   },
   "prettier": {
     "printWidth": 120,
@@ -57,9 +58,9 @@
   "devDependencies": {
     "concurrently": "^9.1.2",
     "nodemon": "^3.1.10",
-    "@angular-eslint/eslint-plugin": "^21.4.0",
-    "@angular-eslint/eslint-plugin-template": "^21.4.0",
-    "@angular-eslint/template-parser": "^21.4.0",
+    "@angular-eslint/eslint-plugin": "^22.0.0",
+    "@angular-eslint/eslint-plugin-template": "^22.0.0",
+    "@angular-eslint/template-parser": "^22.0.0",
     "@angular/build": "^22.0.0",
     "@angular/cli": "^22.0.0",
     "@angular/compiler-cli": "^22.0.0",
@@ -69,7 +70,7 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vitest/coverage-v8": "^4.1.8",
-    "angular-eslint": "^21.4.0",
+    "angular-eslint": "^22.0.0",
     "eslint": "^9.0.0",
     "jsdom": "^27.1.0",
     "postcss": "^8.5.15",
