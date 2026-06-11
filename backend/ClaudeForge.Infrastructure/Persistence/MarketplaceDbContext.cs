@@ -21,10 +21,10 @@ public sealed class MarketplaceDbContext : DbContext
     }
 
     // Existing sets
-    public DbSet<PluginEntity> Plugins => Set<PluginEntity>();
-    public DbSet<PluginVersionEntity> PluginVersions => Set<PluginVersionEntity>();
+    public DbSet<AddOnEntity> Plugins => Set<AddOnEntity>();
+    public DbSet<AddOnVersionEntity> PluginVersions => Set<AddOnVersionEntity>();
     public DbSet<CategoryEntity> Categories => Set<CategoryEntity>();
-    public DbSet<PluginCategoryEntity> PluginCategories => Set<PluginCategoryEntity>();
+    public DbSet<AddOnCategoryEntity> PluginCategories => Set<AddOnCategoryEntity>();
     public DbSet<TelemetryEventEntity> TelemetryEvents => Set<TelemetryEventEntity>();
     public DbSet<TelemetryAggregateEntity> TelemetryAggregates => Set<TelemetryAggregateEntity>();
     public DbSet<DocPageEntity> DocPages => Set<DocPageEntity>();
@@ -47,8 +47,8 @@ public sealed class MarketplaceDbContext : DbContext
     public DbSet<AppealEntity> Appeals => Set<AppealEntity>();
 
     // Safe zone / org block sets
-    public DbSet<SafeZonePluginEntity> SafeZonePlugins => Set<SafeZonePluginEntity>();
-    public DbSet<OrgPluginBlockEntity> OrgPluginBlocks => Set<OrgPluginBlockEntity>();
+    public DbSet<SafeZoneAddOnEntity> SafeZonePlugins => Set<SafeZoneAddOnEntity>();
+    public DbSet<OrgAddOnBlockEntity> OrgPluginBlocks => Set<OrgAddOnBlockEntity>();
 
     // Reputation sets
     public DbSet<BadgeEntity> Badges => Set<BadgeEntity>();
@@ -103,7 +103,7 @@ public sealed class MarketplaceDbContext : DbContext
 
     private static void ConfigurePlugins(ModelBuilder modelBuilder, bool isPostgres = true)
     {
-        modelBuilder.Entity<PluginEntity>(entity =>
+        modelBuilder.Entity<AddOnEntity>(entity =>
         {
             entity.ToTable("plugins");
             entity.HasKey(p => p.Id);
@@ -262,7 +262,7 @@ public sealed class MarketplaceDbContext : DbContext
 
     private static void ConfigurePluginVersions(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<PluginVersionEntity>(entity =>
+        modelBuilder.Entity<AddOnVersionEntity>(entity =>
         {
             entity.ToTable("plugin_versions");
             entity.HasKey(pv => pv.Id);
@@ -319,7 +319,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .HasDefaultValueSql("NOW()");
 
             // FK → plugins ON DELETE CASCADE
-            entity.HasOne(pv => pv.Plugin)
+            entity.HasOne(pv => pv.AddOn)
                   .WithMany(p => p.Versions)
                   .HasForeignKey(pv => pv.PluginId)
                   .OnDelete(DeleteBehavior.Cascade);
@@ -376,7 +376,7 @@ public sealed class MarketplaceDbContext : DbContext
 
     private static void ConfigurePluginCategories(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<PluginCategoryEntity>(entity =>
+        modelBuilder.Entity<AddOnCategoryEntity>(entity =>
         {
             entity.ToTable("plugin_categories");
 
@@ -387,7 +387,7 @@ public sealed class MarketplaceDbContext : DbContext
             entity.Property(pc => pc.CategoryId).HasColumnName("category_id");
 
             // FK → plugins ON DELETE CASCADE
-            entity.HasOne(pc => pc.Plugin)
+            entity.HasOne(pc => pc.AddOn)
                   .WithMany(p => p.PluginCategories)
                   .HasForeignKey(pc => pc.PluginId)
                   .OnDelete(DeleteBehavior.Cascade);
@@ -419,7 +419,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .HasColumnName("plugin_id")
                   .IsRequired(false);
 
-            entity.HasOne<PluginEntity>()
+            entity.HasOne<AddOnEntity>()
                   .WithMany()
                   .HasForeignKey(te => te.PluginId)
                   .OnDelete(DeleteBehavior.SetNull)
@@ -476,7 +476,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .HasColumnName("window_start");
 
             // FK → plugins (no cascade annotation; aggregate data kept after plugin removal)
-            entity.HasOne<PluginEntity>()
+            entity.HasOne<AddOnEntity>()
                   .WithMany()
                   .HasForeignKey(ta => ta.PluginId)
                   .OnDelete(DeleteBehavior.Restrict);
@@ -996,7 +996,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .IsRequired(false);
 
             // FK → plugins ON DELETE CASCADE
-            entity.HasOne(j => j.Plugin)
+            entity.HasOne(j => j.AddOn)
                   .WithMany()
                   .HasForeignKey(j => j.PluginId)
                   .OnDelete(DeleteBehavior.Cascade);
@@ -1107,7 +1107,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .HasDefaultValueSql("NOW()");
 
             // FK → plugins ON DELETE CASCADE
-            entity.HasOne(r => r.Plugin)
+            entity.HasOne(r => r.AddOn)
                   .WithMany()
                   .HasForeignKey(r => r.PluginId)
                   .OnDelete(DeleteBehavior.Cascade);
@@ -1273,7 +1273,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .HasDefaultValueSql("NOW()");
 
             // FK → plugins ON DELETE CASCADE
-            entity.HasOne(a => a.Plugin)
+            entity.HasOne(a => a.AddOn)
                   .WithMany()
                   .HasForeignKey(a => a.PluginId)
                   .OnDelete(DeleteBehavior.Cascade);
@@ -1302,7 +1302,7 @@ public sealed class MarketplaceDbContext : DbContext
 
     private static void ConfigureSafeZonePlugins(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<SafeZonePluginEntity>(entity =>
+        modelBuilder.Entity<SafeZoneAddOnEntity>(entity =>
         {
             entity.ToTable("safe_zone_plugins");
             entity.HasKey(sz => sz.Id);
@@ -1341,7 +1341,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
 
             // FK → plugins ON DELETE CASCADE
-            entity.HasOne(sz => sz.Plugin)
+            entity.HasOne(sz => sz.AddOn)
                   .WithMany()
                   .HasForeignKey(sz => sz.PluginId)
                   .OnDelete(DeleteBehavior.Cascade);
@@ -1361,7 +1361,7 @@ public sealed class MarketplaceDbContext : DbContext
 
     private static void ConfigureOrgPluginBlocks(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<OrgPluginBlockEntity>(entity =>
+        modelBuilder.Entity<OrgAddOnBlockEntity>(entity =>
         {
             entity.ToTable("org_plugin_blocks");
             entity.HasKey(b => b.Id);
@@ -1392,7 +1392,7 @@ public sealed class MarketplaceDbContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
 
             // FK → plugins ON DELETE CASCADE
-            entity.HasOne(b => b.Plugin)
+            entity.HasOne(b => b.AddOn)
                   .WithMany()
                   .HasForeignKey(b => b.PluginId)
                   .OnDelete(DeleteBehavior.Cascade);

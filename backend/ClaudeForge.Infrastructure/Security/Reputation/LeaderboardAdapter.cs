@@ -137,10 +137,10 @@ public sealed class LeaderboardAdapter : ILeaderboardPort
             if (orgId.HasValue && orgId.Value != Guid.Empty)
             {
                 filteredReps = from rep in repQuery
-                    join member in _ctx.OrganizationMembers.AsNoTracking()
-                        on rep.AuthorId equals member.UserId
-                    where member.OrgId == orgId.Value
-                    select rep;
+                               join member in _ctx.OrganizationMembers.AsNoTracking()
+                                   on rep.AuthorId equals member.UserId
+                               where member.OrgId == orgId.Value
+                               select rep;
             }
 
             var allReps = await filteredReps

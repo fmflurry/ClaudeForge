@@ -64,7 +64,7 @@ public sealed class SaveAnalysisResultAdapter : ISaveAnalysisResultPort
         db.AnalysisResults.Add(entity);
 
         // Update plugin security score and status
-        PluginEntity? plugin = await db.Plugins.FindAsync([command.PluginId], ct);
+        AddOnEntity? plugin = await db.Plugins.FindAsync([command.PluginId], ct);
         if (plugin is not null)
         {
             plugin.SecurityScore = command.Score.TotalScore;

@@ -33,10 +33,10 @@ public sealed class SharedKernelIsolationTests
     private const string SharedAuthzNamespace = "ClaudeForge.Core.Shared.Authorization";
 
     // Existing module Application-layer namespaces that must remain clean
-    private const string PluginCatalogNamespace = "ClaudeForge.Application.Modules.PluginCatalog";
-    private const string PluginSearchNamespace = "ClaudeForge.Application.Modules.PluginSearch";
-    private const string PluginDistributionNamespace = "ClaudeForge.Application.Modules.PluginDistribution";
-    private const string PluginPublishingNamespace = "ClaudeForge.Application.Modules.PluginPublishing";
+    private const string PluginCatalogNamespace = "ClaudeForge.Application.Modules.AddOnCatalog";
+    private const string PluginSearchNamespace = "ClaudeForge.Application.Modules.AddOnSearch";
+    private const string PluginDistributionNamespace = "ClaudeForge.Application.Modules.AddOnDistribution";
+    private const string PluginPublishingNamespace = "ClaudeForge.Application.Modules.AddOnPublishing";
 
     // =========================================================================
     // (a) Existing modules must NOT depend on Identity or Organizations namespaces
@@ -46,7 +46,7 @@ public sealed class SharedKernelIsolationTests
     public void PluginCatalog_Core_ShouldNot_HaveDependencyOnIdentityModule()
     {
         Types? types = Types.InAssembly(
-            typeof(ClaudeForge.Application.Modules.PluginCatalog.UseCases.ListPluginsUseCase).Assembly);
+            typeof(ClaudeForge.Application.Modules.AddOnCatalog.UseCases.ListAddOnsUseCase).Assembly);
 
         TestResult? result = types
             .That()
@@ -64,7 +64,7 @@ public sealed class SharedKernelIsolationTests
     public void PluginCatalog_Core_ShouldNot_HaveDependencyOnOrganizationsModule()
     {
         Types? types = Types.InAssembly(
-            typeof(ClaudeForge.Application.Modules.PluginCatalog.UseCases.ListPluginsUseCase).Assembly);
+            typeof(ClaudeForge.Application.Modules.AddOnCatalog.UseCases.ListAddOnsUseCase).Assembly);
 
         TestResult? result = types
             .That()
@@ -82,7 +82,7 @@ public sealed class SharedKernelIsolationTests
     public void PluginSearch_Core_ShouldNot_HaveDependencyOnIdentityModule()
     {
         Types? types = Types.InAssembly(
-            typeof(ClaudeForge.Application.Modules.PluginSearch.UseCases.SearchPluginsUseCase).Assembly);
+            typeof(ClaudeForge.Application.Modules.AddOnSearch.UseCases.SearchAddOnsUseCase).Assembly);
 
         TestResult? result = types
             .That()
@@ -100,7 +100,7 @@ public sealed class SharedKernelIsolationTests
     public void PluginSearch_Core_ShouldNot_HaveDependencyOnOrganizationsModule()
     {
         Types? types = Types.InAssembly(
-            typeof(ClaudeForge.Application.Modules.PluginSearch.UseCases.SearchPluginsUseCase).Assembly);
+            typeof(ClaudeForge.Application.Modules.AddOnSearch.UseCases.SearchAddOnsUseCase).Assembly);
 
         TestResult? result = types
             .That()
@@ -118,7 +118,7 @@ public sealed class SharedKernelIsolationTests
     public void PluginDistribution_Core_ShouldNot_HaveDependencyOnIdentityModule()
     {
         Types? types = Types.InAssembly(
-            typeof(ClaudeForge.Application.Modules.PluginDistribution.UseCases.DownloadPluginUseCase).Assembly);
+            typeof(ClaudeForge.Application.Modules.AddOnDistribution.UseCases.DownloadAddOnUseCase).Assembly);
 
         TestResult? result = types
             .That()
@@ -136,7 +136,7 @@ public sealed class SharedKernelIsolationTests
     public void PluginDistribution_Core_ShouldNot_HaveDependencyOnOrganizationsModule()
     {
         Types? types = Types.InAssembly(
-            typeof(ClaudeForge.Application.Modules.PluginDistribution.UseCases.DownloadPluginUseCase).Assembly);
+            typeof(ClaudeForge.Application.Modules.AddOnDistribution.UseCases.DownloadAddOnUseCase).Assembly);
 
         TestResult? result = types
             .That()
@@ -154,7 +154,7 @@ public sealed class SharedKernelIsolationTests
     public void PluginPublishing_Core_ShouldNot_HaveDependencyOnIdentityModule()
     {
         Types? types = Types.InAssembly(
-            typeof(ClaudeForge.Application.Modules.PluginPublishing.UseCases.UploadPluginUseCase).Assembly);
+            typeof(ClaudeForge.Application.Modules.AddOnPublishing.UseCases.UploadAddOnUseCase).Assembly);
 
         TestResult? result = types
             .That()
@@ -172,7 +172,7 @@ public sealed class SharedKernelIsolationTests
     public void PluginPublishing_Core_ShouldNot_HaveDependencyOnOrganizationsModule()
     {
         Types? types = Types.InAssembly(
-            typeof(ClaudeForge.Application.Modules.PluginPublishing.UseCases.UploadPluginUseCase).Assembly);
+            typeof(ClaudeForge.Application.Modules.AddOnPublishing.UseCases.UploadAddOnUseCase).Assembly);
 
         TestResult? result = types
             .That()
@@ -193,7 +193,7 @@ public sealed class SharedKernelIsolationTests
     [Fact]
     public void SharedAuthzKernel_ShouldNot_HaveDependencyOnIdentityModule()
     {
-        // The shared kernel (ICurrentUser, IOrgMembershipQueryPort, IPluginAccessPolicy)
+        // The shared kernel (ICurrentUser, IOrgMembershipQueryPort, IAddOnAccessPolicy)
         // must remain a pure-primitive seam — no Identity module dependency.
         Types? types = Types.InAssembly(
             typeof(ClaudeForge.Core.Shared.Exceptions.ProblemDetailsException).Assembly);

@@ -24,5 +24,5 @@ public sealed class CategoryEntity
     public string? Description { get; set; }
 
     // Navigation property
-    public ICollection<PluginCategoryEntity> PluginCategories { get; set; } = [];
+    public ICollection<AddOnCategoryEntity> PluginCategories { get; set; } = [];
 }

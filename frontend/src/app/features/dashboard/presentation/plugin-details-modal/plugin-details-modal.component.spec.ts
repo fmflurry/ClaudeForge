@@ -16,7 +16,7 @@
  *   class PluginDetailsModalComponent {
  *     // Inputs:
  *     readonly pluginName = input.required<string>();
- *     readonly plugin = input<InstalledPlugin | undefined>(undefined);
+ *     readonly plugin = input<InstalledAddOn | undefined>(undefined);
  *
  *     // Outputs:
  *     readonly closed = output<void>();
@@ -40,7 +40,7 @@
  *
  *   // DashboardPageComponent (extend existing stub) MUST:
  *   //   - inject DashboardFacade only
- *   //   - host InstalledPluginsTableComponent + PluginDetailsModalComponent
+ *   //   - host InstalledAddOnsTableComponent + PluginDetailsModalComponent
  *   //   - run a periodic checkForUpdates on a 5-minute interval (300_000 ms)
  *   //   - template must include:
  *   //     [data-testid="dashboard-page"]
@@ -58,7 +58,7 @@ import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { PluginDetailsModalComponent } from './plugin-details-modal.component';
 import { DashboardFacade } from '../../application/facades/dashboard.facade';
 import { DashboardPageComponent } from '../dashboard-page.component';
-import type { InstalledPlugin, DashboardGroup, RecommendedPlugin } from '../../domain/models/dashboard.models';
+import type { InstalledAddOn, DashboardGroup, RecommendedAddOn } from '../../domain/models/dashboard.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
 
@@ -154,21 +154,21 @@ const I18N_PROVIDERS = [
 
 @Injectable()
 class StubDashboardFacade {
-  private readonly _installed = signal<InstalledPlugin[]>([]);
+  private readonly _installed = signal<InstalledAddOn[]>([]);
   private readonly _isLoading = signal(false);
   private readonly _error = signal<{ code: string; message: string }[] | undefined>(undefined);
   private readonly _hasUpdates = signal(false);
   private readonly _groupsByTeam = signal<DashboardGroup>({ teamId: 'team-test', plugins: [] });
-  private readonly _recommended = signal<readonly RecommendedPlugin[]>([]);
+  private readonly _recommended = signal<readonly RecommendedAddOn[]>([]);
 
-  setInstalled(plugins: InstalledPlugin[]): void {
+  setInstalled(plugins: InstalledAddOn[]): void {
     this._installed.set(plugins);
   }
   setHasUpdates(v: boolean): void {
     this._hasUpdates.set(v);
   }
 
-  get installedPlugins(): Signal<InstalledPlugin[]> {
+  get installedPlugins(): Signal<InstalledAddOn[]> {
     return this._installed;
   }
   get isLoading(): Signal<boolean> {
@@ -183,7 +183,7 @@ class StubDashboardFacade {
   get groupsByTeam(): Signal<DashboardGroup> {
     return this._groupsByTeam;
   }
-  get recommendedPlugins(): Signal<readonly RecommendedPlugin[]> {
+  get recommendedPlugins(): Signal<readonly RecommendedAddOn[]> {
     return this._recommended;
   }
 
@@ -210,7 +210,7 @@ class StubDashboardFacade {
 // Fixtures
 // ---------------------------------------------------------------------------
 
-function makePlugin(overrides: Partial<InstalledPlugin> = {}): InstalledPlugin {
+function makePlugin(overrides: Partial<InstalledAddOn> = {}): InstalledAddOn {
   return {
     name: 'alpha-plugin',
     version: '1.2.0',
@@ -233,7 +233,7 @@ const PLUGIN_NEEDS_UPDATE = makePlugin({
 // PluginDetailsModalComponent — setup
 // ---------------------------------------------------------------------------
 
-function setupModal(plugin: InstalledPlugin | undefined = PLUGIN_BASIC): {
+function setupModal(plugin: InstalledAddOn | undefined = PLUGIN_BASIC): {
   fixture: ComponentFixture<PluginDetailsModalComponent>;
   translocoService: TranslocoService;
 } {

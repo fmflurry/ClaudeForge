@@ -72,10 +72,10 @@ builder.Services.AddCors(options =>
 // IHostedService implementations start in registration order.  Registering the
 // migration service here — before RegisterModules (which registers the seeders)
 // — guarantees that MigrateAsync() completes before CategorySeeder or
-// PluginDataSeeder ever touch the schema.
+// AddOnDataSeeder ever touch the schema.
 builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
-// Auto-discover and register feature modules (including rate limiting from PluginPublishingModule).
+// Auto-discover and register feature modules (including rate limiting from AddOnPublishingModule).
 // IConfiguration is passed directly — no BuildServiceProvider() anti-pattern.
 builder.Services.RegisterModules(builder.Configuration);
 

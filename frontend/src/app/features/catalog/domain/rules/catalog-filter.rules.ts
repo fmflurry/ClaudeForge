@@ -3,8 +3,8 @@
  * No Angular or infrastructure dependencies — zero side effects.
  */
 
-import type { ListPluginsParams } from '../../../../shared/infrastructure/http/api-client.types';
-import type { PluginSummary } from '../models/catalog.models';
+import type { ListAddOnsParams } from '../../../../shared/infrastructure/http/api-client.types';
+import type { AddOnSummary } from '../models/catalog.models';
 
 export interface CatalogFilterQuery {
   readonly types?: readonly string[];
@@ -42,23 +42,23 @@ export function buildFilterQuery(partial: Partial<CatalogFilterQuery>): CatalogF
  * Logic: AND across dimensions, OR within each dimension.
  * Empty filter arrays are ignored (dimension is inactive).
  */
-export function filterMatches(plugin: PluginSummary, query: CatalogFilterQuery): boolean {
+export function filterMatches(addOn: AddOnSummary, query: CatalogFilterQuery): boolean {
   const activeTypes = query.types ?? [];
   const activeLanguages = query.languages ?? [];
   const activeUseCases = query.useCases ?? [];
 
   if (activeTypes.length > 0) {
-    const hasTypeMatch = activeTypes.some((t) => plugin.types.includes(t));
+    const hasTypeMatch = activeTypes.some((t) => addOn.types.includes(t));
     if (!hasTypeMatch) return false;
   }
 
   if (activeLanguages.length > 0) {
-    const hasLangMatch = activeLanguages.some((l) => plugin.languages.includes(l));
+    const hasLangMatch = activeLanguages.some((l) => addOn.languages.includes(l));
     if (!hasLangMatch) return false;
   }
 
   if (activeUseCases.length > 0) {
-    const hasUseCaseMatch = activeUseCases.some((u) => plugin.useCaseTags.includes(u));
+    const hasUseCaseMatch = activeUseCases.some((u) => addOn.useCaseTags.includes(u));
     if (!hasUseCaseMatch) return false;
   }
 
@@ -80,12 +80,12 @@ export function composeSortParams(query: CatalogFilterQuery): {
 }
 
 /**
- * Converts a CatalogFilterQuery to the wire ListPluginsParams shape.
+ * Converts a CatalogFilterQuery to the wire ListAddOnsParams shape.
  * Returns a NEW object each call.
  */
-export function toListPluginsParams(query: CatalogFilterQuery): ListPluginsParams {
+export function toListAddOnsParams(query: CatalogFilterQuery): ListAddOnsParams {
   const sortParams = composeSortParams(query);
-  const result: ListPluginsParams = {
+  const result: ListAddOnsParams = {
     page: query.page ?? DEFAULT_PAGE,
     limit: query.limit ?? DEFAULT_LIMIT,
     sort: sortParams.sort,

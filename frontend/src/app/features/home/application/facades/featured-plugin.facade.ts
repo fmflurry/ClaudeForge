@@ -1,18 +1,18 @@
 import { DestroyRef, inject, Injectable, Signal, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FeaturedPluginPort } from '../../domain/ports/featured-plugin.port';
-import type { FeaturedPlugin } from '../../domain/models/featured-plugin.model';
+import { FeaturedAddOnPort } from '../../domain/ports/featured-plugin.port';
+import type { FeaturedAddOn } from '../../domain/models/featured-plugin.model';
 
 @Injectable()
-export class FeaturedPluginFacade {
-  private readonly port = inject(FeaturedPluginPort);
+export class FeaturedAddOnFacade {
+  private readonly port = inject(FeaturedAddOnPort);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly _featuredPlugin = signal<FeaturedPlugin | null>(null);
+  private readonly _featuredAddOn = signal<FeaturedAddOn | null>(null);
   private readonly _isLoading = signal<boolean>(false);
 
-  /** The currently featured plugin, or null when none is featured / fetch failed. */
-  readonly featuredPlugin: Signal<FeaturedPlugin | null> = this._featuredPlugin.asReadonly();
+  /** The currently featured add-on, or null when none is featured / fetch failed. */
+  readonly featuredAddOn: Signal<FeaturedAddOn | null> = this._featuredAddOn.asReadonly();
 
   /** True while the fetch is in-flight. */
   readonly isLoading: Signal<boolean> = this._isLoading.asReadonly();
@@ -20,16 +20,16 @@ export class FeaturedPluginFacade {
   load(): void {
     this._isLoading.set(true);
     this.port
-      .getFeaturedPlugin()
+      .getFeaturedAddOn()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (plugin) => {
-          this._featuredPlugin.set(plugin);
+        next: (addOn) => {
+          this._featuredAddOn.set(addOn);
           this._isLoading.set(false);
         },
         error: () => {
           // The adapter already maps errors to null; this branch is a safety net.
-          this._featuredPlugin.set(null);
+          this._featuredAddOn.set(null);
           this._isLoading.set(false);
         },
       });

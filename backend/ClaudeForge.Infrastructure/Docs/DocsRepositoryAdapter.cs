@@ -112,7 +112,7 @@ public sealed class DocsRepositoryAdapter : IDocsRepositoryPort
     {
         string pluginSlug = slug.Substring(PluginSlugPrefix.Length);
 
-        PluginEntity? plugin = await _context.Plugins
+        AddOnEntity? plugin = await _context.Plugins
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Slug == pluginSlug, ct);
 
@@ -121,7 +121,7 @@ public sealed class DocsRepositoryAdapter : IDocsRepositoryPort
             return null;
         }
 
-        PluginVersionEntity? latestVersion = await _context.PluginVersions
+        AddOnVersionEntity? latestVersion = await _context.PluginVersions
             .AsNoTracking()
             .Where(v => v.PluginId == plugin.Id && v.IsLatest)
             .FirstOrDefaultAsync(ct);

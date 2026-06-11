@@ -1,0 +1,98 @@
+using System.Threading.RateLimiting;
+using ClaudeForge.Api.Module;
+using ClaudeForge.Application.Modules.AddOnDistribution.Ports;
+using ClaudeForge.Application.Modules.AddOnDistribution.UseCases;
+using ClaudeForge.Core.Shared.Authorization;
+using ClaudeForge.Infrastructure.AddOnDistribution;
+using ClaudeForge.Infrastructure.Authorization;
+using ClaudeForge.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+
+namespace ClaudeForge.Api.Modules.AddOnDistribution;
+
+/// <summary>
+/// Feature module for the Plugin Distribution endpoint.
+///   GET /api/v1/plugins/{pluginId:Guid}/download?version=
+/// </summary>
+public sealed class AddOnDistributionModule : IModule
+{
+    private const string DownloadRateLimitPolicy = "plugin-download-limit";
+
+    public IServiceCollection RegisterModule(IServiceCollection services, IConfiguration configuration)
+    {
+        // Repository adapter
+        services.AddScoped<IAddOnDistributionRepositoryPort>(sp =>
+            new AddOnDistributionRepositoryAdapter(sp.GetRequiredService<MarketplaceDbContext>()));
+
+        // Access policy (singleton — pure logic, no I/O)
+        if (!services.Any(d => d.ServiceType == typeof(IAddOnAccessPolicy)))
+        {
+            services.AddSingleton<IAddOnAccessPolicy, AddOnAccessPolicy>();
+        }
+
+        // IOrgMembershipQueryPort (requires IMemoryCache)
+        if (!services.Any(d => d.ServiceType == typeof(IOrgMembershipQueryPort)))
+        {
+            services.AddMemoryCache();
+            services.AddScoped<IOrgMembershipQueryPort>(sp =>
+                new OrgMembershipQueryAdapter(
+                    sp.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<MarketplaceDbContext>>(),
+                    sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>()));
+        }
+
+        // Use case
+        services.AddScoped<DownloadAddOnUseCase>();
+
+        // Per-IP fixed-window rate limiting for the download endpoint
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            options.AddPolicy(DownloadRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 100,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    }));
+        });
+
+        return services;
+    }
+
+    public IEndpointRouteBuilder MapEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/api/v1/plugins/{pluginId:guid}/download", DownloadPluginHandler)
+            .WithName("DownloadPlugin")
+            .WithTags("PluginDistribution")
+            .RequireRateLimiting(DownloadRateLimitPolicy);
+
+        return endpoints;
+    }
+
+    // =========================================================================
+    // Handlers
+    // =========================================================================
+
+    private static async Task<IResult> DownloadPluginHandler(
+        Guid pluginId,
+        [FromQuery] string? version,
+        [FromServices] DownloadAddOnUseCase useCase,
+        HttpContext httpContext)
+    {
+        DownloadResult result = await useCase.ExecuteAsync(pluginId, version, httpContext.RequestAborted);
+
+        // Set response headers before streaming
+        httpContext.Response.Headers.ETag = $"\"{result.Sha256}\"";
+        httpContext.Response.ContentLength = result.SizeBytes;
+
+        return Results.File(
+            fileStream: result.Stream,
+            contentType: result.ContentType,
+            fileDownloadName: result.FileName);
+    }
+}

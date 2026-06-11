@@ -113,7 +113,7 @@ public sealed class DocPageSeederTests : IAsyncLifetime
     // Reuse same pattern as DocsRepositoryPortTests.
     // -------------------------------------------------------------------------
 
-    private static PluginEntity MakePlugin(string name, string slug) =>
+    private static AddOnEntity MakePlugin(string name, string slug) =>
         new()
         {
             Id = Guid.NewGuid(),
@@ -126,7 +126,7 @@ public sealed class DocPageSeederTests : IAsyncLifetime
             UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-    private static PluginVersionEntity MakeVersion(
+    private static AddOnVersionEntity MakeVersion(
         Guid pluginId,
         string version,
         string? readmeText = null,
@@ -476,7 +476,7 @@ public sealed class DocPageSeederTests : IAsyncLifetime
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
         // Insert a plugin with a version that has readme_text
-        PluginEntity plugin = MakePlugin("Docs Test Plugin", "docs-test-plugin");
+        AddOnEntity plugin = MakePlugin("Docs Test Plugin", "docs-test-plugin");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
@@ -505,7 +505,7 @@ public sealed class DocPageSeederTests : IAsyncLifetime
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("H1 Title Plugin", "h1-title-plugin");
+        AddOnEntity plugin = MakePlugin("H1 Title Plugin", "h1-title-plugin");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
@@ -540,7 +540,7 @@ public sealed class DocPageSeederTests : IAsyncLifetime
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("Silent Plugin 22", "silent-plugin-22");
+        AddOnEntity plugin = MakePlugin("Silent Plugin 22", "silent-plugin-22");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
@@ -564,7 +564,7 @@ public sealed class DocPageSeederTests : IAsyncLifetime
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("Empty Readme Plugin", "empty-readme-plugin");
+        AddOnEntity plugin = MakePlugin("Empty Readme Plugin", "empty-readme-plugin");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 

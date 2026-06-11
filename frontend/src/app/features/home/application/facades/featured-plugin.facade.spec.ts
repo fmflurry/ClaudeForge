@@ -1,36 +1,36 @@
 /**
- * Tests for FeaturedPluginFacade.
+ * Tests for FeaturedAddOnFacade.
  * Follows the pattern of home-metrics.facade.spec.ts.
  */
 
 import { TestBed } from '@angular/core/testing';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { FeaturedPluginFacade } from './featured-plugin.facade';
-import { FeaturedPluginPort } from '../../domain/ports/featured-plugin.port';
-import type { FeaturedPlugin } from '../../domain/models/featured-plugin.model';
+import { FeaturedAddOnFacade } from './featured-plugin.facade';
+import { FeaturedAddOnPort } from '../../domain/ports/featured-plugin.port';
+import type { FeaturedAddOn } from '../../domain/models/featured-plugin.model';
 
 // ---------------------------------------------------------------------------
 // Fake port implementations
 // ---------------------------------------------------------------------------
 
-const FAKE_PLUGIN: FeaturedPlugin = {
+const FAKE_ADDON: FeaturedAddOn = {
   pluginId: 'plugin-abc',
-  name: 'Awesome Plugin',
-  slug: 'awesome-plugin',
+  name: 'Awesome AddOn',
+  slug: 'awesome-addon',
   latestVersion: '1.2.3',
 };
 
 @Injectable()
-class FakeFeaturedPluginPort extends FeaturedPluginPort {
-  override getFeaturedPlugin(): Observable<FeaturedPlugin | null> {
-    return of(FAKE_PLUGIN);
+class FakeFeaturedAddOnPort extends FeaturedAddOnPort {
+  override getFeaturedAddOn(): Observable<FeaturedAddOn | null> {
+    return of(FAKE_ADDON);
   }
 }
 
 @Injectable()
-class NullFeaturedPluginPort extends FeaturedPluginPort {
-  override getFeaturedPlugin(): Observable<FeaturedPlugin | null> {
+class NullFeaturedAddOnPort extends FeaturedAddOnPort {
+  override getFeaturedAddOn(): Observable<FeaturedAddOn | null> {
     return of(null);
   }
 }
@@ -39,32 +39,32 @@ class NullFeaturedPluginPort extends FeaturedPluginPort {
 // Setup helpers
 // ---------------------------------------------------------------------------
 
-function setupWithPlugin(): { facade: FeaturedPluginFacade } {
+function setupWithAddOn(): { facade: FeaturedAddOnFacade } {
   TestBed.configureTestingModule({
-    providers: [FeaturedPluginFacade, { provide: FeaturedPluginPort, useClass: FakeFeaturedPluginPort }],
+    providers: [FeaturedAddOnFacade, { provide: FeaturedAddOnPort, useClass: FakeFeaturedAddOnPort }],
   });
-  return { facade: TestBed.inject(FeaturedPluginFacade) };
+  return { facade: TestBed.inject(FeaturedAddOnFacade) };
 }
 
-function setupWithNull(): { facade: FeaturedPluginFacade } {
+function setupWithNull(): { facade: FeaturedAddOnFacade } {
   TestBed.configureTestingModule({
-    providers: [FeaturedPluginFacade, { provide: FeaturedPluginPort, useClass: NullFeaturedPluginPort }],
+    providers: [FeaturedAddOnFacade, { provide: FeaturedAddOnPort, useClass: NullFeaturedAddOnPort }],
   });
-  return { facade: TestBed.inject(FeaturedPluginFacade) };
+  return { facade: TestBed.inject(FeaturedAddOnFacade) };
 }
 
 // ---------------------------------------------------------------------------
 // Initial state
 // ---------------------------------------------------------------------------
 
-describe('FeaturedPluginFacade — initial state', () => {
-  it('featuredPlugin() should be null before load()', () => {
-    const { facade } = setupWithPlugin();
-    expect(facade.featuredPlugin()).toBeNull();
+describe('FeaturedAddOnFacade — initial state', () => {
+  it('featuredAddOn() should be null before load()', () => {
+    const { facade } = setupWithAddOn();
+    expect(facade.featuredAddOn()).toBeNull();
   });
 
   it('isLoading() should be false before load()', () => {
-    const { facade } = setupWithPlugin();
+    const { facade } = setupWithAddOn();
     expect(facade.isLoading()).toBe(false);
   });
 });
@@ -73,50 +73,50 @@ describe('FeaturedPluginFacade — initial state', () => {
 // Signal API surface
 // ---------------------------------------------------------------------------
 
-describe('FeaturedPluginFacade — signal API surface', () => {
-  it('featuredPlugin should be a callable signal function', () => {
-    const { facade } = setupWithPlugin();
-    expect(typeof facade.featuredPlugin).toBe('function');
+describe('FeaturedAddOnFacade — signal API surface', () => {
+  it('featuredAddOn should be a callable signal function', () => {
+    const { facade } = setupWithAddOn();
+    expect(typeof facade.featuredAddOn).toBe('function');
   });
 
   it('isLoading should be a callable signal function', () => {
-    const { facade } = setupWithPlugin();
+    const { facade } = setupWithAddOn();
     expect(typeof facade.isLoading).toBe('function');
   });
 
   it('load should be a method', () => {
-    const { facade } = setupWithPlugin();
+    const { facade } = setupWithAddOn();
     expect(typeof facade.load).toBe('function');
   });
 });
 
 // ---------------------------------------------------------------------------
-// load() — success (featured plugin present)
+// load() — success (featured add-on present)
 // ---------------------------------------------------------------------------
 
-describe('FeaturedPluginFacade — load() with plugin', () => {
-  it('should set featuredPlugin() after successful load', () => {
-    const { facade } = setupWithPlugin();
+describe('FeaturedAddOnFacade — load() with add-on', () => {
+  it('should set featuredAddOn() after successful load', () => {
+    const { facade } = setupWithAddOn();
     facade.load();
-    expect(facade.featuredPlugin()).toEqual(FAKE_PLUGIN);
+    expect(facade.featuredAddOn()).toEqual(FAKE_ADDON);
   });
 
   it('should set isLoading to false after load', () => {
-    const { facade } = setupWithPlugin();
+    const { facade } = setupWithAddOn();
     facade.load();
     expect(facade.isLoading()).toBe(false);
   });
 
-  it('should expose the slug from the featured plugin', () => {
-    const { facade } = setupWithPlugin();
+  it('should expose the slug from the featured add-on', () => {
+    const { facade } = setupWithAddOn();
     facade.load();
-    expect(facade.featuredPlugin()?.slug).toBe('awesome-plugin');
+    expect(facade.featuredAddOn()?.slug).toBe('awesome-addon');
   });
 
-  it('should expose the latestVersion from the featured plugin', () => {
-    const { facade } = setupWithPlugin();
+  it('should expose the latestVersion from the featured add-on', () => {
+    const { facade } = setupWithAddOn();
     facade.load();
-    expect(facade.featuredPlugin()?.latestVersion).toBe('1.2.3');
+    expect(facade.featuredAddOn()?.latestVersion).toBe('1.2.3');
   });
 });
 
@@ -124,11 +124,11 @@ describe('FeaturedPluginFacade — load() with plugin', () => {
 // load() — null result (none featured / fetch failed → adapter returns null)
 // ---------------------------------------------------------------------------
 
-describe('FeaturedPluginFacade — load() with null (no featured plugin)', () => {
-  it('should set featuredPlugin() to null when port returns null', () => {
+describe('FeaturedAddOnFacade — load() with null (no featured add-on)', () => {
+  it('should set featuredAddOn() to null when port returns null', () => {
     const { facade } = setupWithNull();
     facade.load();
-    expect(facade.featuredPlugin()).toBeNull();
+    expect(facade.featuredAddOn()).toBeNull();
   });
 
   it('should set isLoading to false even when result is null', () => {
@@ -142,33 +142,33 @@ describe('FeaturedPluginFacade — load() with null (no featured plugin)', () =>
 // load() — immutability (new object on each load)
 // ---------------------------------------------------------------------------
 
-describe('FeaturedPluginFacade — immutable updates', () => {
-  it('should return a new plugin object on each successive load', () => {
+describe('FeaturedAddOnFacade — immutable updates', () => {
+  it('should return a new add-on object on each successive load', () => {
     let call = 0;
     @Injectable()
-    class SequentialPort extends FeaturedPluginPort {
-      override getFeaturedPlugin(): Observable<FeaturedPlugin | null> {
+    class SequentialPort extends FeaturedAddOnPort {
+      override getFeaturedAddOn(): Observable<FeaturedAddOn | null> {
         call++;
         return of({
           pluginId: `p${call}`,
-          name: `Plugin ${call}`,
-          slug: `plugin-${call}`,
+          name: `AddOn ${call}`,
+          slug: `addon-${call}`,
           latestVersion: `${call}.0.0`,
         });
       }
     }
 
     TestBed.configureTestingModule({
-      providers: [FeaturedPluginFacade, { provide: FeaturedPluginPort, useClass: SequentialPort }],
+      providers: [FeaturedAddOnFacade, { provide: FeaturedAddOnPort, useClass: SequentialPort }],
     });
-    const facade = TestBed.inject(FeaturedPluginFacade);
+    const facade = TestBed.inject(FeaturedAddOnFacade);
 
     facade.load();
-    const first = facade.featuredPlugin();
+    const first = facade.featuredAddOn();
     facade.load();
-    const second = facade.featuredPlugin();
+    const second = facade.featuredAddOn();
 
-    expect(second?.slug).toBe('plugin-2');
-    expect(first?.slug).toBe('plugin-1');
+    expect(second?.slug).toBe('addon-2');
+    expect(first?.slug).toBe('addon-1');
   });
 });

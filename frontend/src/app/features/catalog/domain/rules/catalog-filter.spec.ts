@@ -24,15 +24,15 @@
  *   function buildFilterQuery(partial: Partial<CatalogFilterQuery>): CatalogFilterQuery
  *     → fills missing fields with defaults; returns NEW object
  *
- *   function filterMatches(plugin: PluginSummary, query: CatalogFilterQuery): boolean
- *     → AND-across-dimension: a plugin matches iff for EACH dimension with active filters,
- *        at least one plugin tag is included (OR within dimension, AND across dimensions)
+ *   function filterMatches(addOn: AddOnSummary, query: CatalogFilterQuery): boolean
+ *     → AND-across-dimension: an add-on matches iff for EACH dimension with active filters,
+ *        at least one add-on tag is included (OR within dimension, AND across dimensions)
  *
  *   function composeSortParams(query: CatalogFilterQuery): { sort: string; order: 'asc' | 'desc' }
  *     → returns { sort, order } from query, falling back to defaults
  *
- *   function toListPluginsParams(query: CatalogFilterQuery): ListPluginsParams
- *     → converts CatalogFilterQuery to the wire ListPluginsParams shape
+ *   function toListAddOnsParams(query: CatalogFilterQuery): ListAddOnsParams
+ *     → converts CatalogFilterQuery to the wire ListAddOnsParams shape
  */
 
 import {
@@ -43,21 +43,21 @@ import {
   DEFAULT_PAGE,
   DEFAULT_SORT,
   filterMatches,
-  toListPluginsParams,
+  toListAddOnsParams,
 } from '../rules/catalog-filter.rules';
 import type { CatalogFilterQuery } from '../rules/catalog-filter.rules';
-import type { PluginSummary } from '../models/catalog.models';
+import type { AddOnSummary } from '../models/catalog.models';
 
 // ---------------------------------------------------------------------------
 // Fixture: a minimal PluginSummary for filter tests
 // ---------------------------------------------------------------------------
 
-function makePlugin(overrides: Partial<PluginSummary> = {}): PluginSummary {
+function makeAddOn(overrides: Partial<AddOnSummary> = {}): AddOnSummary {
   return {
     pluginId: 'p1',
-    name: 'Test Plugin',
-    slug: 'test-plugin',
-    description: 'A test plugin.',
+    name: 'Test AddOn',
+    slug: 'test-addon',
+    description: 'A test add-on.',
     author: 'Author',
     types: ['formatter'],
     languages: ['typescript'],
@@ -157,52 +157,52 @@ describe('buildFilterQuery', () => {
 
 describe('filterMatches — no active filters', () => {
   it('should return true when all filter arrays are empty', () => {
-    const plugin = makePlugin();
+    const plugin = makeAddOn();
     const q = buildFilterQuery({});
     expect(filterMatches(plugin, q)).toBe(true);
   });
 
   it('should return true for any plugin when no filters are set', () => {
-    const plugin = makePlugin({ types: [], languages: [], useCaseTags: [] });
+    const plugin = makeAddOn({ types: [], languages: [], useCaseTags: [] });
     expect(filterMatches(plugin, buildFilterQuery({}))).toBe(true);
   });
 });
 
 describe('filterMatches — single dimension', () => {
   it('should return true when the type filter matches one plugin type', () => {
-    const plugin = makePlugin({ types: ['formatter', 'linter'] });
+    const plugin = makeAddOn({ types: ['formatter', 'linter'] });
     expect(filterMatches(plugin, buildFilterQuery({ types: ['formatter'] }))).toBe(true);
   });
 
   it('should return false when the type filter has no overlap with plugin types', () => {
-    const plugin = makePlugin({ types: ['formatter'] });
+    const plugin = makeAddOn({ types: ['formatter'] });
     expect(filterMatches(plugin, buildFilterQuery({ types: ['linter'] }))).toBe(false);
   });
 
   it('should return true when language filter has at least one overlap (OR within dimension)', () => {
-    const plugin = makePlugin({ languages: ['typescript', 'javascript'] });
+    const plugin = makeAddOn({ languages: ['typescript', 'javascript'] });
     expect(filterMatches(plugin, buildFilterQuery({ languages: ['javascript', 'python'] }))).toBe(true);
   });
 
   it('should return false when language filter has no overlap', () => {
-    const plugin = makePlugin({ languages: ['typescript'] });
+    const plugin = makeAddOn({ languages: ['typescript'] });
     expect(filterMatches(plugin, buildFilterQuery({ languages: ['python'] }))).toBe(false);
   });
 
   it('should return true when useCase filter has at least one overlap', () => {
-    const plugin = makePlugin({ useCaseTags: ['code-quality', 'testing'] });
+    const plugin = makeAddOn({ useCaseTags: ['code-quality', 'testing'] });
     expect(filterMatches(plugin, buildFilterQuery({ useCases: ['testing'] }))).toBe(true);
   });
 
   it('should return false when useCase filter has no overlap', () => {
-    const plugin = makePlugin({ useCaseTags: ['code-quality'] });
+    const plugin = makeAddOn({ useCaseTags: ['code-quality'] });
     expect(filterMatches(plugin, buildFilterQuery({ useCases: ['testing'] }))).toBe(false);
   });
 });
 
 describe('filterMatches — AND across dimensions', () => {
   it('should return true only when ALL active dimensions match (AND semantics)', () => {
-    const plugin = makePlugin({
+    const plugin = makeAddOn({
       types: ['formatter'],
       languages: ['typescript'],
       useCaseTags: ['code-quality'],
@@ -216,7 +216,7 @@ describe('filterMatches — AND across dimensions', () => {
   });
 
   it('should return false when one dimension does not match', () => {
-    const plugin = makePlugin({
+    const plugin = makeAddOn({
       types: ['formatter'],
       languages: ['typescript'],
       useCaseTags: ['code-quality'],
@@ -230,14 +230,14 @@ describe('filterMatches — AND across dimensions', () => {
   });
 
   it('should return false when multiple dimensions do not match', () => {
-    const plugin = makePlugin({ types: ['formatter'], languages: ['typescript'] });
+    const plugin = makeAddOn({ types: ['formatter'], languages: ['typescript'] });
     const q = buildFilterQuery({ types: ['linter'], languages: ['python'] });
     expect(filterMatches(plugin, q)).toBe(false);
   });
 
   it('should ignore empty filter dimension (active = non-empty only)', () => {
     // Only types filter active; languages filter is empty → ignored
-    const plugin = makePlugin({ types: ['formatter'], languages: ['python'] });
+    const plugin = makeAddOn({ types: ['formatter'], languages: ['python'] });
     const q = buildFilterQuery({ types: ['formatter'], languages: [] });
     expect(filterMatches(plugin, q)).toBe(true);
   });
@@ -245,17 +245,17 @@ describe('filterMatches — AND across dimensions', () => {
 
 describe('filterMatches — edge cases', () => {
   it('should return false when plugin has no types but a type filter is active', () => {
-    const plugin = makePlugin({ types: [] });
+    const plugin = makeAddOn({ types: [] });
     expect(filterMatches(plugin, buildFilterQuery({ types: ['formatter'] }))).toBe(false);
   });
 
   it('should handle plugin with no useCaseTags when useCase filter is active', () => {
-    const plugin = makePlugin({ useCaseTags: [] });
+    const plugin = makeAddOn({ useCaseTags: [] });
     expect(filterMatches(plugin, buildFilterQuery({ useCases: ['code-quality'] }))).toBe(false);
   });
 
   it('should not mutate the plugin or query', () => {
-    const plugin = makePlugin();
+    const plugin = makeAddOn();
     const q = buildFilterQuery({ types: ['formatter'] });
     const originalTypes = [...(q.types ?? [])];
     filterMatches(plugin, q);
@@ -292,13 +292,13 @@ describe('composeSortParams', () => {
 });
 
 // ---------------------------------------------------------------------------
-// toListPluginsParams — wire shape conversion
+// toListAddOnsParams — wire shape conversion
 // ---------------------------------------------------------------------------
 
-describe('toListPluginsParams', () => {
+describe('toListAddOnsParams', () => {
   it('should include page, limit, sort, order', () => {
     const q = buildFilterQuery({ page: 2, limit: 10, sort: 'name', order: 'asc' });
-    const params = toListPluginsParams(q);
+    const params = toListAddOnsParams(q);
     expect(params.page).toBe(2);
     expect(params.limit).toBe(10);
     expect(params.sort).toBe('name');
@@ -307,25 +307,25 @@ describe('toListPluginsParams', () => {
 
   it('should include types filter', () => {
     const q = buildFilterQuery({ types: ['formatter', 'linter'] });
-    const params = toListPluginsParams(q);
+    const params = toListAddOnsParams(q);
     expect(params.type).toEqual(['formatter', 'linter']);
   });
 
   it('should include language filter', () => {
     const q = buildFilterQuery({ languages: ['typescript'] });
-    const params = toListPluginsParams(q);
+    const params = toListAddOnsParams(q);
     expect(params.language).toEqual(['typescript']);
   });
 
   it('should include useCase filter', () => {
     const q = buildFilterQuery({ useCases: ['code-quality'] });
-    const params = toListPluginsParams(q);
+    const params = toListAddOnsParams(q);
     expect(params.useCase).toEqual(['code-quality']);
   });
 
   it('should omit empty filter arrays (no undefined/empty arrays on wire)', () => {
     const q = buildFilterQuery({});
-    const params = toListPluginsParams(q);
+    const params = toListAddOnsParams(q);
     // Empty arrays should either be omitted or be empty — never cause filter bleed
     const typeVal = params.type;
     if (typeVal !== undefined) {

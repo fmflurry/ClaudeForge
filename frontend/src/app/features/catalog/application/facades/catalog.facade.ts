@@ -8,7 +8,7 @@
 import { computed, DestroyRef, inject, Injectable, Signal, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CatalogPort } from '../../domain/ports/catalog.port';
-import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '../../domain/models/catalog.models';
+import type { AddOnDetail, AddOnSummary, Categories, PaginationMeta } from '../../domain/models/catalog.models';
 import { buildFilterQuery } from '../../domain/rules/catalog-filter.rules';
 import type { CatalogFilterQuery } from '../../domain/rules/catalog-filter.rules';
 import { CatalogStore, CatalogStoreEnum } from '../store/catalog.store';
@@ -22,15 +22,15 @@ export class CatalogFacade {
   /** Holds the current active filter query (mutable via setPage/setSort/setFilters). */
   private readonly _currentQuery = signal<CatalogFilterQuery>(buildFilterQuery({}));
 
-  /** Pagination meta stored separately — not part of the ResourceState<PluginSummary[]> data. */
+  /** Pagination meta stored separately — not part of the ResourceState<AddOnSummary[]> data. */
   private readonly _paginationMeta = signal<PaginationMeta | undefined>(undefined);
 
   // ---------------------------------------------------------------------------
   // Signal getters
   // ---------------------------------------------------------------------------
 
-  get plugins(): Signal<PluginSummary[]> {
-    return computed(() => this.store.get(CatalogStoreEnum.PLUGINS)().data ?? []);
+  get addOns(): Signal<AddOnSummary[]> {
+    return computed(() => this.store.get(CatalogStoreEnum.ADDONS)().data ?? []);
   }
 
   get paginationMeta(): Signal<PaginationMeta | undefined> {
@@ -41,48 +41,48 @@ export class CatalogFacade {
     return computed(() => this.store.get(CatalogStoreEnum.CATEGORIES)().data);
   }
 
-  get selectedPlugin(): Signal<PluginDetail | undefined> {
-    return computed(() => this.store.get(CatalogStoreEnum.PLUGIN_DETAIL)().data);
+  get selectedAddOn(): Signal<AddOnDetail | undefined> {
+    return computed(() => this.store.get(CatalogStoreEnum.ADDON_DETAIL)().data);
   }
 
-  get isLoadingPlugins(): Signal<boolean> {
-    return computed(() => this.store.get(CatalogStoreEnum.PLUGINS)().isLoading ?? false);
+  get isLoadingAddOns(): Signal<boolean> {
+    return computed(() => this.store.get(CatalogStoreEnum.ADDONS)().isLoading ?? false);
   }
 
   get isLoadingDetail(): Signal<boolean> {
-    return computed(() => this.store.get(CatalogStoreEnum.PLUGIN_DETAIL)().isLoading ?? false);
+    return computed(() => this.store.get(CatalogStoreEnum.ADDON_DETAIL)().isLoading ?? false);
   }
 
   get isLoadingCategories(): Signal<boolean> {
     return computed(() => this.store.get(CatalogStoreEnum.CATEGORIES)().isLoading ?? false);
   }
 
-  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> {
-    return computed(() => this.store.get(CatalogStoreEnum.PLUGINS)().errors);
+  get addOnsError(): Signal<{ code: string; message: string }[] | undefined> {
+    return computed(() => this.store.get(CatalogStoreEnum.ADDONS)().errors);
   }
 
   get detailError(): Signal<{ code: string; message: string }[] | undefined> {
-    return computed(() => this.store.get(CatalogStoreEnum.PLUGIN_DETAIL)().errors);
+    return computed(() => this.store.get(CatalogStoreEnum.ADDON_DETAIL)().errors);
   }
 
   // ---------------------------------------------------------------------------
   // Methods
   // ---------------------------------------------------------------------------
 
-  loadPlugins(query?: Partial<CatalogFilterQuery>): void {
+  loadAddOns(query?: Partial<CatalogFilterQuery>): void {
     const fullQuery = buildFilterQuery({ ...this._currentQuery(), ...query });
     this._currentQuery.set(fullQuery);
 
-    this.store.startLoading(CatalogStoreEnum.PLUGINS);
+    this.store.startLoading(CatalogStoreEnum.ADDONS);
 
     this.port
-      .loadPlugins(fullQuery)
+      .loadAddOns(fullQuery)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: ({ plugins, meta }) => {
+        next: ({ addOns, meta }) => {
           this._paginationMeta.set(meta);
-          this.store.update(CatalogStoreEnum.PLUGINS, {
-            data: plugins,
+          this.store.update(CatalogStoreEnum.ADDONS, {
+            data: addOns,
             status: 'Success',
             isLoading: false,
             errors: undefined,
@@ -90,7 +90,7 @@ export class CatalogFacade {
         },
         error: (err: unknown) => {
           const message = err instanceof Error ? err.message : 'Unknown error';
-          this.store.update(CatalogStoreEnum.PLUGINS, {
+          this.store.update(CatalogStoreEnum.ADDONS, {
             status: 'Error',
             isLoading: false,
             errors: [{ code: 'LOAD_ERROR', message }],
@@ -100,27 +100,27 @@ export class CatalogFacade {
   }
 
   setPage(page: number): void {
-    this.loadPlugins({ page });
+    this.loadAddOns({ page });
   }
 
   setSort(sort: string, order?: 'asc' | 'desc'): void {
-    this.loadPlugins({ sort, order });
+    this.loadAddOns({ sort, order });
   }
 
   setFilters(filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>): void {
-    this.loadPlugins({ ...filters, page: 1 });
+    this.loadAddOns({ ...filters, page: 1 });
   }
 
   loadDetail(pluginId: string): void {
-    this.store.startLoading(CatalogStoreEnum.PLUGIN_DETAIL);
+    this.store.startLoading(CatalogStoreEnum.ADDON_DETAIL);
 
     this.port
-      .getPlugin(pluginId)
+      .getAddOn(pluginId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (plugin) => {
-          this.store.update(CatalogStoreEnum.PLUGIN_DETAIL, {
-            data: plugin,
+        next: (addOn) => {
+          this.store.update(CatalogStoreEnum.ADDON_DETAIL, {
+            data: addOn,
             status: 'Success',
             isLoading: false,
             errors: undefined,
@@ -128,7 +128,7 @@ export class CatalogFacade {
         },
         error: (err: unknown) => {
           const message = err instanceof Error ? err.message : 'Unknown error';
-          this.store.update(CatalogStoreEnum.PLUGIN_DETAIL, {
+          this.store.update(CatalogStoreEnum.ADDON_DETAIL, {
             status: 'Error',
             isLoading: false,
             errors: [{ code: 'LOAD_ERROR', message }],

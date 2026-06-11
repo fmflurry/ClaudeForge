@@ -54,12 +54,12 @@ public sealed class ReputationTests : IDisposable
         new(_db, _leaderboardLogger);
 
     /// <summary>Creates a plugin owned by a specific user, with analysis results.</summary>
-    private PluginEntity MakeOwnedPlugin(Guid userId, long downloads = 0)
+    private AddOnEntity MakeOwnedPlugin(Guid userId, long downloads = 0)
     {
         Guid id = Guid.NewGuid();
         string shortId = id.ToString("N")[..6];
         string slugId = id.ToString("N")[..8];
-        var plugin = new PluginEntity
+        var plugin = new AddOnEntity
         {
             Id = id,
             Name = $"Plugin-{shortId}",
@@ -220,7 +220,7 @@ public sealed class ReputationTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Create a plugin owned by the author with at least 1 analysis result
-        PluginEntity plugin = MakeOwnedPlugin(authorId);
+        AddOnEntity plugin = MakeOwnedPlugin(authorId);
         _db.Plugins.Add(plugin);
         _db.AnalysisResults.Add(new AnalysisResultEntity
         {
@@ -276,7 +276,7 @@ public sealed class ReputationTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Create a plugin owned by author with 1 analysis result
-        PluginEntity plugin = MakeOwnedPlugin(authorId);
+        AddOnEntity plugin = MakeOwnedPlugin(authorId);
         _db.Plugins.Add(plugin);
         _db.AnalysisResults.Add(new AnalysisResultEntity
         {

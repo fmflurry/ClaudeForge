@@ -1,7 +1,7 @@
 /**
  * Facade for the Dashboard domain.
  * Components interact with this facade only — no direct store, use-case, or port access.
- * Install intent is written to browser storage only (InstalledPluginsStoragePort).
+ * Install intent is written to browser storage only (InstalledAddOnsStoragePort).
  * No HTTP writes ever happen in this facade.
  */
 
@@ -10,17 +10,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { DashboardStore, DashboardStoreEnum } from '../store/dashboard.store';
-import { InstalledPluginsStoragePort } from '../../../../shared/domain/ports/installed-plugins-storage.port';
+import { InstalledAddOnsStoragePort } from '../../../../shared/domain/ports/installed-plugins-storage.port';
 import { CatalogLatestVersionPort } from '../../domain/ports/catalog-latest-version.port';
 import { TeamContextFacade } from '../../../team-context/application/facades/team-context.facade';
 import { enrichInstalledPlugin } from '../../domain/rules/dashboard-update.rules';
 import { groupPluginsByTeam } from '../../domain/rules/dashboard-grouping.rules';
-import type { DashboardGroup, InstalledPlugin, RecommendedPlugin } from '../../domain/models/dashboard.models';
+import type { DashboardGroup, InstalledAddOn, RecommendedAddOn } from '../../domain/models/dashboard.models';
 
 @Injectable()
 export class DashboardFacade {
   private readonly store = inject(DashboardStore);
-  private readonly storagePort = inject(InstalledPluginsStoragePort);
+  private readonly storagePort = inject(InstalledAddOnsStoragePort);
   private readonly catalogPort = inject(CatalogLatestVersionPort);
   private readonly teamContextFacade = inject(TeamContextFacade);
   private readonly destroyRef = inject(DestroyRef);
@@ -29,8 +29,8 @@ export class DashboardFacade {
   // Signal getters
   // ---------------------------------------------------------------------------
 
-  /** Enriched list of installed plugins with update status. */
-  get installedPlugins(): Signal<InstalledPlugin[]> {
+  /** Enriched list of installed add-ons with update status. */
+  get installedPlugins(): Signal<InstalledAddOn[]> {
     return computed(() => this.store.get(DashboardStoreEnum.INSTALLED_PLUGINS)().data ?? []);
   }
 
@@ -47,8 +47,8 @@ export class DashboardFacade {
     });
   }
 
-  /** Catalog plugins not yet installed — empty until catalog is loaded externally. */
-  get recommendedPlugins(): Signal<readonly RecommendedPlugin[]> {
+  /** Catalog add-ons not yet installed — empty until catalog is loaded externally. */
+  get recommendedPlugins(): Signal<readonly RecommendedAddOn[]> {
     return computed(() => []);
   }
 

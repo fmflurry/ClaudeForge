@@ -9,13 +9,13 @@ namespace ClaudeForge.Application.Modules.SecurityAnalysis.UseCases;
 /// Lists plugins that passed security analysis but aren't yet approved for the org's safe zone.
 /// Only admin/owner can view pending queue.
 /// </summary>
-public sealed class ListPendingSafeZonePluginsUseCase
+public sealed class ListPendingSafeZoneAddOnsUseCase
 {
     private readonly ICurrentUser _currentUser;
     private readonly IMembershipStorePort _membershipStore;
     private readonly ISafeZoneStorePort _safeZoneStore;
 
-    public ListPendingSafeZonePluginsUseCase(
+    public ListPendingSafeZoneAddOnsUseCase(
         ICurrentUser currentUser,
         IMembershipStorePort membershipStore,
         ISafeZoneStorePort safeZoneStore)
@@ -39,6 +39,6 @@ public sealed class ListPendingSafeZonePluginsUseCase
         if (member is null)
             throw new ForbiddenException();
 
-        return await _safeZoneStore.ListPendingPluginsAsync(orgId, ct);
+        return await _safeZoneStore.ListPendingAddOnsAsync(orgId, ct);
     }
 }

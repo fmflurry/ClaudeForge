@@ -5,17 +5,17 @@
 import { Injectable } from '@angular/core';
 import { BaseStore } from '../../../../shared/application/store/base-store';
 import type { ResourceState } from '../../../../shared/application/store/resource-state.model';
-import type { Categories, PluginDetail, PluginSummary } from '../../domain/models/catalog.models';
+import type { AddOnDetail, AddOnSummary, Categories } from '../../domain/models/catalog.models';
 
 export enum CatalogStoreEnum {
-  PLUGINS = 'PLUGINS',
-  PLUGIN_DETAIL = 'PLUGIN_DETAIL',
+  ADDONS = 'ADDONS',
+  ADDON_DETAIL = 'ADDON_DETAIL',
   CATEGORIES = 'CATEGORIES',
 }
 
 export interface CatalogState {
-  [CatalogStoreEnum.PLUGINS]: ResourceState<PluginSummary[]>;
-  [CatalogStoreEnum.PLUGIN_DETAIL]: ResourceState<PluginDetail>;
+  [CatalogStoreEnum.ADDONS]: ResourceState<AddOnSummary[]>;
+  [CatalogStoreEnum.ADDON_DETAIL]: ResourceState<AddOnDetail>;
   [CatalogStoreEnum.CATEGORIES]: ResourceState<Categories>;
 }
 

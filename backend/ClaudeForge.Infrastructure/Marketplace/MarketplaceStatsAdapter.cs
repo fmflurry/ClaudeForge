@@ -24,7 +24,7 @@ public sealed class MarketplaceStatsAdapter : IMarketplaceStatsPort
     /// <inheritdoc/>
     public async Task<MarketplaceStatsDto> GetStatsAsync(CancellationToken ct = default)
     {
-        IQueryable<PluginEntity> publicPlugins =
+        IQueryable<AddOnEntity> publicPlugins =
             _context.Plugins
                 .AsNoTracking()
                 .Where(p => p.Visibility == PublicVisibility);

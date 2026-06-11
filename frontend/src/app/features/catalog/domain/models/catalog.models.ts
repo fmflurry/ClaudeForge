@@ -2,7 +2,7 @@
  * Immutable domain models for the Catalog feature.
  *
  * Note: `type` aliases are used here (instead of `interface`) because the test
- * suite casts PluginSummary to `Record<string, unknown>` — a pattern that
+ * suite casts AddOnSummary to `Record<string, unknown>` — a pattern that
  * TypeScript strict mode permits only for `type` aliases, not `interface`
  * declarations (TS2352: index signature missing in interface).
  * The ESLint consistent-type-definitions rule is disabled for this file only.
@@ -10,7 +10,7 @@
 
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 
-export type PluginVersion = {
+export type AddOnVersion = {
   readonly pluginId: string;
   readonly version: string;
   readonly isLatest: boolean;
@@ -19,7 +19,7 @@ export type PluginVersion = {
   readonly createdAt: Date;
 };
 
-export type PluginSummary = {
+export type AddOnSummary = {
   readonly pluginId: string;
   readonly name: string;
   readonly slug: string;
@@ -34,8 +34,8 @@ export type PluginSummary = {
   readonly updatedAt: Date;
 };
 
-export type PluginDetail = PluginSummary & {
-  readonly versions: readonly PluginVersion[];
+export type AddOnDetail = AddOnSummary & {
+  readonly versions: readonly AddOnVersion[];
 };
 
 export type CategoryValue = {

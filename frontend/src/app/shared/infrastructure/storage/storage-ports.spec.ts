@@ -31,7 +31,7 @@
  *     version: string
  *     installedAt: string  (ISO date string)
  *
- *   InstalledPluginsStoragePort (abstract class):
+ *   InstalledAddOnsStoragePort (abstract class):
  *     abstract list(): InstalledPluginRecord[]
  *     abstract add(record: InstalledPluginRecord): void
  *     abstract remove(name: string): void
@@ -40,22 +40,22 @@
  *
  *   LocalStorageTeamContextAdapter implements TeamContextStoragePort
  *   LocalStorageTelemetryPreferenceAdapter implements TelemetryPreferencePort
- *   LocalStorageInstalledPluginsAdapter implements InstalledPluginsStoragePort
+ *   LocalStorageInstalledAddOnsAdapter implements InstalledAddOnsStoragePort
  *
  *   InMemoryTeamContextAdapter implements TeamContextStoragePort
  *   InMemoryTelemetryPreferenceAdapter implements TelemetryPreferencePort
- *   InMemoryInstalledPluginsAdapter implements InstalledPluginsStoragePort
+ *   InMemoryInstalledAddOnsAdapter implements InstalledAddOnsStoragePort
  */
 
 import { TeamContextStoragePort } from '../../domain/ports/team-context-storage.port';
 import { TelemetryPreferencePort } from '../../domain/ports/telemetry-preference.port';
-import { InstalledPluginRecord, InstalledPluginsStoragePort } from '../../domain/ports/installed-plugins-storage.port';
+import { InstalledPluginRecord, InstalledAddOnsStoragePort } from '../../domain/ports/installed-plugins-storage.port';
 import { LocalStorageTeamContextAdapter } from './local-storage-team-context.adapter';
 import { LocalStorageTelemetryPreferenceAdapter } from './local-storage-telemetry-preference.adapter';
-import { LocalStorageInstalledPluginsAdapter } from './local-storage-installed-plugins.adapter';
+import { LocalStorageInstalledAddOnsAdapter } from './local-storage-installed-plugins.adapter';
 import { InMemoryTeamContextAdapter } from './in-memory-team-context.adapter';
 import { InMemoryTelemetryPreferenceAdapter } from './in-memory-telemetry-preference.adapter';
-import { InMemoryInstalledPluginsAdapter } from './in-memory-installed-plugins.adapter';
+import { InMemoryInstalledAddOnsAdapter } from './in-memory-installed-plugins.adapter';
 
 // ---------------------------------------------------------------------------
 // Helpers — use jsdom's localStorage (available in vitest + jsdom environment)
@@ -78,8 +78,8 @@ describe('Storage key constants', () => {
     expect(TelemetryPreferencePort.STORAGE_KEY).toBe('plugin-marketplace:telemetry-disabled');
   });
 
-  it('InstalledPluginsStoragePort.STORAGE_KEY should equal "plugin-marketplace:installed"', () => {
-    expect(InstalledPluginsStoragePort.STORAGE_KEY).toBe('plugin-marketplace:installed');
+  it('InstalledAddOnsStoragePort.STORAGE_KEY should equal "plugin-marketplace:installed"', () => {
+    expect(InstalledAddOnsStoragePort.STORAGE_KEY).toBe('plugin-marketplace:installed');
   });
 });
 
@@ -248,11 +248,11 @@ describe('InMemoryTelemetryPreferenceAdapter (TelemetryPreferencePort)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// InstalledPluginsStoragePort — LocalStorageInstalledPluginsAdapter
+// InstalledAddOnsStoragePort — LocalStorageInstalledAddOnsAdapter
 // ---------------------------------------------------------------------------
 
-describe('LocalStorageInstalledPluginsAdapter', () => {
-  let adapter: InstalledPluginsStoragePort;
+describe('LocalStorageInstalledAddOnsAdapter', () => {
+  let adapter: InstalledAddOnsStoragePort;
   const baseRecord: InstalledPluginRecord = {
     name: 'my-plugin',
     version: '1.0.0',
@@ -261,7 +261,7 @@ describe('LocalStorageInstalledPluginsAdapter', () => {
 
   beforeEach(() => {
     clearStorage();
-    adapter = new LocalStorageInstalledPluginsAdapter();
+    adapter = new LocalStorageInstalledAddOnsAdapter();
   });
 
   it('should return empty array when nothing is stored', () => {
@@ -277,7 +277,7 @@ describe('LocalStorageInstalledPluginsAdapter', () => {
   it('should persist records across adapter instances (via real localStorage)', () => {
     adapter.add(baseRecord);
     // New instance reads from the same storage
-    const adapter2 = new LocalStorageInstalledPluginsAdapter();
+    const adapter2 = new LocalStorageInstalledAddOnsAdapter();
     expect(adapter2.list()).toHaveLength(1);
     expect(adapter2.list()[0].name).toBe('my-plugin');
   });
@@ -305,7 +305,7 @@ describe('LocalStorageInstalledPluginsAdapter', () => {
     adapter.add(baseRecord);
     adapter.clear();
     expect(adapter.list()).toEqual([]);
-    expect(window.localStorage.getItem(InstalledPluginsStoragePort.STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(InstalledAddOnsStoragePort.STORAGE_KEY)).toBeNull();
   });
 
   it('should produce immutable list — mutating the returned array must not affect store', () => {
@@ -321,23 +321,23 @@ describe('LocalStorageInstalledPluginsAdapter', () => {
   });
 
   it('should handle corrupted JSON in localStorage gracefully (return [], not throw)', () => {
-    window.localStorage.setItem(InstalledPluginsStoragePort.STORAGE_KEY, '{NOT VALID JSON}');
+    window.localStorage.setItem(InstalledAddOnsStoragePort.STORAGE_KEY, '{NOT VALID JSON}');
     expect(() => adapter.list()).not.toThrow();
     expect(adapter.list()).toEqual([]);
   });
 
   it('should handle missing key in localStorage gracefully (return [])', () => {
-    window.localStorage.removeItem(InstalledPluginsStoragePort.STORAGE_KEY);
+    window.localStorage.removeItem(InstalledAddOnsStoragePort.STORAGE_KEY);
     expect(adapter.list()).toEqual([]);
   });
 });
 
 // ---------------------------------------------------------------------------
-// InstalledPluginsStoragePort — InMemoryInstalledPluginsAdapter (swappability)
+// InstalledAddOnsStoragePort — InMemoryInstalledAddOnsAdapter (swappability)
 // ---------------------------------------------------------------------------
 
-describe('InMemoryInstalledPluginsAdapter (InstalledPluginsStoragePort)', () => {
-  let adapter: InstalledPluginsStoragePort;
+describe('InMemoryInstalledAddOnsAdapter (InstalledAddOnsStoragePort)', () => {
+  let adapter: InstalledAddOnsStoragePort;
   const record: InstalledPluginRecord = {
     name: 'test-plugin',
     version: '1.2.3',
@@ -345,7 +345,7 @@ describe('InMemoryInstalledPluginsAdapter (InstalledPluginsStoragePort)', () => 
   };
 
   beforeEach(() => {
-    adapter = new InMemoryInstalledPluginsAdapter();
+    adapter = new InMemoryInstalledAddOnsAdapter();
   });
 
   it('should return empty array initially', () => {
@@ -372,17 +372,17 @@ describe('InMemoryInstalledPluginsAdapter (InstalledPluginsStoragePort)', () => 
   it('should NOT touch window.localStorage', () => {
     clearStorage();
     adapter.add(record);
-    expect(window.localStorage.getItem(InstalledPluginsStoragePort.STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(InstalledAddOnsStoragePort.STORAGE_KEY)).toBeNull();
   });
 
-  it('should be assignable to InstalledPluginsStoragePort (structural compatibility)', () => {
-    const port: InstalledPluginsStoragePort = adapter;
+  it('should be assignable to InstalledAddOnsStoragePort (structural compatibility)', () => {
+    const port: InstalledAddOnsStoragePort = adapter;
     expect(port).toBeDefined();
   });
 
   it('two instances should have isolated state', () => {
-    const a = new InMemoryInstalledPluginsAdapter();
-    const b = new InMemoryInstalledPluginsAdapter();
+    const a = new InMemoryInstalledAddOnsAdapter();
+    const b = new InMemoryInstalledAddOnsAdapter();
     a.add(record);
     expect(b.list()).toHaveLength(0);
   });
@@ -408,8 +408,8 @@ describe('Port contract compliance', () => {
     expect(typeof adapter.clear).toBe('function');
   });
 
-  it('LocalStorageInstalledPluginsAdapter must implement InstalledPluginsStoragePort', () => {
-    const adapter = new LocalStorageInstalledPluginsAdapter();
+  it('LocalStorageInstalledAddOnsAdapter must implement InstalledAddOnsStoragePort', () => {
+    const adapter = new LocalStorageInstalledAddOnsAdapter();
     expect(typeof adapter.list).toBe('function');
     expect(typeof adapter.add).toBe('function');
     expect(typeof adapter.remove).toBe('function');

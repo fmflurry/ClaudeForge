@@ -103,9 +103,9 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static async Task<PluginEntity> SeedPluginAsync(MarketplaceDbContext ctx)
+    private static async Task<AddOnEntity> SeedPluginAsync(MarketplaceDbContext ctx)
     {
-        PluginEntity plugin = new()
+        AddOnEntity plugin = new()
         {
             Id = Guid.NewGuid(),
             Name = "HttpTelemetryPlugin-" + Guid.NewGuid().ToString("N")[..8],
@@ -141,7 +141,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Act
         HttpResponseMessage response = await _client.PostAsJsonAsync(
@@ -157,7 +157,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         object payload = new
         {
@@ -188,7 +188,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         object payload = new
         {
@@ -218,7 +218,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         object payload = new
         {
@@ -247,7 +247,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         object payload = new
         {
@@ -277,7 +277,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         object payload = new
         {
@@ -338,7 +338,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Ingest 2 download events
         for (int i = 0; i < 2; i++)
@@ -389,7 +389,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Act
         HttpResponseMessage response = await _client.GetAsync(
@@ -417,7 +417,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Ingest an event so there's some data
         await _client.PostAsJsonAsync("/api/v1/telemetry/events", ValidPayload(plugin.Id));
@@ -438,7 +438,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         await _client.PostAsJsonAsync("/api/v1/telemetry/events", ValidPayload(plugin.Id));
 
         // Act
@@ -457,7 +457,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Act
         HttpResponseMessage response = await _client.GetAsync(
@@ -488,7 +488,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Ingest one event
         await _client.PostAsJsonAsync("/api/v1/telemetry/events", ValidPayload(plugin.Id));
@@ -529,7 +529,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Act — multiple valid requests within the rate limit window
         for (int i = 0; i < 3; i++)
@@ -553,7 +553,7 @@ public sealed class TelemetryHttpTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Ingest events so there's at least 1 day with activity
         await _client.PostAsJsonAsync("/api/v1/telemetry/events", ValidPayload(plugin.Id));

@@ -6,11 +6,11 @@ namespace ClaudeForge.Application.Modules.SecurityAnalysis.UseCases;
 /// Lists all approved safe zone plugins for an organization,
 /// including globally-approved plugins (minus org-level blocks).
 /// </summary>
-public sealed class ListSafeZonePluginsUseCase
+public sealed class ListSafeZoneAddOnsUseCase
 {
     private readonly ISafeZoneStorePort _safeZoneStore;
 
-    public ListSafeZonePluginsUseCase(ISafeZoneStorePort safeZoneStore)
+    public ListSafeZoneAddOnsUseCase(ISafeZoneStorePort safeZoneStore)
     {
         _safeZoneStore = safeZoneStore;
     }
@@ -32,7 +32,7 @@ public sealed class ListSafeZonePluginsUseCase
 
         // Get org-level blocked global plugin IDs
         IReadOnlyList<Guid> blockedIds = await _safeZoneStore
-            .ListBlockedGlobalPluginsAsync(orgId, ct);
+            .ListBlockedGlobalAddOnsAsync(orgId, ct);
 
         // Merge: org-specific + globals not blocked by org
         HashSet<Guid> orgPluginIds = new(orgPlugins.Select(p => p.PluginId));

@@ -4,13 +4,13 @@
  */
 
 import { Observable } from 'rxjs';
-import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '../models/catalog.models';
+import type { AddOnDetail, AddOnSummary, Categories, PaginationMeta } from '../models/catalog.models';
 import type { CatalogFilterQuery } from '../rules/catalog-filter.rules';
 
 export abstract class CatalogPort {
-  abstract loadPlugins(query: CatalogFilterQuery): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }>;
+  abstract loadAddOns(query: CatalogFilterQuery): Observable<{ addOns: AddOnSummary[]; meta: PaginationMeta }>;
 
-  abstract getPlugin(pluginId: string): Observable<PluginDetail>;
+  abstract getAddOn(pluginId: string): Observable<AddOnDetail>;
 
   abstract getCategories(): Observable<Categories>;
 }

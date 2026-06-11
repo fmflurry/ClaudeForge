@@ -48,7 +48,7 @@ public sealed class CoreIsolationTests
     [Fact]
     public void Application_ShouldNot_HaveAnyDependencyOnInfrastructure()
     {
-        Types? types = Types.InAssembly(typeof(ClaudeForge.Application.Modules.PluginPublishing.UseCases.UploadPluginUseCase).Assembly);
+        Types? types = Types.InAssembly(typeof(ClaudeForge.Application.Modules.AddOnPublishing.UseCases.UploadAddOnUseCase).Assembly);
 
         TestResult? result = types
             .That()

@@ -1,5 +1,5 @@
 /**
- * Tests for FeaturedPluginHttpAdapter.
+ * Tests for FeaturedAddOnHttpAdapter.
  *
  * Uses a StubApiClient to avoid HttpTestingController, matching the pattern
  * of marketplace-stats-http.adapter.spec.ts.
@@ -8,34 +8,34 @@
 import { TestBed } from '@angular/core/testing';
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
-import { FeaturedPluginHttpAdapter } from './featured-plugin-http.adapter';
-import { FeaturedPluginPort } from '../../domain/ports/featured-plugin.port';
+import { FeaturedAddOnHttpAdapter } from './featured-plugin-http.adapter';
+import { FeaturedAddOnPort } from '../../domain/ports/featured-plugin.port';
 import { ApiClient } from '../../../../shared/infrastructure/http/api-client';
-import type { FeaturedPlugin } from '../../domain/models/featured-plugin.model';
-import type { FeaturedPluginEnvelope } from '../../../../shared/infrastructure/http/api-client.types';
+import type { FeaturedAddOn } from '../../domain/models/featured-plugin.model';
+import type { FeaturedAddOnEnvelope } from '../../../../shared/infrastructure/http/api-client.types';
 
 // ---------------------------------------------------------------------------
 // Stub ApiClient
 // ---------------------------------------------------------------------------
 
-const FAKE_ENVELOPE: FeaturedPluginEnvelope = {
+const FAKE_ENVELOPE: FeaturedAddOnEnvelope = {
   data: {
     pluginId: 'plugin-abc',
-    name: 'Awesome Plugin',
-    slug: 'awesome-plugin',
+    name: 'Awesome AddOn',
+    slug: 'awesome-addon',
     latestVersion: '1.2.3',
   },
 };
 
 @Injectable()
 class StubApiClient {
-  private _envelope: FeaturedPluginEnvelope = FAKE_ENVELOPE;
+  private _envelope: FeaturedAddOnEnvelope = FAKE_ENVELOPE;
   private _shouldError = false;
   private _errorStatus: number | undefined;
 
-  getFeaturedPluginCalls = 0;
+  getFeaturedAddOnCalls = 0;
 
-  setEnvelope(envelope: FeaturedPluginEnvelope): void {
+  setEnvelope(envelope: FeaturedAddOnEnvelope): void {
     this._envelope = envelope;
     this._shouldError = false;
   }
@@ -45,8 +45,8 @@ class StubApiClient {
     this._errorStatus = status;
   }
 
-  getFeaturedPlugin(): Observable<FeaturedPluginEnvelope> {
-    this.getFeaturedPluginCalls++;
+  getFeaturedAddOn(): Observable<FeaturedAddOnEnvelope> {
+    this.getFeaturedAddOnCalls++;
     if (this._shouldError) {
       const err = Object.assign(new Error('Http error'), { status: this._errorStatus ?? 500 });
       return throwError(() => err);
@@ -59,27 +59,27 @@ class StubApiClient {
 // Setup
 // ---------------------------------------------------------------------------
 
-function setup(): { adapter: FeaturedPluginHttpAdapter; stub: StubApiClient } {
+function setup(): { adapter: FeaturedAddOnHttpAdapter; stub: StubApiClient } {
   TestBed.resetTestingModule();
   const stub = new StubApiClient();
   TestBed.configureTestingModule({
     providers: [
       { provide: ApiClient, useValue: stub },
-      { provide: FeaturedPluginPort, useClass: FeaturedPluginHttpAdapter },
-      FeaturedPluginHttpAdapter,
+      { provide: FeaturedAddOnPort, useClass: FeaturedAddOnHttpAdapter },
+      FeaturedAddOnHttpAdapter,
     ],
   });
-  return { adapter: TestBed.inject(FeaturedPluginHttpAdapter), stub };
+  return { adapter: TestBed.inject(FeaturedAddOnHttpAdapter), stub };
 }
 
 // ---------------------------------------------------------------------------
 // Architecture
 // ---------------------------------------------------------------------------
 
-describe('FeaturedPluginHttpAdapter — architecture', () => {
-  it('should be an instance of FeaturedPluginPort', () => {
+describe('FeaturedAddOnHttpAdapter — architecture', () => {
+  it('should be an instance of FeaturedAddOnPort', () => {
     const { adapter } = setup();
-    expect(adapter).toBeInstanceOf(FeaturedPluginPort);
+    expect(adapter).toBeInstanceOf(FeaturedAddOnPort);
   });
 });
 
@@ -87,46 +87,46 @@ describe('FeaturedPluginHttpAdapter — architecture', () => {
 // Success path
 // ---------------------------------------------------------------------------
 
-describe('FeaturedPluginHttpAdapter — getFeaturedPlugin() success', () => {
-  it('should call apiClient.getFeaturedPlugin once', () => {
+describe('FeaturedAddOnHttpAdapter — getFeaturedAddOn() success', () => {
+  it('should call apiClient.getFeaturedAddOn once', () => {
     const { adapter, stub } = setup();
-    adapter.getFeaturedPlugin().subscribe();
-    expect(stub.getFeaturedPluginCalls).toBe(1);
+    adapter.getFeaturedAddOn().subscribe();
+    expect(stub.getFeaturedAddOnCalls).toBe(1);
   });
 
   it('should map the DTO to the domain model', () => {
     const { adapter } = setup();
-    let result: FeaturedPlugin | null | undefined;
-    adapter.getFeaturedPlugin().subscribe((p) => (result = p));
+    let result: FeaturedAddOn | null | undefined;
+    adapter.getFeaturedAddOn().subscribe((p) => (result = p));
     expect(result).toEqual({
       pluginId: 'plugin-abc',
-      name: 'Awesome Plugin',
-      slug: 'awesome-plugin',
+      name: 'Awesome AddOn',
+      slug: 'awesome-addon',
       latestVersion: '1.2.3',
     });
   });
 
   it('should map pluginId from DTO to domain model', () => {
     const { adapter } = setup();
-    let result: FeaturedPlugin | null | undefined;
-    adapter.getFeaturedPlugin().subscribe((p) => (result = p));
+    let result: FeaturedAddOn | null | undefined;
+    adapter.getFeaturedAddOn().subscribe((p) => (result = p));
     expect(result?.pluginId).toBe('plugin-abc');
   });
 
   it('should map slug from DTO to domain model', () => {
     const { adapter } = setup();
-    let result: FeaturedPlugin | null | undefined;
-    adapter.getFeaturedPlugin().subscribe((p) => (result = p));
-    expect(result?.slug).toBe('awesome-plugin');
+    let result: FeaturedAddOn | null | undefined;
+    adapter.getFeaturedAddOn().subscribe((p) => (result = p));
+    expect(result?.slug).toBe('awesome-addon');
   });
 
   it('should map null latestVersion from DTO', () => {
     const { adapter, stub } = setup();
     stub.setEnvelope({
-      data: { pluginId: 'p1', name: 'Plugin', slug: 'plugin', latestVersion: null },
+      data: { pluginId: 'p1', name: 'AddOn', slug: 'addon', latestVersion: null },
     });
-    let result: FeaturedPlugin | null | undefined;
-    adapter.getFeaturedPlugin().subscribe((p) => (result = p));
+    let result: FeaturedAddOn | null | undefined;
+    adapter.getFeaturedAddOn().subscribe((p) => (result = p));
     expect(result?.latestVersion).toBeNull();
   });
 });
@@ -135,20 +135,20 @@ describe('FeaturedPluginHttpAdapter — getFeaturedPlugin() success', () => {
 // 404 / error path — must map to null
 // ---------------------------------------------------------------------------
 
-describe('FeaturedPluginHttpAdapter — getFeaturedPlugin() 404 / error → null', () => {
+describe('FeaturedAddOnHttpAdapter — getFeaturedAddOn() 404 / error → null', () => {
   it('should emit null when the backend returns a 404', () => {
     const { adapter, stub } = setup();
     stub.setError(404);
-    let result: FeaturedPlugin | null | undefined;
-    adapter.getFeaturedPlugin().subscribe((p) => (result = p));
+    let result: FeaturedAddOn | null | undefined;
+    adapter.getFeaturedAddOn().subscribe((p) => (result = p));
     expect(result).toBeNull();
   });
 
   it('should emit null when the backend returns a 500', () => {
     const { adapter, stub } = setup();
     stub.setError(500);
-    let result: FeaturedPlugin | null | undefined;
-    adapter.getFeaturedPlugin().subscribe((p) => (result = p));
+    let result: FeaturedAddOn | null | undefined;
+    adapter.getFeaturedAddOn().subscribe((p) => (result = p));
     expect(result).toBeNull();
   });
 
@@ -156,15 +156,15 @@ describe('FeaturedPluginHttpAdapter — getFeaturedPlugin() 404 / error → null
     const { adapter, stub } = setup();
     stub.setError(404);
     let errorCaught: unknown;
-    adapter.getFeaturedPlugin().subscribe({ error: (e: unknown) => (errorCaught = e) });
+    adapter.getFeaturedAddOn().subscribe({ error: (e: unknown) => (errorCaught = e) });
     expect(errorCaught).toBeUndefined();
   });
 
   it('should emit null on network error', () => {
     const { adapter, stub } = setup();
     stub.setError();
-    let result: FeaturedPlugin | null | undefined;
-    adapter.getFeaturedPlugin().subscribe((p) => (result = p));
+    let result: FeaturedAddOn | null | undefined;
+    adapter.getFeaturedAddOn().subscribe((p) => (result = p));
     expect(result).toBeNull();
   });
 });

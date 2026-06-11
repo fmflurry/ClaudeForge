@@ -3,23 +3,23 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../.././../core/config/api-config';
 import {
+  AddOnDto,
+  AddOnVersionDto,
   CategoriesDto,
-  DiscoverPluginsParams,
+  DiscoverAddOnsParams,
   DiscoveryResultDto,
   DocPageDto,
-  FeaturedPluginEnvelope,
+  FeaturedAddOnEnvelope,
   GetVersionHistoryParams,
   IngestTelemetryRequestDto,
-  ListPluginsParams,
+  ListAddOnsParams,
   MarketplaceStatsDto,
   PaginatedEnvelope,
-  PluginDto,
-  PluginVersionDto,
+  SearchAddOnsParams,
   SearchDocsParams,
-  SearchPluginsParams,
   SearchResultDto,
   TelemetrySummaryDto,
-  UploadPluginResponseDto,
+  UploadAddOnResponseDto,
 } from './api-client.types';
 
 /**
@@ -33,18 +33,18 @@ export class ApiClient {
   private readonly baseUrl = inject(API_BASE_URL);
 
   // ---------------------------------------------------------------------------
-  // Plugin Catalog
+  // AddOn Catalog
   // ---------------------------------------------------------------------------
 
-  listPlugins(params: ListPluginsParams = {}): Observable<PaginatedEnvelope<PluginDto>> {
+  listAddOns(params: ListAddOnsParams = {}): Observable<PaginatedEnvelope<AddOnDto>> {
     const httpParams = this.buildParams(params as Record<string, unknown>);
-    return this.http.get<PaginatedEnvelope<PluginDto>>(`${this.baseUrl}/api/v1/plugins`, {
+    return this.http.get<PaginatedEnvelope<AddOnDto>>(`${this.baseUrl}/api/v1/plugins`, {
       params: httpParams,
     });
   }
 
-  getPluginById(pluginId: string): Observable<PluginDto> {
-    return this.http.get<PluginDto>(`${this.baseUrl}/api/v1/plugins/${pluginId}`);
+  getAddOnById(pluginId: string): Observable<AddOnDto> {
+    return this.http.get<AddOnDto>(`${this.baseUrl}/api/v1/plugins/${pluginId}`);
   }
 
   listCategories(): Observable<CategoriesDto> {
@@ -52,24 +52,24 @@ export class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
-  // Plugin Search / Discovery
+  // AddOn Search / Discovery
   // ---------------------------------------------------------------------------
 
-  searchPlugins(params: SearchPluginsParams = {}): Observable<PaginatedEnvelope<SearchResultDto>> {
+  searchAddOns(params: SearchAddOnsParams = {}): Observable<PaginatedEnvelope<SearchResultDto>> {
     const httpParams = this.buildParams(params as Record<string, unknown>);
     return this.http.get<PaginatedEnvelope<SearchResultDto>>(`${this.baseUrl}/api/v1/plugins/search`, {
       params: httpParams,
     });
   }
 
-  searchPluginsAlias(params: SearchPluginsParams = {}): Observable<PaginatedEnvelope<SearchResultDto>> {
+  searchAddOnsAlias(params: SearchAddOnsParams = {}): Observable<PaginatedEnvelope<SearchResultDto>> {
     const httpParams = this.buildParams(params as Record<string, unknown>);
     return this.http.get<PaginatedEnvelope<SearchResultDto>>(`${this.baseUrl}/api/v1/search`, {
       params: httpParams,
     });
   }
 
-  discoverPlugins(params: DiscoverPluginsParams = {}): Observable<PaginatedEnvelope<DiscoveryResultDto>> {
+  discoverAddOns(params: DiscoverAddOnsParams = {}): Observable<PaginatedEnvelope<DiscoveryResultDto>> {
     const httpParams = this.buildParams(params as Record<string, unknown>);
     return this.http.get<PaginatedEnvelope<DiscoveryResultDto>>(`${this.baseUrl}/api/v1/discovery`, {
       params: httpParams,
@@ -77,36 +77,36 @@ export class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
-  // Plugin Publishing
+  // AddOn Publishing
   // ---------------------------------------------------------------------------
 
-  uploadPlugin(formData: FormData): Observable<UploadPluginResponseDto> {
-    return this.http.post<UploadPluginResponseDto>(`${this.baseUrl}/api/v1/plugins/upload`, formData);
+  uploadAddOn(formData: FormData): Observable<UploadAddOnResponseDto> {
+    return this.http.post<UploadAddOnResponseDto>(`${this.baseUrl}/api/v1/plugins/upload`, formData);
   }
 
-  publishPluginVersion(pluginId: string, formData: FormData): Observable<PluginVersionDto> {
-    return this.http.post<PluginVersionDto>(`${this.baseUrl}/api/v1/plugins/${pluginId}/versions`, formData);
+  publishAddOnVersion(pluginId: string, formData: FormData): Observable<AddOnVersionDto> {
+    return this.http.post<AddOnVersionDto>(`${this.baseUrl}/api/v1/plugins/${pluginId}/versions`, formData);
   }
 
   getVersionHistory(
     pluginId: string,
     params: GetVersionHistoryParams = {},
-  ): Observable<PaginatedEnvelope<PluginVersionDto>> {
+  ): Observable<PaginatedEnvelope<AddOnVersionDto>> {
     const httpParams = this.buildParams(params as Record<string, unknown>);
-    return this.http.get<PaginatedEnvelope<PluginVersionDto>>(`${this.baseUrl}/api/v1/plugins/${pluginId}/versions`, {
+    return this.http.get<PaginatedEnvelope<AddOnVersionDto>>(`${this.baseUrl}/api/v1/plugins/${pluginId}/versions`, {
       params: httpParams,
     });
   }
 
-  getVersion(pluginId: string, version: string): Observable<PluginVersionDto> {
-    return this.http.get<PluginVersionDto>(`${this.baseUrl}/api/v1/plugins/${pluginId}/versions/${version}`);
+  getVersion(pluginId: string, version: string): Observable<AddOnVersionDto> {
+    return this.http.get<AddOnVersionDto>(`${this.baseUrl}/api/v1/plugins/${pluginId}/versions/${version}`);
   }
 
   // ---------------------------------------------------------------------------
-  // Plugin Distribution
+  // AddOn Distribution
   // ---------------------------------------------------------------------------
 
-  downloadPlugin(pluginId: string, version?: string): Observable<Blob> {
+  downloadAddOn(pluginId: string, version?: string): Observable<Blob> {
     const httpParams = version ? new HttpParams().set('version', version) : undefined;
     return this.http.get(`${this.baseUrl}/api/v1/plugins/${pluginId}/download`, {
       params: httpParams,
@@ -150,11 +150,11 @@ export class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
-  // Featured Plugin
+  // Featured AddOn
   // ---------------------------------------------------------------------------
 
-  getFeaturedPlugin(): Observable<FeaturedPluginEnvelope> {
-    return this.http.get<FeaturedPluginEnvelope>(`${this.baseUrl}/api/v1/plugins/featured`);
+  getFeaturedAddOn(): Observable<FeaturedAddOnEnvelope> {
+    return this.http.get<FeaturedAddOnEnvelope>(`${this.baseUrl}/api/v1/plugins/featured`);
   }
 
   // ---------------------------------------------------------------------------

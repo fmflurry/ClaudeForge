@@ -1,5 +1,5 @@
 /**
- * Domain model for a single installed-plugin record.
+ * Domain model for a single installed add-on record.
  */
 export interface InstalledPluginRecord {
   name: string;
@@ -8,10 +8,10 @@ export interface InstalledPluginRecord {
 }
 
 /**
- * Domain port for persisting the list of installed plugins.
+ * Domain port for persisting the list of installed add-ons.
  * list() always returns a new array (immutable).
  */
-export abstract class InstalledPluginsStoragePort {
+export abstract class InstalledAddOnsStoragePort {
   static readonly STORAGE_KEY = 'plugin-marketplace:installed';
 
   abstract list(): InstalledPluginRecord[];

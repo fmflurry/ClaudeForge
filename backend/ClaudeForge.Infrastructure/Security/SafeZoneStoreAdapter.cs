@@ -18,7 +18,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
         _ctx = ctx;
     }
 
-    public async Task<(bool Eligible, string? Reason)> IsPluginEligibleAsync(
+    public async Task<(bool Eligible, string? Reason)> IsAddOnEligibleAsync(
         Guid pluginId,
         CancellationToken ct = default)
     {
@@ -35,7 +35,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
         return (true, null);
     }
 
-    public async Task<SafeZoneEntryDto?> ApprovePluginAsync(
+    public async Task<SafeZoneEntryDto?> ApproveAddOnAsync(
         Guid orgId,
         Guid pluginId,
         string pluginVersion,
@@ -43,7 +43,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
         CancellationToken ct = default)
     {
         // Check if entry already exists (idempotent — update if active)
-        SafeZonePluginEntity? existing = await _ctx.SafeZonePlugins
+        SafeZoneAddOnEntity? existing = await _ctx.SafeZonePlugins
             .FirstOrDefaultAsync(
                 sz => sz.OrgId == orgId && sz.PluginId == pluginId && sz.PluginVersion == pluginVersion,
                 ct);
@@ -63,7 +63,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
             return ToEntryDto(existing);
         }
 
-        SafeZonePluginEntity entity = new()
+        SafeZoneAddOnEntity entity = new()
         {
             Id = Guid.NewGuid(),
             OrgId = orgId,
@@ -107,7 +107,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
         return results;
     }
 
-    public async Task<IReadOnlyList<PendingSafeZonePluginDto>> ListPendingPluginsAsync(
+    public async Task<IReadOnlyList<PendingSafeZonePluginDto>> ListPendingAddOnsAsync(
         Guid orgId,
         CancellationToken ct = default)
     {
@@ -140,7 +140,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
         string? pluginVersion = null,
         CancellationToken ct = default)
     {
-        IQueryable<SafeZonePluginEntity> query = _ctx.SafeZonePlugins
+        IQueryable<SafeZoneAddOnEntity> query = _ctx.SafeZonePlugins
             .Where(sz => sz.OrgId == orgId && sz.PluginId == pluginId && sz.IsActive);
 
         if (pluginVersion is not null)
@@ -148,20 +148,20 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
             query = query.Where(sz => sz.PluginVersion == pluginVersion);
         }
 
-        SafeZonePluginEntity? entity = await query.FirstOrDefaultAsync(ct);
+        SafeZoneAddOnEntity? entity = await query.FirstOrDefaultAsync(ct);
         return entity is null ? null : ToEntryDto(entity);
     }
 
     // ── Global safe zone (3.3.4) ───────────────────────────────────────────
 
-    public async Task<SafeZoneEntryDto?> ApprovePluginGlobalAsync(
+    public async Task<SafeZoneEntryDto?> ApproveAddOnGlobalAsync(
         Guid pluginId,
         string pluginVersion,
         Guid approvedBy,
         CancellationToken ct = default)
     {
         // Use Guid.Empty for global org
-        return await ApprovePluginAsync(Guid.Empty, pluginId, pluginVersion, approvedBy, ct);
+        return await ApproveAddOnAsync(Guid.Empty, pluginId, pluginVersion, approvedBy, ct);
     }
 
     public async Task<IReadOnlyList<SafeZonePluginDetailDto>> ListGlobalSafeZonePluginsAsync(
@@ -172,7 +172,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
 
     // ── Org-level blocks for global plugins (3.3.5) ────────────────────────
 
-    public async Task BlockGlobalPluginAsync(
+    public async Task BlockGlobalAddOnAsync(
         Guid orgId,
         Guid pluginId,
         Guid blockedBy,
@@ -183,7 +183,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
 
         if (!alreadyBlocked)
         {
-            _ctx.OrgPluginBlocks.Add(new OrgPluginBlockEntity
+            _ctx.OrgPluginBlocks.Add(new OrgAddOnBlockEntity
             {
                 Id = Guid.NewGuid(),
                 OrgId = orgId,
@@ -195,12 +195,12 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
         }
     }
 
-    public async Task UnblockGlobalPluginAsync(
+    public async Task UnblockGlobalAddOnAsync(
         Guid orgId,
         Guid pluginId,
         CancellationToken ct = default)
     {
-        OrgPluginBlockEntity? block = await _ctx.OrgPluginBlocks
+        OrgAddOnBlockEntity? block = await _ctx.OrgPluginBlocks
             .FirstOrDefaultAsync(b => b.OrgId == orgId && b.PluginId == pluginId, ct);
 
         if (block is not null)
@@ -220,7 +220,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
                    .AnyAsync(b => b.OrgId == orgId && b.PluginId == pluginId, ct);
     }
 
-    public async Task<IReadOnlyList<Guid>> ListBlockedGlobalPluginsAsync(
+    public async Task<IReadOnlyList<Guid>> ListBlockedGlobalAddOnsAsync(
         Guid orgId,
         CancellationToken ct = default)
     {
@@ -233,7 +233,7 @@ public sealed class SafeZoneStoreAdapter : ISafeZoneStorePort
 
     // ── Helpers ────────────────────────────────────────────────────────────
 
-    private static SafeZoneEntryDto ToEntryDto(SafeZonePluginEntity entity) => new(
+    private static SafeZoneEntryDto ToEntryDto(SafeZoneAddOnEntity entity) => new(
         Id: entity.Id,
         OrgId: entity.OrgId,
         PluginId: entity.PluginId,

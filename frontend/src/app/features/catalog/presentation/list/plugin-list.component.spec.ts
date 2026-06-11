@@ -40,7 +40,7 @@ import { By } from '@angular/platform-browser';
 import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { PluginListComponent } from './plugin-list.component';
 import { CatalogFacade } from '../../application/facades/catalog.facade';
-import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '../../domain/models/catalog.models';
+import type { Categories, PaginationMeta, AddOnDetail, AddOnSummary } from '../../domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../../domain/rules/catalog-filter.rules';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
@@ -110,31 +110,31 @@ const FR_CATALOG_LANGS: Record<string, string> = {
 
 @Injectable()
 class StubCatalogFacade {
-  private readonly _plugins = signal<PluginSummary[]>([]);
+  private readonly _addOns = signal<AddOnSummary[]>([]);
   private readonly _paginationMeta = signal<PaginationMeta | undefined>(undefined);
   private readonly _categories = signal<Categories | undefined>(undefined);
-  private readonly _selectedPlugin = signal<PluginDetail | undefined>(undefined);
-  private readonly _isLoadingPlugins = signal(false);
+  private readonly _selectedAddOn = signal<AddOnDetail | undefined>(undefined);
+  private readonly _isLoadingAddOns = signal(false);
   private readonly _isLoadingDetail = signal(false);
   private readonly _isLoadingCategories = signal(false);
-  private readonly _pluginsError = signal<{ code: string; message: string }[] | undefined>(undefined);
+  private readonly _addOnsError = signal<{ code: string; message: string }[] | undefined>(undefined);
   private readonly _detailError = signal<{ code: string; message: string }[] | undefined>(undefined);
 
   // Writeable test helpers
-  setPluginsState(plugins: PluginSummary[], meta?: PaginationMeta): void {
-    this._plugins.set(plugins);
+  setPluginsState(addOns: AddOnSummary[], meta?: PaginationMeta): void {
+    this._addOns.set(addOns);
     this._paginationMeta.set(meta);
   }
   setLoading(loading: boolean): void {
-    this._isLoadingPlugins.set(loading);
+    this._isLoadingAddOns.set(loading);
   }
   setError(errors: { code: string; message: string }[]): void {
-    this._pluginsError.set(errors);
+    this._addOnsError.set(errors);
   }
 
   // Facade signal getters
-  get plugins(): Signal<PluginSummary[]> {
-    return this._plugins;
+  get addOns(): Signal<AddOnSummary[]> {
+    return this._addOns;
   }
   get paginationMeta(): Signal<PaginationMeta | undefined> {
     return this._paginationMeta;
@@ -142,11 +142,11 @@ class StubCatalogFacade {
   get categories(): Signal<Categories | undefined> {
     return this._categories;
   }
-  get selectedPlugin(): Signal<PluginDetail | undefined> {
-    return this._selectedPlugin;
+  get selectedAddOn(): Signal<AddOnDetail | undefined> {
+    return this._selectedAddOn;
   }
-  get isLoadingPlugins(): Signal<boolean> {
-    return this._isLoadingPlugins;
+  get isLoadingAddOns(): Signal<boolean> {
+    return this._isLoadingAddOns;
   }
   get isLoadingDetail(): Signal<boolean> {
     return this._isLoadingDetail;
@@ -154,23 +154,23 @@ class StubCatalogFacade {
   get isLoadingCategories(): Signal<boolean> {
     return this._isLoadingCategories;
   }
-  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> {
-    return this._pluginsError;
+  get addOnsError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._addOnsError;
   }
   get detailError(): Signal<{ code: string; message: string }[] | undefined> {
     return this._detailError;
   }
 
   // Recorded calls for assertion
-  loadPluginsCalls: Partial<CatalogFilterQuery>[] = [];
+  loadAddOnsCalls: Partial<CatalogFilterQuery>[] = [];
   setPageCalls: number[] = [];
   setSortCalls: { sort: string; order?: 'asc' | 'desc' }[] = [];
   setFiltersCalls: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>[] = [];
   loadDetailCalls: string[] = [];
   loadCategoriesCalls = 0;
 
-  loadPlugins(query?: Partial<CatalogFilterQuery>): void {
-    this.loadPluginsCalls.push(query ?? {});
+  loadAddOns(query?: Partial<CatalogFilterQuery>): void {
+    this.loadAddOnsCalls.push(query ?? {});
   }
   setPage(page: number): void {
     this.setPageCalls.push(page);
@@ -193,7 +193,7 @@ class StubCatalogFacade {
 // Plugin fixtures
 // ---------------------------------------------------------------------------
 
-const PLUGIN_A: PluginSummary = {
+const PLUGIN_A: AddOnSummary = {
   pluginId: 'p1',
   name: 'Alpha Plugin',
   slug: 'alpha-plugin',
@@ -208,7 +208,7 @@ const PLUGIN_A: PluginSummary = {
   updatedAt: new Date('2024-01-01'),
 };
 
-const PLUGIN_B: PluginSummary = {
+const PLUGIN_B: AddOnSummary = {
   pluginId: 'p2',
   name: 'Beta Plugin',
   slug: 'beta-plugin',

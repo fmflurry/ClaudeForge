@@ -67,7 +67,8 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         --sb-amber-rgb: 250 204 21;
         --sb-slate: #0f172a;
         --sb-mint-rgb: 34 197 94;
-        --sb-shadow: 0 22px 60px rgb(15 23 42 / 0.14);
+        --sb-blue-rgb: 59 130 246;
+        --sb-shadow: 0 22px 60px rgb(15 23 42 / 0.10);
       }
 
       .sb-error {
@@ -97,8 +98,9 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         gap: 0.875rem;
         padding: 1rem;
         background:
-          radial-gradient(circle at 12% 0%, rgb(var(--sb-amber-rgb) / 0.22), transparent 18rem),
-          radial-gradient(circle at 100% 100%, rgb(var(--sb-mint-rgb) / 0.16), transparent 18rem), var(--sb-slate);
+          radial-gradient(circle at 12% 0%, rgb(var(--sb-amber-rgb) / 0.30), transparent 18rem),
+          radial-gradient(circle at 100% 100%, rgb(var(--sb-blue-rgb) / 0.10), transparent 18rem),
+          var(--sb-cream);
         border-radius: 1rem;
         box-shadow: var(--sb-shadow);
       }
@@ -110,16 +112,17 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         gap: 0.25rem;
         min-width: 8rem;
         padding: 1rem;
-        border: 1px solid rgb(255 255 255 / 0.12);
+        border: 1px solid rgb(15 23 42 / 0.08);
         border-radius: 0.875rem;
-        background: rgb(255 255 255 / 0.08);
-        backdrop-filter: blur(10px);
+        background: #ffffff;
+        box-shadow: 0 4px 16px rgb(15 23 42 / 0.05);
       }
 
       .sb-stat-card__label {
         margin: 0;
         font-size: 0.875rem;
-        color: rgb(255 255 255 / 0.72);
+        color: var(--sb-slate);
+        opacity: 0.65;
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -128,7 +131,7 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         margin: 0;
         font-size: 1.75rem;
         font-weight: 700;
-        color: var(--sb-cream);
+        color: var(--sb-slate);
       }
     `,
   ],

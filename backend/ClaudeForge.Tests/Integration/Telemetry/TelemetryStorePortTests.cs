@@ -77,9 +77,9 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     private static readonly string ValidAnonClientId = new('b', 64);  // 64-hex characters
 
     /// <summary>Seeds a plugin row so FK constraints on telemetry tables are satisfied.</summary>
-    private static async Task<PluginEntity> SeedPluginAsync(MarketplaceDbContext ctx)
+    private static async Task<AddOnEntity> SeedPluginAsync(MarketplaceDbContext ctx)
     {
-        PluginEntity plugin = new()
+        AddOnEntity plugin = new()
         {
             Id = Guid.NewGuid(),
             Name = "TelemetryTestPlugin-" + Guid.NewGuid().ToString("N")[..8],
@@ -119,7 +119,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         TelemetryStoreAdapter adapter = new(ctx);
         TelemetryEvent ev = MakeEvent(plugin.Id, "download");
 
@@ -139,7 +139,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         TelemetryStoreAdapter adapter = new(ctx);
         TelemetryEvent ev = MakeEvent(plugin.Id, "install");
 
@@ -165,7 +165,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         TelemetryStoreAdapter adapter = new(ctx);
         TelemetryEvent ev = MakeEvent(plugin.Id, "download", "1.0.0");
 
@@ -189,7 +189,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         TelemetryStoreAdapter adapter = new(ctx);
 
         // Act — two download events for the same plugin
@@ -215,7 +215,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         TelemetryStoreAdapter adapter = new(ctx);
 
         // Act — one download, one install
@@ -251,7 +251,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         TelemetryStoreAdapter adapter = new(ctx);
         TelemetryEvent ev = MakeEvent(plugin.Id) with { AnonClientId = ValidAnonClientId };
 
@@ -277,7 +277,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         TelemetryStoreAdapter adapter = new(ctx);
 
         // Seed 3 download events
@@ -302,7 +302,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         for (int i = 0; i < 2; i++)
         {
@@ -324,7 +324,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Act
         await using MarketplaceDbContext summaryCtx = _fixture.CreateContext();
@@ -344,7 +344,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Insert 2 download events today
         for (int i = 0; i < 2; i++)
@@ -372,7 +372,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange — insert some raw events, then verify summary has no anon IDs etc.
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         await new TelemetryStoreAdapter(ctx).RecordEventAsync(MakeEvent(plugin.Id, "download"));
 
         // Act
@@ -401,7 +401,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         DateTimeOffset oldTimestamp = DateTimeOffset.UtcNow.AddDays(-91);
         DateTimeOffset recentTimestamp = DateTimeOffset.UtcNow.AddDays(-1);
@@ -447,7 +447,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
         DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         // Insert an aggregate row directly (simulates pre-aggregated data)
@@ -491,7 +491,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         // Insert 3 recent raw events (within N days)
         for (int i = 0; i < 3; i++)
@@ -524,7 +524,7 @@ public sealed class TelemetryStorePortTests : IAsyncLifetime
     {
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
-        PluginEntity plugin = await SeedPluginAsync(ctx);
+        AddOnEntity plugin = await SeedPluginAsync(ctx);
 
         ctx.TelemetryEvents.Add(new TelemetryEventEntity
         {

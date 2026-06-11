@@ -116,9 +116,9 @@ public sealed class SecurityAnalysisModule : IModule
         services.AddScoped<ISafeZoneStorePort, SafeZoneStoreAdapter>();
 
         // ── Use Cases ──────────────────────────────────────────────────────
-        services.AddScoped<ApprovePluginForOrgUseCase>();
-        services.AddScoped<ListSafeZonePluginsUseCase>();
-        services.AddScoped<ListPendingSafeZonePluginsUseCase>();
+        services.AddScoped<ApproveAddOnForOrgUseCase>();
+        services.AddScoped<ListSafeZoneAddOnsUseCase>();
+        services.AddScoped<ListPendingSafeZoneAddOnsUseCase>();
 
         // ═══════════════════════════════════════════════════════════════════
         // Phase 5: Gamification Service Registration
@@ -143,7 +143,7 @@ public sealed class SecurityAnalysisModule : IModule
     public IEndpointRouteBuilder MapEndpoints(IEndpointRouteBuilder endpoints)
     {
         // ── Plugin Analysis ────────────────────────────────────────────────
-        endpoints.MapPost("/api/v1/plugins/submit", (Delegate)SubmitPluginHandler)
+        endpoints.MapPost("/api/v1/plugins/submit", (Delegate)SubmitAddOnHandler)
             .WithName("SubmitPluginForAnalysis")
             .WithTags("SecurityAnalysis")
             .RequireAuthorization()
@@ -177,7 +177,7 @@ public sealed class SecurityAnalysisModule : IModule
             .WithTags("SecurityAnalysis");
 
         // ── Safe Zone — Pending Queue (3.2.5) ──────────────────────────────
-        endpoints.MapGet("/api/v1/safe-zone/{orgId:guid}/pending", (Delegate)ListPendingSafeZonePluginsHandler)
+        endpoints.MapGet("/api/v1/safe-zone/{orgId:guid}/pending", (Delegate)ListPendingSafeZoneAddOnsHandler)
             .WithName("ListPendingSafeZonePlugins")
             .WithTags("SecurityAnalysis")
             .RequireAuthorization()
@@ -321,7 +321,7 @@ public sealed class SecurityAnalysisModule : IModule
     // Handlers — Phase 2 & 3 existing
     // =========================================================================
 
-    private static async Task<IResult> SubmitPluginHandler(HttpContext httpContext)
+    private static async Task<IResult> SubmitAddOnHandler(HttpContext httpContext)
     {
         SubmitPluginRequest? request;
         try
@@ -341,7 +341,7 @@ public sealed class SecurityAnalysisModule : IModule
 
         // 5.5.2/5.5.3: Determine queue priority based on author karma
         var db = httpContext.RequestServices.GetRequiredService<MarketplaceDbContext>();
-        Guid? authorId = await GetPluginAuthorIdAsync(db, request.PluginId, httpContext.RequestAborted);
+        Guid? authorId = await GetAddOnAuthorIdAsync(db, request.PluginId, httpContext.RequestAborted);
 
         int priority = 0;
         if (authorId.HasValue)
@@ -383,9 +383,9 @@ public sealed class SecurityAnalysisModule : IModule
     };
 
     /// <summary>Gets the plugin author's user ID from the plugins table.</summary>
-    private static async Task<Guid?> GetPluginAuthorIdAsync(MarketplaceDbContext db, Guid pluginId, CancellationToken ct)
+    private static async Task<Guid?> GetAddOnAuthorIdAsync(MarketplaceDbContext db, Guid pluginId, CancellationToken ct)
     {
-        PluginEntity? plugin = await db.Plugins
+        AddOnEntity? plugin = await db.Plugins
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == pluginId, ct);
 
@@ -582,7 +582,7 @@ public sealed class SecurityAnalysisModule : IModule
             // No body or invalid JSON — use default "latest"
         }
 
-        ApprovePluginForOrgUseCase useCase = httpContext.RequestServices.GetRequiredService<ApprovePluginForOrgUseCase>();
+        ApproveAddOnForOrgUseCase useCase = httpContext.RequestServices.GetRequiredService<ApproveAddOnForOrgUseCase>();
 
         try
         {
@@ -602,21 +602,21 @@ public sealed class SecurityAnalysisModule : IModule
         if (orgId == Guid.Empty)
             return Results.ValidationProblem(new Dictionary<string, string[]> { { "orgId", ["Organization ID is required"] } });
 
-        ListSafeZonePluginsUseCase useCase = httpContext.RequestServices.GetRequiredService<ListSafeZonePluginsUseCase>();
+        ListSafeZoneAddOnsUseCase useCase = httpContext.RequestServices.GetRequiredService<ListSafeZoneAddOnsUseCase>();
 
         IReadOnlyList<SafeZonePluginDetailDto> plugins = await useCase.ExecuteAsync(orgId, httpContext.RequestAborted);
 
         return Results.Ok(plugins);
     }
 
-    private static async Task<IResult> ListPendingSafeZonePluginsHandler(
+    private static async Task<IResult> ListPendingSafeZoneAddOnsHandler(
         Guid orgId,
         HttpContext httpContext)
     {
         if (orgId == Guid.Empty)
             return Results.ValidationProblem(new Dictionary<string, string[]> { { "orgId", ["Organization ID is required"] } });
 
-        ListPendingSafeZonePluginsUseCase useCase = httpContext.RequestServices.GetRequiredService<ListPendingSafeZonePluginsUseCase>();
+        ListPendingSafeZoneAddOnsUseCase useCase = httpContext.RequestServices.GetRequiredService<ListPendingSafeZoneAddOnsUseCase>();
 
         try
         {
@@ -631,7 +631,7 @@ public sealed class SecurityAnalysisModule : IModule
             foreach (var plugin in plugins)
             {
                 // Get the plugin's author
-                PluginEntity? pluginEntity = await db.Plugins
+                AddOnEntity? pluginEntity = await db.Plugins
                     .AsNoTracking()
                     .FirstOrDefaultAsync(p => p.Id == plugin.PluginId, ct);
 
@@ -674,7 +674,7 @@ public sealed class SecurityAnalysisModule : IModule
     private static async Task<IResult> ListGlobalSafeZonePluginsHandler(
         HttpContext httpContext)
     {
-        ListSafeZonePluginsUseCase useCase = httpContext.RequestServices.GetRequiredService<ListSafeZonePluginsUseCase>();
+        ListSafeZoneAddOnsUseCase useCase = httpContext.RequestServices.GetRequiredService<ListSafeZoneAddOnsUseCase>();
 
         IReadOnlyList<SafeZonePluginDetailDto> plugins = await useCase.ExecuteAsync(Guid.Empty, httpContext.RequestAborted);
 
@@ -700,7 +700,7 @@ public sealed class SecurityAnalysisModule : IModule
 
         try
         {
-            await store.BlockGlobalPluginAsync(orgId, pluginId, currentUser.UserId.Value, httpContext.RequestAborted);
+            await store.BlockGlobalAddOnAsync(orgId, pluginId, currentUser.UserId.Value, httpContext.RequestAborted);
             return Results.Ok(new { message = "Global plugin blocked for this organization." });
         }
         catch (Core.Shared.Exceptions.ProblemDetailsException ex)
@@ -722,7 +722,7 @@ public sealed class SecurityAnalysisModule : IModule
 
         ISafeZoneStorePort store = httpContext.RequestServices.GetRequiredService<ISafeZoneStorePort>();
 
-        await store.UnblockGlobalPluginAsync(orgId, pluginId, httpContext.RequestAborted);
+        await store.UnblockGlobalAddOnAsync(orgId, pluginId, httpContext.RequestAborted);
         return Results.Ok(new { message = "Global plugin unblocked for this organization." });
     }
 
@@ -757,7 +757,7 @@ public sealed class SecurityAnalysisModule : IModule
             return Results.Json(new { error = "You are not a member of this organization." }, statusCode: StatusCodes.Status403Forbidden);
 
         ISafeZoneStorePort store = httpContext.RequestServices.GetRequiredService<ISafeZoneStorePort>();
-        (bool eligible, string? reason) = await store.IsPluginEligibleAsync(body.PluginId, httpContext.RequestAborted);
+        (bool eligible, string? reason) = await store.IsAddOnEligibleAsync(body.PluginId, httpContext.RequestAborted);
         if (!eligible)
             return Results.BadRequest(new { error = reason ?? "Plugin is not eligible for approval." });
 
@@ -959,7 +959,7 @@ public sealed class SecurityAnalysisModule : IModule
         var ct = httpContext.RequestAborted;
 
         var appeal = await db.Appeals
-            .Include(a => a.Plugin)
+            .Include(a => a.AddOn)
             .Include(a => a.AnalysisResult)
             .FirstOrDefaultAsync(a => a.Id == appealId, ct);
 
@@ -970,7 +970,7 @@ public sealed class SecurityAnalysisModule : IModule
         {
             appealId = appeal.Id,
             pluginId = appeal.PluginId,
-            pluginName = appeal.Plugin?.Name,
+            pluginName = appeal.AddOn?.Name,
             analysisResultId = appeal.AnalysisResultId,
             authorId = appeal.AuthorId,
             reason = appeal.Reason,
@@ -1135,8 +1135,12 @@ public sealed class SecurityAnalysisModule : IModule
         // Snapshot previous config for audit log
         var previousConfig = new
         {
-            config.StaticWeight, config.DynamicWeight, config.PassThreshold,
-            config.FailThreshold, config.MaxWorkers, config.RetryLimit,
+            config.StaticWeight,
+            config.DynamicWeight,
+            config.PassThreshold,
+            config.FailThreshold,
+            config.MaxWorkers,
+            config.RetryLimit,
             config.AnalysisTimeoutSeconds,
         };
 
@@ -1172,8 +1176,12 @@ public sealed class SecurityAnalysisModule : IModule
             PreviousConfig = JsonSerializer.Serialize(previousConfig),
             NewConfig = JsonSerializer.Serialize(new
             {
-                config.StaticWeight, config.DynamicWeight, config.PassThreshold,
-                config.FailThreshold, config.MaxWorkers, config.RetryLimit,
+                config.StaticWeight,
+                config.DynamicWeight,
+                config.PassThreshold,
+                config.FailThreshold,
+                config.MaxWorkers,
+                config.RetryLimit,
                 config.AnalysisTimeoutSeconds,
             }),
             ChangeDescription = "Analysis configuration updated",

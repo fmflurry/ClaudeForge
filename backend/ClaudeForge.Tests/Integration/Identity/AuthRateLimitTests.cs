@@ -17,7 +17,7 @@ namespace ClaudeForge.Tests.Integration.Identity;
 ///
 /// Verifies that per-IP fixed-window rate-limit policies are applied to the sensitive
 /// auth endpoints.  The production code (GREEN) must register the following named policies
-/// via AddRateLimiter (identical idiom to PluginPublishingModule / TelemetryModule):
+/// via AddRateLimiter (identical idiom to AddOnPublishingModule / TelemetryModule):
 ///
 /// ┌─────────────────────────────────────────────────────────────────────────────────┐
 /// │  Policy name              │ Endpoint(s)                   │ Permit │ Window    │
@@ -371,7 +371,7 @@ public sealed class AuthRateLimitTests : IAsyncLifetime
 
     /// <summary>
     /// When rate-limited, the response body must be RFC 7807 ProblemDetails with status=429.
-    /// This mirrors the RejectionStatusCode=429 pattern in PluginPublishingModule.
+    /// This mirrors the RejectionStatusCode=429 pattern in AddOnPublishingModule.
     /// </summary>
     [Fact]
     public async Task RateLimitedResponse_HasCorrectStatusCode()

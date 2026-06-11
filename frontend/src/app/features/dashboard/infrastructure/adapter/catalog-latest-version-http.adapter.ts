@@ -15,7 +15,7 @@ export class CatalogLatestVersionHttpAdapter extends CatalogLatestVersionPort {
   private readonly apiClient = inject(ApiClient);
 
   getLatestVersion(pluginName: string): Observable<string | null> {
-    return this.apiClient.searchPlugins({ q: pluginName, limit: 1 }).pipe(
+    return this.apiClient.searchAddOns({ q: pluginName, limit: 1 }).pipe(
       map((result) => {
         const match = result.data.find((p) => p.name.toLowerCase() === pluginName.toLowerCase());
         return match?.latestVersion ?? null;

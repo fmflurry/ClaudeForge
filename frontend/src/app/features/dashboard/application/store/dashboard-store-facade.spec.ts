@@ -15,7 +15,7 @@
  *   }
  *
  *   interface DashboardState {
- *     [DashboardStoreEnum.INSTALLED_PLUGINS]: ResourceState<InstalledPlugin[]>;
+ *     [DashboardStoreEnum.INSTALLED_PLUGINS]: ResourceState<InstalledAddOn[]>;
  *     [DashboardStoreEnum.UPDATE_CHECKS]:     ResourceState<Record<string, string | null>>;
  *   }
  *
@@ -44,11 +44,11 @@
  *
  *     // Methods:
  *     loadInstalled(): void
- *       — reads from InstalledPluginsStoragePort, enriches with last-known update status
+ *       — reads from InstalledAddOnsStoragePort, enriches with last-known update status
  *     recordInstallIntent(name: string, version: string): void
- *       — calls InstalledPluginsStoragePort.add(), updates store (no HTTP write)
+ *       — calls InstalledAddOnsStoragePort.add(), updates store (no HTTP write)
  *     removeInstalled(name: string): void
- *       — calls InstalledPluginsStoragePort.remove(), updates store
+ *       — calls InstalledAddOnsStoragePort.remove(), updates store
  *     checkForUpdates(): void
  *       — queries CatalogLatestVersionPort for each installed plugin,
  *         sets update status in store; sets error on failure
@@ -61,11 +61,11 @@ import { Observable, of, throwError } from 'rxjs';
 import { DashboardStore, DashboardStoreEnum } from './dashboard.store';
 import type { DashboardState } from './dashboard.store';
 import { DashboardFacade } from '../facades/dashboard.facade';
-import { InstalledPluginsStoragePort } from '../../../../shared/domain/ports/installed-plugins-storage.port';
+import { InstalledAddOnsStoragePort } from '../../../../shared/domain/ports/installed-plugins-storage.port';
 import type { InstalledPluginRecord } from '../../../../shared/domain/ports/installed-plugins-storage.port';
-import { InMemoryInstalledPluginsAdapter } from '../../../../shared/infrastructure/storage/in-memory-installed-plugins.adapter';
+import { InMemoryInstalledAddOnsAdapter } from '../../../../shared/infrastructure/storage/in-memory-installed-plugins.adapter';
 import { CatalogLatestVersionPort } from '../../domain/ports/catalog-latest-version.port';
-import type { InstalledPlugin, DashboardGroup } from '../../domain/models/dashboard.models';
+import type { InstalledAddOn, DashboardGroup } from '../../domain/models/dashboard.models';
 import { TeamContextFacade } from '../../../team-context/application/facades/team-context.facade';
 import type { ResourceState } from '../../../../shared/application/store/resource-state.model';
 
@@ -126,21 +126,21 @@ const RECORD_B: InstalledPluginRecord = {
 // Setup helpers
 // ---------------------------------------------------------------------------
 
-function buildStorage(...records: InstalledPluginRecord[]): InMemoryInstalledPluginsAdapter {
-  const adapter = new InMemoryInstalledPluginsAdapter();
+function buildStorage(...records: InstalledPluginRecord[]): InMemoryInstalledAddOnsAdapter {
+  const adapter = new InMemoryInstalledAddOnsAdapter();
   records.forEach((r) => adapter.add(r));
   return adapter;
 }
 
 function setup(
-  storage: InstalledPluginsStoragePort,
+  storage: InstalledAddOnsStoragePort,
   catalogPort: CatalogLatestVersionPort,
 ): { store: DashboardStore; facade: DashboardFacade } {
   TestBed.configureTestingModule({
     providers: [
       DashboardStore,
       DashboardFacade,
-      { provide: InstalledPluginsStoragePort, useValue: storage },
+      { provide: InstalledAddOnsStoragePort, useValue: storage },
       { provide: CatalogLatestVersionPort, useValue: catalogPort },
       { provide: TeamContextFacade, useClass: StubTeamContextFacade },
     ],
@@ -186,7 +186,7 @@ describe('DashboardStore — initial state', () => {
   it('should initialise INSTALLED_PLUGINS with empty non-loading state', () => {
     TestBed.configureTestingModule({ providers: [DashboardStore] });
     const store = TestBed.inject(DashboardStore);
-    const state: ResourceState<InstalledPlugin[]> = store.get(DashboardStoreEnum.INSTALLED_PLUGINS)();
+    const state: ResourceState<InstalledAddOn[]> = store.get(DashboardStoreEnum.INSTALLED_PLUGINS)();
     expect(state.isLoading).toBeFalsy();
     expect(state.data).toBeUndefined();
   });
@@ -198,7 +198,7 @@ describe('DashboardStore — initial state', () => {
     expect(state.isLoading).toBeFalsy();
   });
 
-  it('INSTALLED_PLUGINS state should accept ResourceState<InstalledPlugin[]>', () => {
+  it('INSTALLED_PLUGINS state should accept ResourceState<InstalledAddOn[]>', () => {
     TestBed.configureTestingModule({ providers: [DashboardStore] });
     const store = TestBed.inject(DashboardStore);
     const partial: Partial<DashboardState[typeof DashboardStoreEnum.INSTALLED_PLUGINS]> = {
@@ -280,7 +280,7 @@ describe('DashboardFacade — loadInstalled', () => {
   });
 
   it('should NOT make any HTTP call (storage-only operation)', () => {
-    // If the test setup (which only provides InMemoryInstalledPluginsAdapter, no real HTTP)
+    // If the test setup (which only provides InMemoryInstalledAddOnsAdapter, no real HTTP)
     // does not throw, the boundary is maintained.
     const { facade } = setupWithFakePort(RECORD_A);
     expect(() => facade.loadInstalled()).not.toThrow();
@@ -300,7 +300,7 @@ describe('DashboardFacade — recordInstallIntent', () => {
     expect(facade.installedPlugins()[0].name).toBe('new-plugin');
   });
 
-  it('should persist via InstalledPluginsStoragePort (browser storage only)', () => {
+  it('should persist via InstalledAddOnsStoragePort (browser storage only)', () => {
     const storage = buildStorage();
     const catalogPort = new FakeCatalogLatestVersionPort();
     const { facade } = setup(storage, catalogPort);
@@ -352,7 +352,7 @@ describe('DashboardFacade — removeInstalled', () => {
     expect(names).toContain('beta-plugin');
   });
 
-  it('should persist removal via InstalledPluginsStoragePort', () => {
+  it('should persist removal via InstalledAddOnsStoragePort', () => {
     const storage = buildStorage(RECORD_A, RECORD_B);
     const catalogPort = new FakeCatalogLatestVersionPort();
     const { facade } = setup(storage, catalogPort);

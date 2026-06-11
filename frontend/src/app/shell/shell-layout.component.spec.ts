@@ -85,7 +85,7 @@ class StubOrgContextFacade {
 
 @Injectable()
 class StubCatalogFacade {
-  loadPlugins = vi.fn();
+  loadAddOns = vi.fn();
 }
 
 // ---------------------------------------------------------------------------

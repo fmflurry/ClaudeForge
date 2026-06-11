@@ -1,8 +1,8 @@
 /**
- * Domain model for a featured plugin.
+ * Domain model for a featured add-on.
  * Immutable — all fields are readonly.
  */
-export interface FeaturedPlugin {
+export interface FeaturedAddOn {
   readonly pluginId: string;
   readonly name: string;
   readonly slug: string;

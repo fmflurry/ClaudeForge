@@ -10,12 +10,12 @@ public interface ISafeZoneStorePort
     /// Checks whether a plugin has security_status == "passed" and is eligible for safe zone.
     /// Returns (true, null) when eligible, (false, reason) when not.
     /// </summary>
-    Task<(bool Eligible, string? Reason)> IsPluginEligibleAsync(
+    Task<(bool Eligible, string? Reason)> IsAddOnEligibleAsync(
         Guid pluginId,
         CancellationToken ct = default);
 
     /// <summary>Approves a plugin for the org's safe zone. Returns the created entry DTO.</summary>
-    Task<SafeZoneEntryDto?> ApprovePluginAsync(
+    Task<SafeZoneEntryDto?> ApproveAddOnAsync(
         Guid orgId,
         Guid pluginId,
         string pluginVersion,
@@ -28,7 +28,7 @@ public interface ISafeZoneStorePort
         CancellationToken ct = default);
 
     /// <summary>Returns plugins that passed security analysis but are NOT yet approved for the org's safe zone.</summary>
-    Task<IReadOnlyList<PendingSafeZonePluginDto>> ListPendingPluginsAsync(
+    Task<IReadOnlyList<PendingSafeZonePluginDto>> ListPendingAddOnsAsync(
         Guid orgId,
         CancellationToken ct = default);
 
@@ -42,7 +42,7 @@ public interface ISafeZoneStorePort
     // ── Global safe zone (3.3.4) ───────────────────────────────────────────
 
     /// <summary>Approves a plugin globally (visible to all orgs). Returns the created entry DTO.</summary>
-    Task<SafeZoneEntryDto?> ApprovePluginGlobalAsync(
+    Task<SafeZoneEntryDto?> ApproveAddOnGlobalAsync(
         Guid pluginId,
         string pluginVersion,
         Guid approvedBy,
@@ -55,14 +55,14 @@ public interface ISafeZoneStorePort
     // ── Org-level blocks for global plugins (3.3.5) ────────────────────────
 
     /// <summary>Blocks a globally-approved plugin for a specific org.</summary>
-    Task BlockGlobalPluginAsync(
+    Task BlockGlobalAddOnAsync(
         Guid orgId,
         Guid pluginId,
         Guid blockedBy,
         CancellationToken ct = default);
 
     /// <summary>Unblocks a globally-approved plugin for a specific org.</summary>
-    Task UnblockGlobalPluginAsync(
+    Task UnblockGlobalAddOnAsync(
         Guid orgId,
         Guid pluginId,
         CancellationToken ct = default);
@@ -74,7 +74,7 @@ public interface ISafeZoneStorePort
         CancellationToken ct = default);
 
     /// <summary>Returns all globally-blocked plugin IDs for the org.</summary>
-    Task<IReadOnlyList<Guid>> ListBlockedGlobalPluginsAsync(
+    Task<IReadOnlyList<Guid>> ListBlockedGlobalAddOnsAsync(
         Guid orgId,
         CancellationToken ct = default);
 }

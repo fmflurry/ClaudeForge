@@ -5,7 +5,7 @@ using NSubstitute;
 namespace ClaudeForge.Tests.Unit.SecurityAnalysis;
 
 /// <summary>
-/// Unit tests for ListSafeZonePluginsUseCase.
+/// Unit tests for ListSafeZoneAddOnsUseCase.
 ///
 /// Tests org isolation, global plugin visibility, blocked globals,
 /// and pending approval filtering.
@@ -15,7 +15,7 @@ namespace ClaudeForge.Tests.Unit.SecurityAnalysis;
 public sealed class ListSafeZonePluginsUseCaseTests
 {
     private readonly ISafeZoneStorePort _store = Substitute.For<ISafeZoneStorePort>();
-    private readonly ListSafeZonePluginsUseCase _useCase;
+    private readonly ListSafeZoneAddOnsUseCase _useCase;
 
     private static readonly Guid OrgA = Guid.NewGuid();
     private static readonly Guid OrgB = Guid.NewGuid();
@@ -25,7 +25,7 @@ public sealed class ListSafeZonePluginsUseCaseTests
 
     public ListSafeZonePluginsUseCaseTests()
     {
-        _useCase = new ListSafeZonePluginsUseCase(_store);
+        _useCase = new ListSafeZoneAddOnsUseCase(_store);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ public sealed class ListSafeZonePluginsUseCaseTests
         _store.ListGlobalSafeZonePluginsAsync(Arg.Any<CancellationToken>())
             .Returns([]);
 
-        _store.ListBlockedGlobalPluginsAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+        _store.ListBlockedGlobalAddOnsAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -85,7 +85,7 @@ public sealed class ListSafeZonePluginsUseCaseTests
         _store.ListGlobalSafeZonePluginsAsync(Arg.Any<CancellationToken>())
             .Returns([MakePlugin(Plugin1, "Global-Plugin")]);
 
-        _store.ListBlockedGlobalPluginsAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+        _store.ListBlockedGlobalAddOnsAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -113,7 +113,7 @@ public sealed class ListSafeZonePluginsUseCaseTests
         _store.ListGlobalSafeZonePluginsAsync(Arg.Any<CancellationToken>())
             .Returns([MakePlugin(Plugin2, "Global-Plugin")]);
 
-        _store.ListBlockedGlobalPluginsAsync(OrgA, Arg.Any<CancellationToken>())
+        _store.ListBlockedGlobalAddOnsAsync(OrgA, Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -141,7 +141,7 @@ public sealed class ListSafeZonePluginsUseCaseTests
             ]);
 
         // OrgA blocks Plugin2
-        _store.ListBlockedGlobalPluginsAsync(OrgA, Arg.Any<CancellationToken>())
+        _store.ListBlockedGlobalAddOnsAsync(OrgA, Arg.Any<CancellationToken>())
             .Returns([Plugin2]);
 
         // Act
@@ -164,9 +164,9 @@ public sealed class ListSafeZonePluginsUseCaseTests
             .Returns([MakePlugin(Plugin1, "Global-1")]);
 
         // OrgA blocks Plugin1, OrgB does not
-        _store.ListBlockedGlobalPluginsAsync(OrgA, Arg.Any<CancellationToken>())
+        _store.ListBlockedGlobalAddOnsAsync(OrgA, Arg.Any<CancellationToken>())
             .Returns([Plugin1]);
-        _store.ListBlockedGlobalPluginsAsync(OrgB, Arg.Any<CancellationToken>())
+        _store.ListBlockedGlobalAddOnsAsync(OrgB, Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -191,7 +191,7 @@ public sealed class ListSafeZonePluginsUseCaseTests
         _store.ListGlobalSafeZonePluginsAsync(Arg.Any<CancellationToken>())
             .Returns([MakePlugin(Plugin1, "Global-Plugin")]);
 
-        _store.ListBlockedGlobalPluginsAsync(OrgA, Arg.Any<CancellationToken>())
+        _store.ListBlockedGlobalAddOnsAsync(OrgA, Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -213,7 +213,7 @@ public sealed class ListSafeZonePluginsUseCaseTests
             .Returns([]);
         _store.ListGlobalSafeZonePluginsAsync(Arg.Any<CancellationToken>())
             .Returns([]);
-        _store.ListBlockedGlobalPluginsAsync(OrgA, Arg.Any<CancellationToken>())
+        _store.ListBlockedGlobalAddOnsAsync(OrgA, Arg.Any<CancellationToken>())
             .Returns([]);
 
         IReadOnlyList<SafeZonePluginDetailDto> result = await _useCase.ExecuteAsync(OrgA);

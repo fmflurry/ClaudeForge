@@ -26,8 +26,8 @@ import { parseAcceptLanguage, pickLanguage } from './core/i18n/language-detectio
 import type { Lang } from './core/i18n/active-language';
 import { TeamContextStoragePort } from './shared/domain/ports/team-context-storage.port';
 import { LocalStorageTeamContextAdapter } from './shared/infrastructure/storage/local-storage-team-context.adapter';
-import { InstalledPluginsStoragePort } from './shared/domain/ports/installed-plugins-storage.port';
-import { LocalStorageInstalledPluginsAdapter } from './shared/infrastructure/storage/local-storage-installed-plugins.adapter';
+import { InstalledAddOnsStoragePort } from './shared/domain/ports/installed-plugins-storage.port';
+import { LocalStorageInstalledAddOnsAdapter } from './shared/infrastructure/storage/local-storage-installed-plugins.adapter';
 import { TelemetryPreferencePort } from './shared/domain/ports/telemetry-preference.port';
 import { LocalStorageTelemetryPreferenceAdapter } from './shared/infrastructure/storage/local-storage-telemetry-preference.adapter';
 import { CatalogLatestVersionPort } from './features/dashboard/domain/ports/catalog-latest-version.port';
@@ -61,9 +61,9 @@ import { DeviceActivationFacade } from './features/device-activation/application
 import { MarketplaceStatsPort } from './features/home/domain/ports/marketplace-stats.port';
 import { MarketplaceStatsHttpAdapter } from './features/home/infrastructure/adapter/marketplace-stats-http.adapter';
 import { HomeMetricsFacade } from './features/home/application/facades/home-metrics.facade';
-import { FeaturedPluginPort } from './features/home/domain/ports/featured-plugin.port';
-import { FeaturedPluginHttpAdapter } from './features/home/infrastructure/adapter/featured-plugin-http.adapter';
-import { FeaturedPluginFacade } from './features/home/application/facades/featured-plugin.facade';
+import { FeaturedAddOnPort } from './features/home/domain/ports/featured-plugin.port';
+import { FeaturedAddOnHttpAdapter } from './features/home/infrastructure/adapter/featured-plugin-http.adapter';
+import { FeaturedAddOnFacade } from './features/home/application/facades/featured-plugin.facade';
 import { provideZard } from './shared/core/provider/providezard';
 
 /**
@@ -171,8 +171,8 @@ export const appConfig: ApplicationConfig = {
       useClass: LocalStorageTeamContextAdapter,
     },
     {
-      provide: InstalledPluginsStoragePort,
-      useClass: LocalStorageInstalledPluginsAdapter,
+      provide: InstalledAddOnsStoragePort,
+      useClass: LocalStorageInstalledAddOnsAdapter,
     },
     {
       provide: TelemetryPreferencePort,
@@ -247,13 +247,13 @@ export const appConfig: ApplicationConfig = {
     },
     HomeMetricsFacade,
     // ---------------------------------------------------------------------------
-    // Featured Plugin
+    // Featured Add-On
     // ---------------------------------------------------------------------------
     {
-      provide: FeaturedPluginPort,
-      useClass: FeaturedPluginHttpAdapter,
+      provide: FeaturedAddOnPort,
+      useClass: FeaturedAddOnHttpAdapter,
     },
-    FeaturedPluginFacade,
+    FeaturedAddOnFacade,
   ],
 };
 

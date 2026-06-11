@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import type { InstalledPlugin } from '../../domain/models/dashboard.models';
+import type { InstalledAddOn } from '../../domain/models/dashboard.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
-  selector: 'cf-plugin-details-modal',
+  selector: 'cf-addon-details-modal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
@@ -73,11 +73,11 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
     </div>
   `,
 })
-export class PluginDetailsModalComponent {
+export class AddOnDetailsModalComponent {
   protected readonly i18n = inject(I18nFacade);
 
   readonly pluginName = input.required<string>();
-  readonly plugin = input<InstalledPlugin | undefined>(undefined);
+  readonly plugin = input<InstalledAddOn | undefined>(undefined);
 
   readonly closed = output<void>();
   readonly confirmRemove = output<string>();

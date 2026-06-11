@@ -63,7 +63,7 @@ public sealed class MarketplaceStatsAdapterTests : IAsyncLifetime
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static PluginEntity MakePublicPlugin(
+    private static AddOnEntity MakePublicPlugin(
         string author,
         long downloadCount = 0,
         string? nameSuffix = null) =>
@@ -81,7 +81,7 @@ public sealed class MarketplaceStatsAdapterTests : IAsyncLifetime
             UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-    private static PluginEntity MakePrivatePlugin(
+    private static AddOnEntity MakePrivatePlugin(
         Guid ownerOrgId,
         string author,
         long downloadCount = 0) =>
