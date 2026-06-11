@@ -21,7 +21,7 @@ export class SearchHttpAdapter extends SearchPort {
 
   search(query: SearchFilterQuery): Observable<SearchResultsPage> {
     const params = buildSearchQueryParams(query);
-    return this.apiClient.searchPlugins(params).pipe(
+    return this.apiClient.searchAddOns(params).pipe(
       map((envelope) => {
         // The API envelope does not yet carry categorySuggestions at the DTO level.
         // Suggestions are an empty-result hint — surface an empty array by default.
@@ -34,7 +34,7 @@ export class SearchHttpAdapter extends SearchPort {
   discover(criteria: DiscoveryCriteria): Observable<DiscoveryResults> {
     const params = buildDiscoveryQueryParams(criteria);
     return this.apiClient
-      .discoverPlugins(params)
+      .discoverAddOns(params)
       .pipe(map((envelope) => mapDiscoveryEnvelopeToDiscoveryResults(envelope, criteria)));
   }
 }

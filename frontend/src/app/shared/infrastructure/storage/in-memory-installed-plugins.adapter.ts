@@ -1,11 +1,11 @@
-import { InstalledPluginRecord, InstalledPluginsStoragePort } from '../../domain/ports/installed-plugins-storage.port';
+import { InstalledAddOnsStoragePort, InstalledPluginRecord } from '../../domain/ports/installed-plugins-storage.port';
 
 /**
- * In-memory fake adapter for InstalledPluginsStoragePort.
+ * In-memory fake adapter for InstalledAddOnsStoragePort.
  * Does NOT touch window.localStorage — safe for unit tests.
  * Each instance has its own isolated state.
  */
-export class InMemoryInstalledPluginsAdapter extends InstalledPluginsStoragePort {
+export class InMemoryInstalledAddOnsAdapter extends InstalledAddOnsStoragePort {
   private records: InstalledPluginRecord[] = [];
 
   list(): InstalledPluginRecord[] {

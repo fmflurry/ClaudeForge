@@ -1,12 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { ApiClient } from '../../../../shared/infrastructure/http/api-client';
-import type { FeaturedPluginDto } from '../../../../shared/infrastructure/http/api-client.types';
-import { FeaturedPluginPort } from '../../domain/ports/featured-plugin.port';
-import type { FeaturedPlugin } from '../../domain/models/featured-plugin.model';
+import type { FeaturedAddOnDto } from '../../../../shared/infrastructure/http/api-client.types';
+import { FeaturedAddOnPort } from '../../domain/ports/featured-plugin.port';
+import type { FeaturedAddOn } from '../../domain/models/featured-plugin.model';
 
 /** Maps the DTO from the backend to the immutable domain model. */
-function mapDto(dto: FeaturedPluginDto): FeaturedPlugin {
+function mapDto(dto: FeaturedAddOnDto): FeaturedAddOn {
   return {
     pluginId: dto.pluginId,
     name: dto.name,
@@ -16,16 +16,16 @@ function mapDto(dto: FeaturedPluginDto): FeaturedPlugin {
 }
 
 @Injectable()
-export class FeaturedPluginHttpAdapter extends FeaturedPluginPort {
+export class FeaturedAddOnHttpAdapter extends FeaturedAddOnPort {
   private readonly apiClient = inject(ApiClient);
 
   /**
-   * Fetches the featured plugin from the backend.
+   * Fetches the featured add-on from the backend.
    * Maps 404 and any other HTTP/network errors to null so the UI degrades
-   * gracefully — no broken state when no plugin is featured.
+   * gracefully — no broken state when no add-on is featured.
    */
-  override getFeaturedPlugin(): Observable<FeaturedPlugin | null> {
-    return this.apiClient.getFeaturedPlugin().pipe(
+  override getFeaturedAddOn(): Observable<FeaturedAddOn | null> {
+    return this.apiClient.getFeaturedAddOn().pipe(
       map((envelope) => mapDto(envelope.data)),
       catchError(() => of(null)),
     );

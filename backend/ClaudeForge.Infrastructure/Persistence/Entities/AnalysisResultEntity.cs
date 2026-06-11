@@ -43,5 +43,5 @@ public sealed class AnalysisResultEntity
     public DateTimeOffset CreatedAt { get; set; }
 
     // Navigation properties
-    public PluginEntity Plugin { get; set; } = null!;
+    public AddOnEntity AddOn { get; set; } = null!;
 }

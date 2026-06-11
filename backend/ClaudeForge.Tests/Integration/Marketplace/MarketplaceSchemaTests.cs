@@ -17,14 +17,14 @@ namespace ClaudeForge.Tests.Integration.Marketplace;
 /// Expected production types (coder must match these names exactly):
 ///
 ///   ClaudeForge.Infrastructure.Persistence.MarketplaceDbContext
-///     DbSet&lt;PluginEntity&gt;         Plugins
-///     DbSet&lt;PluginVersionEntity&gt;   PluginVersions
+///     DbSet&lt;AddOnEntity&gt;         Plugins
+///     DbSet&lt;AddOnVersionEntity&gt;   PluginVersions
 ///     DbSet&lt;CategoryEntity&gt;        Categories
-///     DbSet&lt;PluginCategoryEntity&gt;  PluginCategories
+///     DbSet&lt;AddOnCategoryEntity&gt;  PluginCategories
 ///     DbSet&lt;TelemetryEventEntity&gt;  TelemetryEvents
 ///     DbSet&lt;TelemetryAggregateEntity&gt; TelemetryAggregates
 ///
-///   ClaudeForge.Infrastructure.Persistence.Entities.PluginEntity
+///   ClaudeForge.Infrastructure.Persistence.Entities.AddOnEntity
 ///     Guid   Id
 ///     string Name
 ///     string NameNormalized   (UNIQUE, generated as lower(name) via EF value converter or DB trigger)
@@ -35,10 +35,10 @@ namespace ClaudeForge.Tests.Integration.Marketplace;
 ///     string? SearchVector    (tsvector column, mapped as string; populated by DB trigger/generated col)
 ///     DateTimeOffset CreatedAt
 ///     DateTimeOffset UpdatedAt
-///     ICollection&lt;PluginVersionEntity&gt; Versions
-///     ICollection&lt;PluginCategoryEntity&gt; PluginCategories
+///     ICollection&lt;AddOnVersionEntity&gt; Versions
+///     ICollection&lt;AddOnCategoryEntity&gt; PluginCategories
 ///
-///   ClaudeForge.Infrastructure.Persistence.Entities.PluginVersionEntity
+///   ClaudeForge.Infrastructure.Persistence.Entities.AddOnVersionEntity
 ///     Guid   Id
 ///     Guid   PluginId          (FK → plugins ON DELETE CASCADE)
 ///     string Version
@@ -52,7 +52,7 @@ namespace ClaudeForge.Tests.Integration.Marketplace;
 ///     long   DownloadCount      default 0
 ///     string? ReadmeText
 ///     DateTimeOffset ReleasedAt
-///     PluginEntity Plugin
+///     AddOnEntity Plugin
 ///
 ///   ClaudeForge.Infrastructure.Persistence.Entities.CategoryEntity
 ///     short  Id
@@ -60,12 +60,12 @@ namespace ClaudeForge.Tests.Integration.Marketplace;
 ///     string Value
 ///     string? DisplayName
 ///     string? Description
-///     ICollection&lt;PluginCategoryEntity&gt; PluginCategories
+///     ICollection&lt;AddOnCategoryEntity&gt; PluginCategories
 ///
-///   ClaudeForge.Infrastructure.Persistence.Entities.PluginCategoryEntity
+///   ClaudeForge.Infrastructure.Persistence.Entities.AddOnCategoryEntity
 ///     Guid  PluginId
 ///     short CategoryId
-///     PluginEntity Plugin
+///     AddOnEntity Plugin
 ///     CategoryEntity Category
 ///
 ///   ClaudeForge.Infrastructure.Persistence.Entities.TelemetryEventEntity
@@ -137,7 +137,7 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     // Helper factories
     // -------------------------------------------------------------------------
 
-    private static PluginEntity MakePlugin(string name, string slug) => new()
+    private static AddOnEntity MakePlugin(string name, string slug) => new()
     {
         Id = Guid.NewGuid(),
         Name = name,
@@ -150,7 +150,7 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
         UpdatedAt = DateTimeOffset.UtcNow,
     };
 
-    private static PluginVersionEntity MakeVersion(
+    private static AddOnVersionEntity MakeVersion(
         Guid pluginId,
         string version,
         long versionSort,
@@ -179,8 +179,8 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity first = MakePlugin("MyPlugin", "my-plugin-t1a");
-        PluginEntity second = MakePlugin("myplugin", "my-plugin-t1b"); // different casing, same normalized
+        AddOnEntity first = MakePlugin("MyPlugin", "my-plugin-t1a");
+        AddOnEntity second = MakePlugin("myplugin", "my-plugin-t1b"); // different casing, same normalized
 
         ctx.Plugins.Add(first);
         await ctx.SaveChangesAsync();
@@ -202,8 +202,8 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity first = MakePlugin("PluginAlpha", "shared-slug-t2");
-        PluginEntity second = MakePlugin("PluginBeta", "shared-slug-t2");
+        AddOnEntity first = MakePlugin("PluginAlpha", "shared-slug-t2");
+        AddOnEntity second = MakePlugin("PluginBeta", "shared-slug-t2");
 
         ctx.Plugins.Add(first);
         await ctx.SaveChangesAsync();
@@ -221,12 +221,12 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("VersionDupPlugin", "version-dup-t3");
+        AddOnEntity plugin = MakePlugin("VersionDupPlugin", "version-dup-t3");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
-        PluginVersionEntity v1 = MakeVersion(plugin.Id, "1.0.0", 1_000_000_000_000L);
-        PluginVersionEntity v2 = MakeVersion(plugin.Id, "1.0.0", 1_000_000_000_000L); // same version
+        AddOnVersionEntity v1 = MakeVersion(plugin.Id, "1.0.0", 1_000_000_000_000L);
+        AddOnVersionEntity v2 = MakeVersion(plugin.Id, "1.0.0", 1_000_000_000_000L); // same version
 
         ctx.PluginVersions.Add(v1);
         await ctx.SaveChangesAsync();
@@ -244,12 +244,12 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("DoubleLatestPlugin", "double-latest-t4a");
+        AddOnEntity plugin = MakePlugin("DoubleLatestPlugin", "double-latest-t4a");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
-        PluginVersionEntity v1 = MakeVersion(plugin.Id, "1.0.0", 1_000_000_000_000L, isLatest: true);
-        PluginVersionEntity v2 = MakeVersion(plugin.Id, "1.1.0", 1_001_000_000_000L, isLatest: true);
+        AddOnVersionEntity v1 = MakeVersion(plugin.Id, "1.0.0", 1_000_000_000_000L, isLatest: true);
+        AddOnVersionEntity v2 = MakeVersion(plugin.Id, "1.1.0", 1_001_000_000_000L, isLatest: true);
 
         ctx.PluginVersions.Add(v1);
         await ctx.SaveChangesAsync();
@@ -267,13 +267,13 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity pluginA = MakePlugin("LatestPluginA", "latest-plugin-a-t4b");
-        PluginEntity pluginB = MakePlugin("LatestPluginB", "latest-plugin-b-t4b");
+        AddOnEntity pluginA = MakePlugin("LatestPluginA", "latest-plugin-a-t4b");
+        AddOnEntity pluginB = MakePlugin("LatestPluginB", "latest-plugin-b-t4b");
         ctx.Plugins.AddRange(pluginA, pluginB);
         await ctx.SaveChangesAsync();
 
-        PluginVersionEntity vA = MakeVersion(pluginA.Id, "1.0.0", 1_000_000_000_000L, isLatest: true);
-        PluginVersionEntity vB = MakeVersion(pluginB.Id, "1.0.0", 1_000_000_000_000L, isLatest: true);
+        AddOnVersionEntity vA = MakeVersion(pluginA.Id, "1.0.0", 1_000_000_000_000L, isLatest: true);
+        AddOnVersionEntity vB = MakeVersion(pluginB.Id, "1.0.0", 1_000_000_000_000L, isLatest: true);
         ctx.PluginVersions.AddRange(vA, vB);
 
         // Must NOT throw
@@ -314,18 +314,18 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("CascadePlugin", "cascade-plugin-t6");
+        AddOnEntity plugin = MakePlugin("CascadePlugin", "cascade-plugin-t6");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
-        PluginVersionEntity version = MakeVersion(plugin.Id, "1.0.0", 1_000_000_000_000L, isLatest: true);
+        AddOnVersionEntity version = MakeVersion(plugin.Id, "1.0.0", 1_000_000_000_000L, isLatest: true);
         ctx.PluginVersions.Add(version);
 
         CategoryEntity cat = new() { Dimension = "type", Value = "cascade-hook-t6", DisplayName = "Hook" };
         ctx.Categories.Add(cat);
         await ctx.SaveChangesAsync();
 
-        PluginCategoryEntity link = new() { PluginId = plugin.Id, CategoryId = cat.Id };
+        AddOnCategoryEntity link = new() { PluginId = plugin.Id, CategoryId = cat.Id };
         ctx.PluginCategories.Add(link);
         await ctx.SaveChangesAsync();
 
@@ -349,12 +349,12 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("AsyncHelper", "async-helper-t7a");
+        AddOnEntity plugin = MakePlugin("AsyncHelper", "async-helper-t7a");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
         // Re-read from DB to get server-generated value
-        PluginEntity? persisted = await ctx.Plugins
+        AddOnEntity? persisted = await ctx.Plugins
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == plugin.Id);
 
@@ -372,12 +372,12 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("OldToolName", "old-tool-t7b");
+        AddOnEntity plugin = MakePlugin("OldToolName", "old-tool-t7b");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
         // Update name and description — trigger or generated column should refresh search_vector
-        PluginEntity? tracked = await ctx.Plugins.FindAsync(plugin.Id);
+        AddOnEntity? tracked = await ctx.Plugins.FindAsync(plugin.Id);
         Assert.NotNull(tracked);
         tracked!.Name = "NewToolName";
         tracked!.NameNormalized = "newtoolname";
@@ -385,7 +385,7 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
         tracked!.UpdatedAt = DateTimeOffset.UtcNow;
         await ctx.SaveChangesAsync();
 
-        PluginEntity? refreshed = await ctx.Plugins
+        AddOnEntity? refreshed = await ctx.Plugins
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == plugin.Id);
 
@@ -404,7 +404,7 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("SortPlugin", "sort-plugin-t8");
+        AddOnEntity plugin = MakePlugin("SortPlugin", "sort-plugin-t8");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
@@ -413,9 +413,9 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
         long sort1100 = new ClaudeForge.Core.Domain.Plugins.SemVer(1, 10, 0).ToVersionSort();
         long sort200 = new ClaudeForge.Core.Domain.Plugins.SemVer(2, 0, 0).ToVersionSort();
 
-        PluginVersionEntity v190 = MakeVersion(plugin.Id, "1.9.0", sort190);
-        PluginVersionEntity v1100 = MakeVersion(plugin.Id, "1.10.0", sort1100);
-        PluginVersionEntity v200 = MakeVersion(plugin.Id, "2.0.0", sort200);
+        AddOnVersionEntity v190 = MakeVersion(plugin.Id, "1.9.0", sort190);
+        AddOnVersionEntity v1100 = MakeVersion(plugin.Id, "1.10.0", sort1100);
+        AddOnVersionEntity v200 = MakeVersion(plugin.Id, "2.0.0", sort200);
 
         ctx.PluginVersions.AddRange(v190, v1100, v200);
         await ctx.SaveChangesAsync();
@@ -489,10 +489,10 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        // PluginEntity.Name is required (NOT NULL in DB).
+        // AddOnEntity.Name is required (NOT NULL in DB).
         // EF Core will throw either a DbUpdateException (DB constraint) or
         // an InvalidOperationException before even hitting the DB if nullable annotations are correct.
-        PluginEntity invalid = new()
+        AddOnEntity invalid = new()
         {
             Id = Guid.NewGuid(),
             Name = null!,   // violates NOT NULL
@@ -513,11 +513,11 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("NotNullVersionPlugin", "not-null-version-t10");
+        AddOnEntity plugin = MakePlugin("NotNullVersionPlugin", "not-null-version-t10");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
-        PluginVersionEntity invalid = new()
+        AddOnVersionEntity invalid = new()
         {
             Id = Guid.NewGuid(),
             PluginId = plugin.Id,
@@ -539,7 +539,7 @@ public sealed class MarketplaceSchemaTests : IAsyncLifetime
     {
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity invalid = new()
+        AddOnEntity invalid = new()
         {
             Id = Guid.NewGuid(),
             Name = "NullSlugPlugin",

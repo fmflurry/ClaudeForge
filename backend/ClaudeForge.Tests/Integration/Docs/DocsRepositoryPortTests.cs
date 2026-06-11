@@ -118,9 +118,9 @@ public sealed class DocsRepositoryPortTests : IAsyncLifetime
         };
 
     /// <summary>
-    /// Creates a PluginEntity for seeding plugin README tests.
+    /// Creates a AddOnEntity for seeding plugin README tests.
     /// </summary>
-    private static PluginEntity MakePlugin(string name, string slug) =>
+    private static AddOnEntity MakePlugin(string name, string slug) =>
         new()
         {
             Id = Guid.NewGuid(),
@@ -134,9 +134,9 @@ public sealed class DocsRepositoryPortTests : IAsyncLifetime
         };
 
     /// <summary>
-    /// Creates a PluginVersionEntity with optional readme_text.
+    /// Creates a AddOnVersionEntity with optional readme_text.
     /// </summary>
-    private static PluginVersionEntity MakeVersion(
+    private static AddOnVersionEntity MakeVersion(
         Guid pluginId,
         string version,
         string? readmeText = null,
@@ -483,7 +483,7 @@ public sealed class DocsRepositoryPortTests : IAsyncLifetime
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("AwesomeTool", "awesome-tool");
+        AddOnEntity plugin = MakePlugin("AwesomeTool", "awesome-tool");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
@@ -516,7 +516,7 @@ public sealed class DocsRepositoryPortTests : IAsyncLifetime
         //       "AND the plugin remains functional and installable"
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("SilentPlugin", "silent-plugin");
+        AddOnEntity plugin = MakePlugin("SilentPlugin", "silent-plugin");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 

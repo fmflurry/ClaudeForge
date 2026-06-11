@@ -9,13 +9,13 @@ namespace ClaudeForge.Application.Modules.SecurityAnalysis.UseCases;
 /// Approves a plugin for an organization's safe zone.
 /// Only admin/owner can approve. Plugin must have security_status = "passed".
 /// </summary>
-public sealed class ApprovePluginForOrgUseCase
+public sealed class ApproveAddOnForOrgUseCase
 {
     private readonly ICurrentUser _currentUser;
     private readonly IMembershipStorePort _membershipStore;
     private readonly ISafeZoneStorePort _safeZoneStore;
 
-    public ApprovePluginForOrgUseCase(
+    public ApproveAddOnForOrgUseCase(
         ICurrentUser currentUser,
         IMembershipStorePort membershipStore,
         ISafeZoneStorePort safeZoneStore)
@@ -48,11 +48,11 @@ public sealed class ApprovePluginForOrgUseCase
             throw new ForbiddenException();
 
         // Verify plugin is eligible (passed security analysis)
-        (bool eligible, string? reason) = await _safeZoneStore.IsPluginEligibleAsync(pluginId, ct);
+        (bool eligible, string? reason) = await _safeZoneStore.IsAddOnEligibleAsync(pluginId, ct);
         if (!eligible)
             throw new ProblemDetailsException(reason ?? "Plugin is not eligible for safe zone approval.");
 
         // Approve
-        return await _safeZoneStore.ApprovePluginAsync(orgId, pluginId, pluginVersion, userId, ct);
+        return await _safeZoneStore.ApproveAddOnAsync(orgId, pluginId, pluginVersion, userId, ct);
     }
 }

@@ -1,7 +1,7 @@
 /**
- * Plugin "Docs" tab component.
- * Shows the documentation for a specific plugin.
- * Calls facade.openPluginDoc when pluginSlug input changes.
+ * Add-on "Docs" tab component.
+ * Shows the documentation for a specific add-on.
+ * Calls facade.openPluginDoc when addOnSlug input changes.
  */
 
 import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angular/core';
@@ -10,16 +10,16 @@ import { DocsFacade } from '../../application/facades/docs.facade';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
-  selector: 'cf-plugin-docs-tab',
+  selector: 'cf-addon-docs-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe],
   template: `
     @if (facade.isLoadingDoc()) {
-      <div aria-busy="true" data-testid="loading" class="loading">{{ i18n.t('docs.loading-plugin-doc') }}</div>
+      <div aria-busy="true" data-testid="loading" class="loading">{{ i18n.t('docs.loading-addon-doc') }}</div>
     } @else if (facade.docError(); as errors) {
       <div role="alert" data-testid="error-message" class="error">
-        {{ pluginErrorMessage(errors) }}
+        {{ addOnErrorMessage(errors) }}
       </div>
     } @else if (facade.currentDoc(); as doc) {
       @if (doc.contentMarkdown) {
@@ -42,22 +42,22 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
     }
   `,
 })
-export class PluginDocsTabComponent {
+export class AddOnDocsTabComponent {
   protected readonly facade = inject(DocsFacade);
   protected readonly i18n = inject(I18nFacade);
 
-  readonly pluginSlug = input<string>();
+  readonly addOnSlug = input<string>();
 
   constructor() {
     effect(() => {
-      const slug = this.pluginSlug();
+      const slug = this.addOnSlug();
       if (slug) {
         this.facade.openPluginDoc(slug);
       }
     });
   }
 
-  protected pluginErrorMessage(errors: { code: string; message: string }[]): string {
-    return errors[0]?.message ?? this.i18n.t('docs.plugin-doc-error');
+  protected addOnErrorMessage(errors: { code: string; message: string }[]): string {
+    return errors[0]?.message ?? this.i18n.t('docs.addon-doc-error');
   }
 }

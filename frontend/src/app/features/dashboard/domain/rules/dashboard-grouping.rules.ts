@@ -3,13 +3,13 @@
  * Zero framework or infrastructure dependencies.
  */
 
-import type { DashboardGroup, InstalledPlugin, RecommendedPlugin } from '../models/dashboard.models';
+import type { DashboardGroup, InstalledAddOn, RecommendedAddOn } from '../models/dashboard.models';
 
 /**
- * Groups an array of installed plugins under a single DashboardGroup for the given team.
+ * Groups an array of installed add-ons under a single DashboardGroup for the given team.
  * Returns a new object every call (immutable).
  */
-export function groupPluginsByTeam(plugins: readonly InstalledPlugin[], teamId: string): DashboardGroup {
+export function groupPluginsByTeam(plugins: readonly InstalledAddOn[], teamId: string): DashboardGroup {
   return {
     teamId,
     plugins: [...plugins],
@@ -17,14 +17,14 @@ export function groupPluginsByTeam(plugins: readonly InstalledPlugin[], teamId: 
 }
 
 /**
- * Derives the list of catalog plugins not already installed by the user.
+ * Derives the list of catalog add-ons not already installed by the user.
  * Returns a new array every call (immutable).
  */
 export function deriveRecommended(
   catalogPlugins: readonly { name: string; latestVersion: string | null }[],
-  installedPlugins: readonly InstalledPlugin[],
+  installedPlugins: readonly InstalledAddOn[],
   teamId: string,
-): readonly RecommendedPlugin[] {
+): readonly RecommendedAddOn[] {
   const installedNames = new Set(installedPlugins.map((p) => p.name));
 
   return catalogPlugins

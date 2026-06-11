@@ -32,5 +32,5 @@ public sealed class AnalysisJobEntity
     public DateTimeOffset? CompletedAt { get; set; }
 
     // Navigation properties
-    public PluginEntity Plugin { get; set; } = null!;
+    public AddOnEntity AddOn { get; set; } = null!;
 }

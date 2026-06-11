@@ -1,5 +1,5 @@
 /**
- * RED tests — Task 15.4a: InstalledPluginsTableComponent
+ * RED tests — Task 15.4a: InstalledAddOnsTableComponent
  *
  * Expected production file (does NOT exist yet — tests WILL FAIL):
  *   src/app/features/dashboard/presentation/installed-plugins/installed-plugins-table.component.ts
@@ -12,11 +12,11 @@
  *     changeDetection: ChangeDetectionStrategy.OnPush,
  *     imports: [...],
  *   })
- *   class InstalledPluginsTableComponent {
+ *   class InstalledAddOnsTableComponent {
  *     private readonly facade = inject(DashboardFacade);
  *
  *     // Derived signals from facade:
- *     readonly plugins: Signal<InstalledPlugin[]>        — from facade.installedPlugins
+ *     readonly plugins: Signal<InstalledAddOn[]>        — from facade.installedPlugins
  *     readonly isLoading: Signal<boolean>                — from facade.isLoading
  *     readonly hasError: Signal<boolean>                 — true when facade.error() !== undefined
  *     readonly hasUpdates: Signal<boolean>               — from facade.hasUpdates
@@ -47,9 +47,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
-import { InstalledPluginsTableComponent } from './installed-plugins-table.component';
+import { InstalledAddOnsTableComponent } from './installed-plugins-table.component';
 import { DashboardFacade } from '../../application/facades/dashboard.facade';
-import type { InstalledPlugin, DashboardGroup, RecommendedPlugin } from '../../domain/models/dashboard.models';
+import type { InstalledAddOn, DashboardGroup, RecommendedAddOn } from '../../domain/models/dashboard.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port';
 
@@ -128,14 +128,14 @@ const FR_DASHBOARD_LANGS: Record<string, string> = {
 
 @Injectable()
 class StubDashboardFacade {
-  private readonly _installed = signal<InstalledPlugin[]>([]);
+  private readonly _installed = signal<InstalledAddOn[]>([]);
   private readonly _isLoading = signal(false);
   private readonly _error = signal<{ code: string; message: string }[] | undefined>(undefined);
   private readonly _hasUpdates = signal(false);
   private readonly _groupsByTeam = signal<DashboardGroup>({ teamId: 'team-test', plugins: [] });
-  private readonly _recommended = signal<readonly RecommendedPlugin[]>([]);
+  private readonly _recommended = signal<readonly RecommendedAddOn[]>([]);
 
-  setInstalled(plugins: InstalledPlugin[]): void {
+  setInstalled(plugins: InstalledAddOn[]): void {
     this._installed.set(plugins);
   }
   setLoading(loading: boolean): void {
@@ -148,7 +148,7 @@ class StubDashboardFacade {
     this._hasUpdates.set(hasUpdates);
   }
 
-  get installedPlugins(): Signal<InstalledPlugin[]> {
+  get installedPlugins(): Signal<InstalledAddOn[]> {
     return this._installed;
   }
   get isLoading(): Signal<boolean> {
@@ -163,7 +163,7 @@ class StubDashboardFacade {
   get groupsByTeam(): Signal<DashboardGroup> {
     return this._groupsByTeam;
   }
-  get recommendedPlugins(): Signal<readonly RecommendedPlugin[]> {
+  get recommendedPlugins(): Signal<readonly RecommendedAddOn[]> {
     return this._recommended;
   }
 
@@ -190,7 +190,7 @@ class StubDashboardFacade {
 // Fixtures
 // ---------------------------------------------------------------------------
 
-function makePlugin(overrides: Partial<InstalledPlugin> = {}): InstalledPlugin {
+function makePlugin(overrides: Partial<InstalledAddOn> = {}): InstalledAddOn {
   return {
     name: 'alpha-plugin',
     version: '1.0.0',
@@ -214,14 +214,14 @@ const PLUGIN_UPDATE_AVAILABLE = makePlugin({
 // ---------------------------------------------------------------------------
 
 function setupComponent(): {
-  fixture: ComponentFixture<InstalledPluginsTableComponent>;
+  fixture: ComponentFixture<InstalledAddOnsTableComponent>;
   stub: StubDashboardFacade;
   translocoService: TranslocoService;
 } {
   const stub = new StubDashboardFacade();
   TestBed.configureTestingModule({
     imports: [
-      InstalledPluginsTableComponent,
+      InstalledAddOnsTableComponent,
       TranslocoTestingModule.forRoot({
         langs: { en: EN_DASHBOARD_LANGS, fr: FR_DASHBOARD_LANGS },
         translocoConfig: { availableLangs: ['en', 'fr'], defaultLang: 'en' },
@@ -233,10 +233,10 @@ function setupComponent(): {
       I18nFacade,
       { provide: LanguageStoragePort, useValue: { read: () => null, write: () => undefined } },
     ],
-  }).overrideComponent(InstalledPluginsTableComponent, {
+  }).overrideComponent(InstalledAddOnsTableComponent, {
     set: { changeDetection: ChangeDetectionStrategy.Default },
   });
-  const fixture = TestBed.createComponent(InstalledPluginsTableComponent);
+  const fixture = TestBed.createComponent(InstalledAddOnsTableComponent);
   const translocoService = TestBed.inject(TranslocoService);
   return { fixture, stub, translocoService };
 }
@@ -245,7 +245,7 @@ function setupComponent(): {
 // Selector test
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — selector', () => {
+describe('InstalledAddOnsTableComponent — selector', () => {
   it('should use selector "cf-installed-plugins-table"', () => {
     const { fixture } = setupComponent();
     expect(fixture.componentInstance).toBeDefined();
@@ -256,7 +256,7 @@ describe('InstalledPluginsTableComponent — selector', () => {
 // Loading state
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — loading state', () => {
+describe('InstalledAddOnsTableComponent — loading state', () => {
   it('should render loading indicator when isLoading is true', () => {
     const { fixture, stub } = setupComponent();
     stub.setLoading(true);
@@ -279,7 +279,7 @@ describe('InstalledPluginsTableComponent — loading state', () => {
 // Error state
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — error state', () => {
+describe('InstalledAddOnsTableComponent — error state', () => {
   it('should render error message when error is set', () => {
     const { fixture, stub } = setupComponent();
     stub.setError([{ code: 'LOAD_ERROR', message: 'Failed to load' }]);
@@ -293,7 +293,7 @@ describe('InstalledPluginsTableComponent — error state', () => {
 // Empty state
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — empty state', () => {
+describe('InstalledAddOnsTableComponent — empty state', () => {
   it('should render empty state when plugins array is empty and not loading', () => {
     const { fixture, stub } = setupComponent();
     stub.setInstalled([]);
@@ -316,7 +316,7 @@ describe('InstalledPluginsTableComponent — empty state', () => {
 // Plugin list rendering
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — plugin list rendering', () => {
+describe('InstalledAddOnsTableComponent — plugin list rendering', () => {
   it('should render a row for each plugin', () => {
     const { fixture, stub } = setupComponent();
     stub.setInstalled([PLUGIN_UP_TO_DATE, PLUGIN_UPDATE_AVAILABLE]);
@@ -375,7 +375,7 @@ describe('InstalledPluginsTableComponent — plugin list rendering', () => {
 // Remove interaction
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — remove interaction', () => {
+describe('InstalledAddOnsTableComponent — remove interaction', () => {
   it('should call facade.removeInstalled when onRemove is invoked', () => {
     const { fixture, stub } = setupComponent();
     stub.setInstalled([PLUGIN_UP_TO_DATE]);
@@ -397,7 +397,7 @@ describe('InstalledPluginsTableComponent — remove interaction', () => {
 // View details interaction
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — view details interaction', () => {
+describe('InstalledAddOnsTableComponent — view details interaction', () => {
   it('should emit viewDetails output when onViewDetails is invoked', () => {
     const { fixture } = setupComponent();
     const emitted: string[] = [];
@@ -411,7 +411,7 @@ describe('InstalledPluginsTableComponent — view details interaction', () => {
 // Update interaction
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — update interaction', () => {
+describe('InstalledAddOnsTableComponent — update interaction', () => {
   it('should emit updatePlugin output when onUpdate is invoked', () => {
     const { fixture } = setupComponent();
     const emitted: string[] = [];
@@ -425,7 +425,7 @@ describe('InstalledPluginsTableComponent — update interaction', () => {
 // Architecture boundary
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — architecture boundary', () => {
+describe('InstalledAddOnsTableComponent — architecture boundary', () => {
   it('should compile and instantiate using only DashboardFacade (no store or use-case injection)', () => {
     const { fixture } = setupComponent();
     expect(fixture.componentInstance).toBeDefined();
@@ -436,7 +436,7 @@ describe('InstalledPluginsTableComponent — architecture boundary', () => {
 // i18n — fr assertions
 // ---------------------------------------------------------------------------
 
-describe('InstalledPluginsTableComponent — i18n', () => {
+describe('InstalledAddOnsTableComponent — i18n', () => {
   it('[FR] loading indicator renders French text when lang is fr', () => {
     const { fixture, stub, translocoService } = setupComponent();
     stub.setLoading(true);

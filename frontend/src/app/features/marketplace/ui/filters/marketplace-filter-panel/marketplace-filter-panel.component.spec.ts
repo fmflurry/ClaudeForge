@@ -9,7 +9,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute, Router } from '@angular/router';
 import { MarketplaceFilterPanelComponent } from './marketplace-filter-panel.component';
 import type { PluginManifest } from '../../../domain/rules/marketplace-categorization-filter.rules';
-import { signal } from '@angular/core';
 
 // ---------------------------------------------------------------------------
 // Fixtures

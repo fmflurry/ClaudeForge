@@ -238,7 +238,7 @@ internal sealed class AnalysisWorkerHostedService : IHostedService
 
         // ── Phase 5.1.2: Award karma based on analysis result ──────────────
         IKarmaServicePort karmaService = scope.ServiceProvider.GetRequiredService<IKarmaServicePort>();
-        Guid? authorId = await GetPluginAuthorIdAsync(scope, job.PluginId, ct);
+        Guid? authorId = await GetAddOnAuthorIdAsync(scope, job.PluginId, ct);
 
         if (authorId.HasValue)
         {
@@ -280,7 +280,7 @@ internal sealed class AnalysisWorkerHostedService : IHostedService
     /// Gets the plugin author's user ID.
     /// Uses OwnerUserId from the plugins table.
     /// </summary>
-    private static async Task<Guid?> GetPluginAuthorIdAsync(IServiceScope scope, Guid pluginId, CancellationToken ct)
+    private static async Task<Guid?> GetAddOnAuthorIdAsync(IServiceScope scope, Guid pluginId, CancellationToken ct)
     {
         var db = scope.ServiceProvider.GetRequiredService<MarketplaceDbContext>();
         var plugin = await db.Plugins
@@ -334,7 +334,7 @@ internal sealed class AnalysisWorkerHostedService : IHostedService
             return;
 
         // Auto-approve for the plugin's owner org
-        var entry = new ClaudeForge.Infrastructure.Persistence.Entities.SafeZonePluginEntity
+        var entry = new ClaudeForge.Infrastructure.Persistence.Entities.SafeZoneAddOnEntity
         {
             Id = Guid.NewGuid(),
             OrgId = plugin.OwnerOrgId.Value,

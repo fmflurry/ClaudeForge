@@ -14,15 +14,15 @@
  *
  *   // catalog.store.enum.ts (may be co-located in catalog.store.ts)
  *   enum CatalogStoreEnum {
- *     PLUGINS = 'PLUGINS',
- *     PLUGIN_DETAIL = 'PLUGIN_DETAIL',
+ *     ADDONS = 'ADDONS',
+ *     ADDON_DETAIL = 'ADDON_DETAIL',
  *     CATEGORIES = 'CATEGORIES',
  *   }
  *
  *   // catalog.store.ts
  *   interface CatalogState {
- *     [CatalogStoreEnum.PLUGINS]: ResourceState<PluginSummary[]>;      // includes PaginationMeta on data side via separate key or wrapper
- *     [CatalogStoreEnum.PLUGIN_DETAIL]: ResourceState<PluginDetail>;
+ *     [CatalogStoreEnum.ADDONS]: ResourceState<AddOnSummary[]>;      // includes PaginationMeta on data side via separate key or wrapper
+ *     [CatalogStoreEnum.ADDON_DETAIL]: ResourceState<AddOnDetail>;
  *     [CatalogStoreEnum.CATEGORIES]: ResourceState<Categories>;
  *   }
  *   @Injectable({ providedIn: 'root' })
@@ -30,8 +30,8 @@
  *
  *   // catalog.port.ts
  *   abstract class CatalogPort {
- *     abstract loadPlugins(query: CatalogFilterQuery): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }>;
- *     abstract getPlugin(pluginId: string): Observable<PluginDetail>;
+ *     abstract loadAddOns(query: CatalogFilterQuery): Observable<{ addOns: AddOnSummary[]; meta: PaginationMeta }>;
+ *     abstract getAddOn(pluginId: string): Observable<AddOnDetail>;
  *     abstract getCategories(): Observable<Categories>;
  *   }
  *
@@ -39,18 +39,18 @@
  *   @Injectable()
  *   class CatalogFacade {
  *     // Signals (readonly, derived from store):
- *     get plugins(): Signal<PluginSummary[]>
+ *     get addOns(): Signal<AddOnSummary[]>
  *     get paginationMeta(): Signal<PaginationMeta | undefined>
  *     get categories(): Signal<Categories | undefined>
- *     get selectedPlugin(): Signal<PluginDetail | undefined>
- *     get isLoadingPlugins(): Signal<boolean>
+ *     get selectedAddOn(): Signal<AddOnDetail | undefined>
+ *     get isLoadingAddOns(): Signal<boolean>
  *     get isLoadingDetail(): Signal<boolean>
  *     get isLoadingCategories(): Signal<boolean>
- *     get pluginsError(): Signal<{ code: string; message: string }[] | undefined>
+ *     get addOnsError(): Signal<{ code: string; message: string }[] | undefined>
  *     get detailError(): Signal<{ code: string; message: string }[] | undefined>
  *
  *     // Methods:
- *     loadPlugins(query?: Partial<CatalogFilterQuery>): void
+ *     loadAddOns(query?: Partial<CatalogFilterQuery>): void
  *     setPage(page: number): void
  *     setSort(sort: string, order?: 'asc' | 'desc'): void
  *     setFilters(filters: Partial<Pick<CatalogFilterQuery, 'types' | 'languages' | 'useCases'>>): void
@@ -67,14 +67,14 @@ import { CatalogStore, CatalogStoreEnum } from './catalog.store';
 import type { CatalogState } from './catalog.store';
 import { CatalogFacade } from '../facades/catalog.facade';
 import { CatalogPort } from '../../domain/ports/catalog.port';
-import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '../../domain/models/catalog.models';
+import type { Categories, PaginationMeta, AddOnDetail, AddOnSummary } from '../../domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../../domain/rules/catalog-filter.rules';
 
 // ---------------------------------------------------------------------------
 // Fake CatalogPort for injection
 // ---------------------------------------------------------------------------
 
-const FAKE_PLUGINS: PluginSummary[] = [
+const FAKE_PLUGINS: AddOnSummary[] = [
   {
     pluginId: 'p1',
     name: 'Plugin One',
@@ -98,7 +98,7 @@ const FAKE_META: PaginationMeta = {
   totalPages: 1,
 };
 
-const FAKE_DETAIL: PluginDetail = {
+const FAKE_DETAIL: AddOnDetail = {
   pluginId: 'p1',
   name: 'Plugin One',
   slug: 'plugin-one',
@@ -131,11 +131,11 @@ const FAKE_CATEGORIES: Categories = {
 
 @Injectable()
 class FakeCatalogPort extends CatalogPort {
-  loadPlugins(_query: CatalogFilterQuery): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }> {
-    return of({ plugins: FAKE_PLUGINS, meta: FAKE_META });
+  loadAddOns(_query: CatalogFilterQuery): Observable<{ addOns: AddOnSummary[]; meta: PaginationMeta }> {
+    return of({ addOns: FAKE_PLUGINS, meta: FAKE_META });
   }
 
-  getPlugin(_pluginId: string): Observable<PluginDetail> {
+  getAddOn(_pluginId: string): Observable<AddOnDetail> {
     return of(FAKE_DETAIL);
   }
 
@@ -146,11 +146,11 @@ class FakeCatalogPort extends CatalogPort {
 
 @Injectable()
 class ErrorCatalogPort extends CatalogPort {
-  loadPlugins(_query: CatalogFilterQuery): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }> {
+  loadAddOns(_query: CatalogFilterQuery): Observable<{ addOns: AddOnSummary[]; meta: PaginationMeta }> {
     return throwError(() => new Error('Network error'));
   }
 
-  getPlugin(_pluginId: string): Observable<PluginDetail> {
+  getAddOn(_pluginId: string): Observable<AddOnDetail> {
     return throwError(() => new Error('Not found'));
   }
 
@@ -188,12 +188,12 @@ function setupWithErrorPort(): { store: CatalogStore; facade: CatalogFacade } {
 // ---------------------------------------------------------------------------
 
 describe('CatalogStore — enum keys', () => {
-  it('should have PLUGINS key', () => {
-    expect(CatalogStoreEnum.PLUGINS).toBe('PLUGINS');
+  it('should have ADDONS key', () => {
+    expect(CatalogStoreEnum.ADDONS).toBe('ADDONS');
   });
 
-  it('should have PLUGIN_DETAIL key', () => {
-    expect(CatalogStoreEnum.PLUGIN_DETAIL).toBe('PLUGIN_DETAIL');
+  it('should have ADDON_DETAIL key', () => {
+    expect(CatalogStoreEnum.ADDON_DETAIL).toBe('ADDON_DETAIL');
   });
 
   it('should have CATEGORIES key', () => {
@@ -202,19 +202,19 @@ describe('CatalogStore — enum keys', () => {
 });
 
 describe('CatalogStore — initial state', () => {
-  it('should initialise PLUGINS with empty non-loading state', () => {
+  it('should initialise ADDONS with empty non-loading state', () => {
     TestBed.configureTestingModule({ providers: [CatalogStore] });
     const store = TestBed.inject(CatalogStore);
-    const state: ResourceState<PluginSummary[]> = store.get(CatalogStoreEnum.PLUGINS)();
+    const state: ResourceState<AddOnSummary[]> = store.get(CatalogStoreEnum.ADDONS)();
     expect(state.isLoading).toBeFalsy();
     expect(state.data).toBeUndefined();
     expect(state.status).toBeUndefined();
   });
 
-  it('should initialise PLUGIN_DETAIL with empty non-loading state', () => {
+  it('should initialise ADDON_DETAIL with empty non-loading state', () => {
     TestBed.configureTestingModule({ providers: [CatalogStore] });
     const store = TestBed.inject(CatalogStore);
-    const state: ResourceState<PluginDetail> = store.get(CatalogStoreEnum.PLUGIN_DETAIL)();
+    const state: ResourceState<AddOnDetail> = store.get(CatalogStoreEnum.ADDON_DETAIL)();
     expect(state.isLoading).toBeFalsy();
   });
 
@@ -233,15 +233,15 @@ describe('CatalogStore — type conformance', () => {
     expect(store).toBeInstanceOf(CatalogStore);
   });
 
-  it('PLUGINS state type should accept ResourceState<PluginSummary[]>', () => {
+  it('ADDONS state type should accept ResourceState<AddOnSummary[]>', () => {
     TestBed.configureTestingModule({ providers: [CatalogStore] });
     const store = TestBed.inject(CatalogStore);
-    const partial: Partial<CatalogState[typeof CatalogStoreEnum.PLUGINS]> = {
+    const partial: Partial<CatalogState[typeof CatalogStoreEnum.ADDONS]> = {
       data: FAKE_PLUGINS,
       status: 'Success',
     };
-    store.update(CatalogStoreEnum.PLUGINS, partial);
-    expect(store.get(CatalogStoreEnum.PLUGINS)().status).toBe('Success');
+    store.update(CatalogStoreEnum.ADDONS, partial);
+    expect(store.get(CatalogStoreEnum.ADDONS)().status).toBe('Success');
   });
 });
 
@@ -250,9 +250,9 @@ describe('CatalogStore — type conformance', () => {
 // ---------------------------------------------------------------------------
 
 describe('CatalogFacade — initial signal values', () => {
-  it('plugins signal should return empty array before any load', () => {
+  it('addOns signal should return empty array before any load', () => {
     const { facade } = setupWithFakePort();
-    expect(facade.plugins()).toEqual([]);
+    expect(facade.addOns()).toEqual([]);
   });
 
   it('paginationMeta signal should return undefined before any load', () => {
@@ -265,14 +265,14 @@ describe('CatalogFacade — initial signal values', () => {
     expect(facade.categories()).toBeUndefined();
   });
 
-  it('selectedPlugin signal should return undefined before any detail load', () => {
+  it('selectedAddOn signal should return undefined before any detail load', () => {
     const { facade } = setupWithFakePort();
-    expect(facade.selectedPlugin()).toBeUndefined();
+    expect(facade.selectedAddOn()).toBeUndefined();
   });
 
-  it('isLoadingPlugins should return false initially', () => {
+  it('isLoadingAddOns should return false initially', () => {
     const { facade } = setupWithFakePort();
-    expect(facade.isLoadingPlugins()).toBe(false);
+    expect(facade.isLoadingAddOns()).toBe(false);
   });
 
   it('isLoadingDetail should return false initially', () => {
@@ -285,9 +285,9 @@ describe('CatalogFacade — initial signal values', () => {
     expect(facade.isLoadingCategories()).toBe(false);
   });
 
-  it('pluginsError should return undefined initially', () => {
+  it('addOnsError should return undefined initially', () => {
     const { facade } = setupWithFakePort();
-    expect(facade.pluginsError()).toBeUndefined();
+    expect(facade.addOnsError()).toBeUndefined();
   });
 
   it('detailError should return undefined initially', () => {
@@ -300,36 +300,36 @@ describe('CatalogFacade — initial signal values', () => {
 // CatalogFacade — loadPlugins (success path)
 // ---------------------------------------------------------------------------
 
-describe('CatalogFacade — loadPlugins success', () => {
-  it('should populate the plugins signal after loadPlugins()', () => {
+describe('CatalogFacade — loadAddOns success', () => {
+  it('should populate the addOns signal after loadAddOns()', () => {
     const { facade } = setupWithFakePort();
-    facade.loadPlugins();
-    expect(facade.plugins()).toEqual(FAKE_PLUGINS);
+    facade.loadAddOns();
+    expect(facade.addOns()).toEqual(FAKE_PLUGINS);
   });
 
-  it('should populate paginationMeta after loadPlugins()', () => {
+  it('should populate paginationMeta after loadAddOns()', () => {
     const { facade } = setupWithFakePort();
-    facade.loadPlugins();
+    facade.loadAddOns();
     expect(facade.paginationMeta()).toEqual(FAKE_META);
   });
 
-  it('should set isLoadingPlugins to false after successful load', () => {
+  it('should set isLoadingAddOns to false after successful load', () => {
     const { facade } = setupWithFakePort();
-    facade.loadPlugins();
-    expect(facade.isLoadingPlugins()).toBe(false);
+    facade.loadAddOns();
+    expect(facade.isLoadingAddOns()).toBe(false);
   });
 
-  it('should clear pluginsError after successful load', () => {
+  it('should clear addOnsError after successful load', () => {
     const { facade } = setupWithFakePort();
-    facade.loadPlugins();
-    expect(facade.pluginsError()).toBeUndefined();
+    facade.loadAddOns();
+    expect(facade.addOnsError()).toBeUndefined();
   });
 
   it('should accept query parameters and pass them to the port', () => {
     const { facade } = setupWithFakePort();
     // Should not throw when called with a partial query
-    expect(() => facade.loadPlugins({ types: ['formatter'], page: 2 })).not.toThrow();
-    expect(facade.plugins()).toEqual(FAKE_PLUGINS);
+    expect(() => facade.loadAddOns({ types: ['formatter'], page: 2 })).not.toThrow();
+    expect(facade.addOns()).toEqual(FAKE_PLUGINS);
   });
 });
 
@@ -337,31 +337,31 @@ describe('CatalogFacade — loadPlugins success', () => {
 // CatalogFacade — loadPlugins (error path)
 // ---------------------------------------------------------------------------
 
-describe('CatalogFacade — loadPlugins error', () => {
-  it('should set pluginsError when port throws', () => {
+describe('CatalogFacade — loadAddOns error', () => {
+  it('should set addOnsError when port throws', () => {
     const { facade } = setupWithErrorPort();
-    facade.loadPlugins();
-    expect(facade.pluginsError()).toBeDefined();
-    expect(Array.isArray(facade.pluginsError())).toBe(true);
+    facade.loadAddOns();
+    expect(facade.addOnsError()).toBeDefined();
+    expect(Array.isArray(facade.addOnsError())).toBe(true);
   });
 
   it('should not crash the application when port throws', () => {
     const { facade } = setupWithErrorPort();
-    expect(() => facade.loadPlugins()).not.toThrow();
+    expect(() => facade.loadAddOns()).not.toThrow();
   });
 
-  it('should set isLoadingPlugins to false after error', () => {
+  it('should set isLoadingAddOns to false after error', () => {
     const { facade } = setupWithErrorPort();
-    facade.loadPlugins();
-    expect(facade.isLoadingPlugins()).toBe(false);
+    facade.loadAddOns();
+    expect(facade.isLoadingAddOns()).toBe(false);
   });
 
-  it('should leave plugins as empty array after error', () => {
+  it('should leave addOns as empty array after error', () => {
     const { facade } = setupWithErrorPort();
-    facade.loadPlugins();
+    facade.loadAddOns();
     // Either empty array or undefined — should not have stale successful data
-    const plugins = facade.plugins();
-    expect(Array.isArray(plugins) ? plugins.length : 0).toBe(0);
+    const addOns = facade.addOns();
+    expect(Array.isArray(addOns) ? addOns.length : 0).toBe(0);
   });
 });
 
@@ -370,10 +370,10 @@ describe('CatalogFacade — loadPlugins error', () => {
 // ---------------------------------------------------------------------------
 
 describe('CatalogFacade — loadDetail success', () => {
-  it('should populate selectedPlugin after loadDetail()', () => {
+  it('should populate selectedAddOn after loadDetail()', () => {
     const { facade } = setupWithFakePort();
     facade.loadDetail('p1');
-    expect(facade.selectedPlugin()).toEqual(FAKE_DETAIL);
+    expect(facade.selectedAddOn()).toEqual(FAKE_DETAIL);
   });
 
   it('should set isLoadingDetail to false after successful load', () => {
@@ -437,16 +437,16 @@ describe('CatalogFacade — loadCategories success', () => {
 describe('CatalogFacade — setPage', () => {
   it('should not throw when called with a page number', () => {
     const { facade } = setupWithFakePort();
-    facade.loadPlugins();
+    facade.loadAddOns();
     expect(() => facade.setPage(2)).not.toThrow();
   });
 
   it('should trigger a reload with the updated page', () => {
     const { facade } = setupWithFakePort();
-    facade.loadPlugins();
+    facade.loadAddOns();
     facade.setPage(3);
     // After setPage the fake port still returns FAKE_META (page 1) but list should still be populated
-    expect(facade.plugins()).toEqual(FAKE_PLUGINS);
+    expect(facade.addOns()).toEqual(FAKE_PLUGINS);
   });
 });
 
@@ -495,17 +495,17 @@ describe('CatalogFacade — architecture boundary', () => {
   it('facade public API should only expose signals and named methods', () => {
     const { facade } = setupWithFakePort();
     // Verify signals exist as functions
-    expect(typeof facade.plugins).toBe('function');
+    expect(typeof facade.addOns).toBe('function');
     expect(typeof facade.paginationMeta).toBe('function');
     expect(typeof facade.categories).toBe('function');
-    expect(typeof facade.selectedPlugin).toBe('function');
-    expect(typeof facade.isLoadingPlugins).toBe('function');
+    expect(typeof facade.selectedAddOn).toBe('function');
+    expect(typeof facade.isLoadingAddOns).toBe('function');
     expect(typeof facade.isLoadingDetail).toBe('function');
     expect(typeof facade.isLoadingCategories).toBe('function');
-    expect(typeof facade.pluginsError).toBe('function');
+    expect(typeof facade.addOnsError).toBe('function');
     expect(typeof facade.detailError).toBe('function');
     // Verify methods exist
-    expect(typeof facade.loadPlugins).toBe('function');
+    expect(typeof facade.loadAddOns).toBe('function');
     expect(typeof facade.setPage).toBe('function');
     expect(typeof facade.setSort).toBe('function');
     expect(typeof facade.setFilters).toBe('function');

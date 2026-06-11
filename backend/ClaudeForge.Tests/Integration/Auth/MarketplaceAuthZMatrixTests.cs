@@ -234,7 +234,7 @@ public sealed class MarketplaceAuthZMatrixTests : IAsyncLifetime
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         await File.WriteAllBytesAsync(path, bytes);
 
-        PluginEntity plugin = new()
+        AddOnEntity plugin = new()
         {
             Id = pluginId,
             Name = name,
@@ -255,7 +255,7 @@ public sealed class MarketplaceAuthZMatrixTests : IAsyncLifetime
         string sha = Convert.ToHexStringLower(
             System.Security.Cryptography.SHA256.HashData(bytes));
 
-        ctx.PluginVersions.Add(new PluginVersionEntity
+        ctx.PluginVersions.Add(new AddOnVersionEntity
         {
             Id = Guid.NewGuid(),
             PluginId = pluginId,

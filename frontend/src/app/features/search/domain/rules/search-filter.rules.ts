@@ -4,8 +4,8 @@
  */
 
 import type {
-  DiscoverPluginsParams,
-  SearchPluginsParams,
+  DiscoverAddOnsParams,
+  SearchAddOnsParams,
 } from '../../../../shared/infrastructure/http/api-client.types';
 import type { DiscoveryCriteria } from '../models/search.models';
 
@@ -29,11 +29,11 @@ export const DEFAULT_SEARCH_PAGE = 1;
 export const DEFAULT_SEARCH_LIMIT = 20;
 
 /**
- * Converts a SearchFilterQuery to the wire SearchPluginsParams shape.
+ * Converts a SearchFilterQuery to the wire SearchAddOnsParams shape.
  * Returns a NEW object each call — never mutates inputs.
  */
-export function buildSearchQueryParams(query: SearchFilterQuery): SearchPluginsParams {
-  const result: SearchPluginsParams = {
+export function buildSearchQueryParams(query: SearchFilterQuery): SearchAddOnsParams {
+  const result: SearchAddOnsParams = {
     page: query.page ?? DEFAULT_SEARCH_PAGE,
     limit: query.limit ?? DEFAULT_SEARCH_LIMIT,
   };
@@ -58,11 +58,11 @@ export function buildSearchQueryParams(query: SearchFilterQuery): SearchPluginsP
 }
 
 /**
- * Converts a DiscoveryCriteria to the wire DiscoverPluginsParams shape.
+ * Converts a DiscoveryCriteria to the wire DiscoverAddOnsParams shape.
  * Returns a NEW object each call — never mutates inputs.
  */
-export function buildDiscoveryQueryParams(criteria: DiscoveryCriteria): DiscoverPluginsParams {
-  const result: DiscoverPluginsParams = {};
+export function buildDiscoveryQueryParams(criteria: DiscoveryCriteria): DiscoverAddOnsParams {
+  const result: DiscoverAddOnsParams = {};
 
   if (criteria.keyword !== undefined) {
     result.keyword = criteria.keyword;

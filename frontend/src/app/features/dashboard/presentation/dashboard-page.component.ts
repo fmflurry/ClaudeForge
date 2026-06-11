@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { DashboardFacade } from '../application/facades/dashboard.facade';
-import { InstalledPluginsTableComponent } from './installed-plugins/installed-plugins-table.component';
-import { PluginDetailsModalComponent } from './plugin-details-modal/plugin-details-modal.component';
-import type { InstalledPlugin } from '../domain/models/dashboard.models';
+import { InstalledAddOnsTableComponent } from './installed-plugins/installed-plugins-table.component';
+import { AddOnDetailsModalComponent } from './plugin-details-modal/plugin-details-modal.component';
+import type { InstalledAddOn } from '../domain/models/dashboard.models';
 import { I18nFacade } from '../../../application/i18n/i18n.facade';
 
 /** Interval between background update checks (5 minutes). */
@@ -12,7 +12,7 @@ const UPDATE_CHECK_INTERVAL_MS = 300_000;
   selector: 'cf-dashboard-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [InstalledPluginsTableComponent, PluginDetailsModalComponent],
+  imports: [InstalledAddOnsTableComponent, AddOnDetailsModalComponent],
   template: `
     <div data-testid="dashboard-page" class="dashboard-page">
       @if (facade.hasUpdates()) {
@@ -27,14 +27,14 @@ const UPDATE_CHECK_INTERVAL_MS = 300_000;
         />
       </div>
 
-      <cf-installed-plugins-table
+      <cf-installed-addons-table
         (viewDetails)="onViewDetails($event)"
         (removePlugin)="onRemovePlugin($event)"
         (updatePlugin)="onUpdatePlugin($event)"
       />
 
       @if (selectedPluginName()) {
-        <cf-plugin-details-modal
+        <cf-addon-details-modal
           [pluginName]="selectedPluginName()!"
           [plugin]="selectedPlugin()"
           (closed)="onModalClosed()"
@@ -55,10 +55,10 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
 
   readonly selectedPluginName = this._selectedPluginName.asReadonly();
 
-  readonly selectedPlugin = computed((): InstalledPlugin | undefined => {
+  readonly selectedPlugin = computed((): InstalledAddOn | undefined => {
     const name = this._selectedPluginName();
     if (!name) return undefined;
-    return this.facade.installedPlugins().find((p: InstalledPlugin) => p.name === name);
+    return this.facade.installedPlugins().find((p: InstalledAddOn) => p.name === name);
   });
 
   ngOnInit(): void {

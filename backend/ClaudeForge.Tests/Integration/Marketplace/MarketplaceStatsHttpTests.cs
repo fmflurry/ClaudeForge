@@ -96,7 +96,7 @@ public sealed class MarketplaceStatsHttpTests : IAsyncLifetime
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static PluginEntity MakePublicPlugin(string author, long downloadCount = 0) =>
+    private static AddOnEntity MakePublicPlugin(string author, long downloadCount = 0) =>
         new()
         {
             Id = Guid.NewGuid(),
@@ -111,7 +111,7 @@ public sealed class MarketplaceStatsHttpTests : IAsyncLifetime
             UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-    private static PluginEntity MakePrivatePlugin(Guid orgId, string author, long downloadCount = 0) =>
+    private static AddOnEntity MakePrivatePlugin(Guid orgId, string author, long downloadCount = 0) =>
         new()
         {
             Id = Guid.NewGuid(),

@@ -4,7 +4,7 @@
  */
 
 import type { InstalledPluginRecord } from '../../../../shared/domain/ports/installed-plugins-storage.port';
-import type { InstalledPlugin, PluginUpdateStatus } from '../models/dashboard.models';
+import type { AddOnUpdateStatus, InstalledAddOn } from '../models/dashboard.models';
 
 /**
  * Compares two semver strings numerically, segment by segment.
@@ -30,7 +30,7 @@ export function compareSemVer(a: string, b: string): number {
  * Derives update status by comparing installed version against the latest catalog version.
  * Returns 'up-to-date' when latestVersion is null, empty, or not strictly greater.
  */
-export function computeUpdateStatus(installedVersion: string, latestVersion: string | null): PluginUpdateStatus {
+export function computeUpdateStatus(installedVersion: string, latestVersion: string | null): AddOnUpdateStatus {
   if (!latestVersion) {
     return 'up-to-date';
   }
@@ -39,11 +39,11 @@ export function computeUpdateStatus(installedVersion: string, latestVersion: str
 }
 
 /**
- * Maps an InstalledPluginRecord (storage model) to an InstalledPlugin view-model,
+ * Maps an InstalledPluginRecord (storage model) to an InstalledAddOn view-model,
  * enriching it with the computed update status.
  * Pure function — no side-effects, returns a new object every call.
  */
-export function enrichInstalledPlugin(record: InstalledPluginRecord, latestVersion: string | null): InstalledPlugin {
+export function enrichInstalledPlugin(record: InstalledPluginRecord, latestVersion: string | null): InstalledAddOn {
   return {
     name: record.name,
     version: record.version,

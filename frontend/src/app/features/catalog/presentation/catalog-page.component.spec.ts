@@ -7,7 +7,7 @@ import { ChangeDetectionStrategy, Injectable, Signal, signal } from '@angular/co
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { CatalogPageComponent } from './catalog-page.component';
 import { CatalogFacade } from '../application/facades/catalog.facade';
-import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '../domain/models/catalog.models';
+import type { Categories, PaginationMeta, AddOnDetail, AddOnSummary } from '../domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../domain/rules/catalog-filter.rules';
 import { I18nFacade } from '../../../application/i18n/i18n.facade';
 import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
@@ -49,21 +49,21 @@ const EN_CATALOG_LANGS: Record<string, string> = {
 
 @Injectable()
 class StubCatalogFacade {
-  private readonly _plugins = signal<PluginSummary[]>([]);
+  private readonly _addOns = signal<AddOnSummary[]>([]);
   private readonly _paginationMeta = signal<PaginationMeta | undefined>(undefined);
   private readonly _categories = signal<Categories | undefined>(undefined);
-  private readonly _selectedPlugin = signal<PluginDetail | undefined>(undefined);
-  private readonly _isLoadingPlugins = signal(false);
+  private readonly _selectedAddOn = signal<AddOnDetail | undefined>(undefined);
+  private readonly _isLoadingAddOns = signal(false);
   private readonly _isLoadingDetail = signal(false);
   private readonly _isLoadingCategories = signal(false);
-  private readonly _pluginsError = signal<{ code: string; message: string }[] | undefined>(undefined);
+  private readonly _addOnsError = signal<{ code: string; message: string }[] | undefined>(undefined);
   private readonly _detailError = signal<{ code: string; message: string }[] | undefined>(undefined);
 
-  loadPluginsCalls = 0;
+  loadAddOnsCalls = 0;
   loadCategoriesCalls = 0;
 
-  get plugins(): Signal<PluginSummary[]> {
-    return this._plugins;
+  get addOns(): Signal<AddOnSummary[]> {
+    return this._addOns;
   }
   get paginationMeta(): Signal<PaginationMeta | undefined> {
     return this._paginationMeta;
@@ -71,11 +71,11 @@ class StubCatalogFacade {
   get categories(): Signal<Categories | undefined> {
     return this._categories;
   }
-  get selectedPlugin(): Signal<PluginDetail | undefined> {
-    return this._selectedPlugin;
+  get selectedAddOn(): Signal<AddOnDetail | undefined> {
+    return this._selectedAddOn;
   }
-  get isLoadingPlugins(): Signal<boolean> {
-    return this._isLoadingPlugins;
+  get isLoadingAddOns(): Signal<boolean> {
+    return this._isLoadingAddOns;
   }
   get isLoadingDetail(): Signal<boolean> {
     return this._isLoadingDetail;
@@ -83,15 +83,15 @@ class StubCatalogFacade {
   get isLoadingCategories(): Signal<boolean> {
     return this._isLoadingCategories;
   }
-  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> {
-    return this._pluginsError;
+  get addOnsError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._addOnsError;
   }
   get detailError(): Signal<{ code: string; message: string }[] | undefined> {
     return this._detailError;
   }
 
-  loadPlugins(_query?: Partial<CatalogFilterQuery>): void {
-    this.loadPluginsCalls++;
+  loadAddOns(_query?: Partial<CatalogFilterQuery>): void {
+    this.loadAddOnsCalls++;
   }
   loadCategories(): void {
     this.loadCategoriesCalls++;
@@ -145,10 +145,10 @@ function setup(): { fixture: ComponentFixture<CatalogPageComponent>; stub: StubC
 // ---------------------------------------------------------------------------
 
 describe('CatalogPageComponent — ngOnInit wiring', () => {
-  it('should call facade.loadPlugins on init', () => {
+  it('should call facade.loadAddOns on init', () => {
     const { fixture, stub } = setup();
     fixture.detectChanges();
-    expect(stub.loadPluginsCalls).toBeGreaterThan(0);
+    expect(stub.loadAddOnsCalls).toBeGreaterThan(0);
   });
 
   it('should call facade.loadCategories on init', () => {

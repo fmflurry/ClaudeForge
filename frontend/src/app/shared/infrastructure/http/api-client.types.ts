@@ -41,7 +41,7 @@ export interface ApiError {
 // Plugin Catalog
 // ---------------------------------------------------------------------------
 
-export interface PluginVersionDto {
+export interface AddOnVersionDto {
   pluginId: string;
   version: string;
   isLatest: boolean;
@@ -50,7 +50,7 @@ export interface PluginVersionDto {
   createdAt: string;
 }
 
-export interface PluginDto {
+export interface AddOnDto {
   pluginId: string;
   name: string;
   slug: string;
@@ -61,7 +61,7 @@ export interface PluginDto {
   useCaseTags: string[];
   downloadCount: number;
   latestVersion: string | null;
-  versions: PluginVersionDto[];
+  versions: AddOnVersionDto[];
   createdAt: string;
   updatedAt: string;
 }
@@ -113,7 +113,7 @@ export interface DiscoveryResultDto {
 // Plugin Publishing
 // ---------------------------------------------------------------------------
 
-export interface UploadPluginResponseDto {
+export interface UploadAddOnResponseDto {
   pluginId: string;
   version: string;
 }
@@ -153,7 +153,7 @@ export interface DocPageDto {
 // Query params
 // ---------------------------------------------------------------------------
 
-export interface ListPluginsParams {
+export interface ListAddOnsParams {
   page?: number;
   limit?: number;
   sort?: string;
@@ -163,7 +163,7 @@ export interface ListPluginsParams {
   useCase?: string[];
 }
 
-export interface SearchPluginsParams {
+export interface SearchAddOnsParams {
   q?: string;
   type?: string[];
   language?: string[];
@@ -172,7 +172,7 @@ export interface SearchPluginsParams {
   limit?: number;
 }
 
-export interface DiscoverPluginsParams {
+export interface DiscoverAddOnsParams {
   keyword?: string;
   language?: string[];
   useCase?: string[];
@@ -205,13 +205,13 @@ export interface MarketplaceStatsDto {
 // Featured Plugin
 // ---------------------------------------------------------------------------
 
-export interface FeaturedPluginDto {
+export interface FeaturedAddOnDto {
   pluginId: string;
   name: string;
   slug: string;
   latestVersion: string | null;
 }
 
-export interface FeaturedPluginEnvelope {
-  data: FeaturedPluginDto;
+export interface FeaturedAddOnEnvelope {
+  data: FeaturedAddOnDto;
 }

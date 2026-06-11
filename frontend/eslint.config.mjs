@@ -4,6 +4,14 @@ import angular from 'angular-eslint';
 
 export default tseslint.config(
   {
+    // Ignore generated build artifacts and test coverage reports.
+    ignores: [
+      '.angular/**',
+      'coverage/**',
+      'dist/**',
+    ],
+  },
+  {
     files: ['**/*.ts'],
     extends: [
       ...tseslint.configs.recommended,

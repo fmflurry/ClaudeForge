@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
 import { CatalogFacade } from '../../application/facades/catalog.facade';
-import type { PluginDetail } from '../../domain/models/catalog.models';
+import type { AddOnDetail } from '../../domain/models/catalog.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
-  selector: 'cf-plugin-detail',
+  selector: 'cf-addon-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
@@ -29,32 +29,32 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         </div>
       }
 
-      @if (!isLoading() && !hasError() && plugin()) {
+      @if (!isLoading() && !hasError() && addon()) {
         <article class="cf-plugin-detail__content">
-          <h2 class="cf-plugin-detail__name">{{ plugin()!.name }}</h2>
-          <p class="cf-plugin-detail__description">{{ plugin()!.description }}</p>
+          <h2 class="cf-plugin-detail__name">{{ addon()!.name }}</h2>
+          <p class="cf-plugin-detail__description">{{ addon()!.description }}</p>
 
           <dl class="cf-plugin-detail__meta">
             <dt>{{ i18n.t('catalog.meta-author') }}</dt>
-            <dd>{{ plugin()!.author }}</dd>
+            <dd>{{ addon()!.author }}</dd>
 
             <dt>{{ i18n.t('catalog.meta-latest-version') }}</dt>
-            <dd>{{ plugin()!.latestVersion }}</dd>
+            <dd>{{ addon()!.latestVersion }}</dd>
 
             <dt>{{ i18n.t('catalog.meta-downloads') }}</dt>
-            <dd>{{ plugin()!.downloadCount }}</dd>
+            <dd>{{ addon()!.downloadCount }}</dd>
           </dl>
 
           <div class="cf-plugin-detail__tags">
             <h3>{{ i18n.t('catalog.types-heading') }}</h3>
-            @for (type of plugin()!.types; track type) {
+            @for (type of addon()!.types; track type) {
               <span class="cf-badge">{{ type }}</span>
             }
           </div>
 
           <div class="cf-plugin-detail__languages">
             <h3>{{ i18n.t('catalog.languages-heading') }}</h3>
-            @for (lang of plugin()!.languages; track lang) {
+            @for (lang of addon()!.languages; track lang) {
               <span class="cf-badge">{{ lang }}</span>
             }
           </div>
@@ -71,7 +71,7 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
                 </tr>
               </thead>
               <tbody>
-                @for (v of plugin()!.versions; track v.version) {
+                @for (v of addon()!.versions; track v.version) {
                   <tr>
                     <td>{{ v.version }}</td>
                     <td>{{ v.isLatest ? i18n.t('catalog.version-latest') : '' }}</td>
@@ -87,11 +87,11 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
     </div>
   `,
 })
-export class PluginDetailComponent {
+export class AddOnDetailComponent {
   private readonly facade = inject(CatalogFacade);
   protected readonly i18n = inject(I18nFacade);
 
-  readonly plugin: Signal<PluginDetail | undefined> = this.facade.selectedPlugin;
+  readonly addon: Signal<AddOnDetail | undefined> = this.facade.selectedAddOn;
   readonly isLoading: Signal<boolean> = this.facade.isLoadingDetail;
   readonly hasError: Signal<boolean> = computed(() => this.facade.detailError() !== undefined);
 

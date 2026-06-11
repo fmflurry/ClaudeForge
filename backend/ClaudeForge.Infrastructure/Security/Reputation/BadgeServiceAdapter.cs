@@ -221,7 +221,7 @@ public sealed class BadgeServiceAdapter : IBadgeServicePort
     private async Task<AuthorStats> ComputeAuthorStatsAsync(Guid authorId, CancellationToken ct)
     {
         // Find all plugins owned by this author
-        List<PluginEntity> authorPlugins = await _ctx.Plugins
+        List<AddOnEntity> authorPlugins = await _ctx.Plugins
             .AsNoTracking()
             .Where(p => p.OwnerUserId == authorId)
             .ToListAsync(ct);

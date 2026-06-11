@@ -4,22 +4,22 @@
  */
 
 import type {
+  AddOnDto,
+  AddOnVersionDto,
   CategoriesDto,
   CategoryValueDto,
   PaginatedEnvelope,
-  PluginDto,
-  PluginVersionDto,
 } from '../../../../shared/infrastructure/http/api-client.types';
 import type {
+  AddOnDetail,
+  AddOnSummary,
+  AddOnVersion,
   Categories,
   CategoryValue,
   PaginationMeta,
-  PluginDetail,
-  PluginSummary,
-  PluginVersion,
 } from '../models/catalog.models';
 
-export function mapPluginVersionDtoToPluginVersion(dto: PluginVersionDto): PluginVersion {
+export function mapAddOnVersionDtoToAddOnVersion(dto: AddOnVersionDto): AddOnVersion {
   return {
     pluginId: dto.pluginId,
     version: dto.version,
@@ -30,7 +30,7 @@ export function mapPluginVersionDtoToPluginVersion(dto: PluginVersionDto): Plugi
   };
 }
 
-export function mapPluginDtoToPluginSummary(dto: PluginDto): PluginSummary {
+export function mapAddOnDtoToAddOnSummary(dto: AddOnDto): AddOnSummary {
   return {
     pluginId: dto.pluginId,
     name: dto.name,
@@ -47,10 +47,10 @@ export function mapPluginDtoToPluginSummary(dto: PluginDto): PluginSummary {
   };
 }
 
-export function mapPluginDtoToPluginDetail(dto: PluginDto): PluginDetail {
+export function mapAddOnDtoToAddOnDetail(dto: AddOnDto): AddOnDetail {
   return {
-    ...mapPluginDtoToPluginSummary(dto),
-    versions: dto.versions.map(mapPluginVersionDtoToPluginVersion),
+    ...mapAddOnDtoToAddOnSummary(dto),
+    versions: dto.versions.map(mapAddOnVersionDtoToAddOnVersion),
   };
 }
 

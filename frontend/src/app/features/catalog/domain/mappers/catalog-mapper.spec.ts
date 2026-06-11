@@ -8,7 +8,7 @@
  * Production types the coder MUST define:
  *
  *   // catalog.models.ts
- *   type PluginVersion = {
+ *   type AddOnVersion = {
  *     readonly pluginId: string;
  *     readonly version: string;
  *     readonly isLatest: boolean;
@@ -17,7 +17,7 @@
  *     readonly createdAt: Date;
  *   }
  *
- *   type PluginSummary = {
+ *   type AddOnSummary = {
  *     readonly pluginId: string;
  *     readonly name: string;
  *     readonly slug: string;
@@ -32,8 +32,8 @@
  *     readonly updatedAt: Date;
  *   }
  *
- *   type PluginDetail = PluginSummary & {
- *     readonly versions: readonly PluginVersion[];
+ *   type AddOnDetail = AddOnSummary & {
+ *     readonly versions: readonly AddOnVersion[];
  *   }
  *
  *   type CategoryValue = {
@@ -57,9 +57,9 @@
  *   }
  *
  *   // catalog-mapper.ts
- *   function mapPluginVersionDtoToPluginVersion(dto: PluginVersionDto): PluginVersion
- *   function mapPluginDtoToPluginSummary(dto: PluginDto): PluginSummary
- *   function mapPluginDtoToPluginDetail(dto: PluginDto): PluginDetail
+ *   function mapAddOnVersionDtoToAddOnVersion(dto: AddOnVersionDto): AddOnVersion
+ *   function mapAddOnDtoToAddOnSummary(dto: AddOnDto): AddOnSummary
+ *   function mapAddOnDtoToAddOnDetail(dto: AddOnDto): AddOnDetail
  *   function mapCategoryValueDtoToCategoryValue(dto: CategoryValueDto): CategoryValue
  *   function mapCategoriesDtoToCategories(dto: CategoriesDto): Categories
  *   function mapPaginatedEnvelopeToMeta<T>(envelope: PaginatedEnvelope<T>): PaginationMeta
@@ -69,31 +69,31 @@ import {
   mapCategoriesDtoToCategories,
   mapCategoryValueDtoToCategoryValue,
   mapPaginatedEnvelopeToMeta,
-  mapPluginDtoToPluginDetail,
-  mapPluginDtoToPluginSummary,
-  mapPluginVersionDtoToPluginVersion,
+  mapAddOnDtoToAddOnDetail,
+  mapAddOnDtoToAddOnSummary,
+  mapAddOnVersionDtoToAddOnVersion,
 } from './catalog-mapper';
 import type {
   Categories,
   CategoryValue,
   PaginationMeta,
-  PluginDetail,
-  PluginSummary,
-  PluginVersion,
+  AddOnDetail,
+  AddOnSummary,
+  AddOnVersion,
 } from '../models/catalog.models';
 import type {
   CategoriesDto,
   CategoryValueDto,
   PaginatedEnvelope,
-  PluginDto,
-  PluginVersionDto,
+  AddOnDto,
+  AddOnVersionDto,
 } from '../../../../shared/infrastructure/http/api-client.types';
 
 // ---------------------------------------------------------------------------
 // DTO Fixtures
 // ---------------------------------------------------------------------------
 
-const versionDto: PluginVersionDto = {
+const versionDto: AddOnVersionDto = {
   pluginId: 'plugin-abc',
   version: '2.1.0',
   isLatest: true,
@@ -102,7 +102,7 @@ const versionDto: PluginVersionDto = {
   createdAt: '2024-03-15T12:00:00.000Z',
 };
 
-const pluginDto: PluginDto = {
+const pluginDto: AddOnDto = {
   pluginId: 'plugin-abc',
   name: 'Awesome Plugin',
   slug: 'awesome-plugin',
@@ -131,7 +131,7 @@ const categoriesDto: CategoriesDto = {
   useCases: [{ value: 'code-quality', displayName: 'Code Quality', description: 'Quality tools.', count: 5 }],
 };
 
-const paginatedEnvelope: PaginatedEnvelope<PluginDto> = {
+const paginatedEnvelope: PaginatedEnvelope<AddOnDto> = {
   data: [pluginDto],
   totalCount: 1,
   page: 1,
@@ -140,14 +140,14 @@ const paginatedEnvelope: PaginatedEnvelope<PluginDto> = {
 };
 
 // ---------------------------------------------------------------------------
-// mapPluginVersionDtoToPluginVersion
+// mapAddOnVersionDtoToAddOnVersion
 // ---------------------------------------------------------------------------
 
-describe('mapPluginVersionDtoToPluginVersion', () => {
-  let result: PluginVersion;
+describe('mapAddOnVersionDtoToAddOnVersion', () => {
+  let result: AddOnVersion;
 
   beforeEach(() => {
-    result = mapPluginVersionDtoToPluginVersion(versionDto);
+    result = mapAddOnVersionDtoToAddOnVersion(versionDto);
   });
 
   it('should map pluginId', () => {
@@ -176,27 +176,27 @@ describe('mapPluginVersionDtoToPluginVersion', () => {
   });
 
   it('should return a new object each call (immutability — no shared reference)', () => {
-    const r1 = mapPluginVersionDtoToPluginVersion(versionDto);
-    const r2 = mapPluginVersionDtoToPluginVersion(versionDto);
+    const r1 = mapAddOnVersionDtoToAddOnVersion(versionDto);
+    const r2 = mapAddOnVersionDtoToAddOnVersion(versionDto);
     expect(r1).not.toBe(r2);
   });
 
   it('should not mutate the source DTO', () => {
-    const copy: PluginVersionDto = { ...versionDto };
-    mapPluginVersionDtoToPluginVersion(versionDto);
+    const copy: AddOnVersionDto = { ...versionDto };
+    mapAddOnVersionDtoToAddOnVersion(versionDto);
     expect(versionDto).toEqual(copy);
   });
 });
 
 // ---------------------------------------------------------------------------
-// mapPluginDtoToPluginSummary
+// mapAddOnDtoToAddOnSummary
 // ---------------------------------------------------------------------------
 
-describe('mapPluginDtoToPluginSummary', () => {
-  let result: PluginSummary;
+describe('mapAddOnDtoToAddOnSummary', () => {
+  let result: AddOnSummary;
 
   beforeEach(() => {
-    result = mapPluginDtoToPluginSummary(pluginDto);
+    result = mapAddOnDtoToAddOnSummary(pluginDto);
   });
 
   it('should map pluginId', () => {
@@ -240,8 +240,8 @@ describe('mapPluginDtoToPluginSummary', () => {
   });
 
   it('should map latestVersion when null', () => {
-    const nullVersionDto: PluginDto = { ...pluginDto, latestVersion: null };
-    const r = mapPluginDtoToPluginSummary(nullVersionDto);
+    const nullVersionDto: AddOnDto = { ...pluginDto, latestVersion: null };
+    const r = mapAddOnDtoToAddOnSummary(nullVersionDto);
     expect(r.latestVersion).toBeNull();
   });
 
@@ -258,30 +258,30 @@ describe('mapPluginDtoToPluginSummary', () => {
   });
 
   it('should return a new object each call', () => {
-    const r1 = mapPluginDtoToPluginSummary(pluginDto);
-    const r2 = mapPluginDtoToPluginSummary(pluginDto);
+    const r1 = mapAddOnDtoToAddOnSummary(pluginDto);
+    const r2 = mapAddOnDtoToAddOnSummary(pluginDto);
     expect(r1).not.toBe(r2);
   });
 
   it('should not mutate the source DTO', () => {
     const originalTypes = [...pluginDto.types];
-    mapPluginDtoToPluginSummary(pluginDto);
+    mapAddOnDtoToAddOnSummary(pluginDto);
     expect(pluginDto.types).toEqual(originalTypes);
   });
 });
 
 // ---------------------------------------------------------------------------
-// mapPluginDtoToPluginDetail
+// mapAddOnDtoToAddOnDetail
 // ---------------------------------------------------------------------------
 
-describe('mapPluginDtoToPluginDetail', () => {
-  let result: PluginDetail;
+describe('mapAddOnDtoToAddOnDetail', () => {
+  let result: AddOnDetail;
 
   beforeEach(() => {
-    result = mapPluginDtoToPluginDetail(pluginDto);
+    result = mapAddOnDtoToAddOnDetail(pluginDto);
   });
 
-  it('should include all PluginSummary fields', () => {
+  it('should include all AddOnSummary fields', () => {
     expect(result.pluginId).toBe('plugin-abc');
     expect(result.name).toBe('Awesome Plugin');
     expect(result.author).toBe('Jane Dev');
@@ -299,14 +299,14 @@ describe('mapPluginDtoToPluginDetail', () => {
   });
 
   it('should map empty versions array gracefully', () => {
-    const noVersionsDto: PluginDto = { ...pluginDto, versions: [] };
-    const r = mapPluginDtoToPluginDetail(noVersionsDto);
+    const noVersionsDto: AddOnDto = { ...pluginDto, versions: [] };
+    const r = mapAddOnDtoToAddOnDetail(noVersionsDto);
     expect(r.versions).toEqual([]);
   });
 
   it('should return a new object each call', () => {
-    const r1 = mapPluginDtoToPluginDetail(pluginDto);
-    const r2 = mapPluginDtoToPluginDetail(pluginDto);
+    const r1 = mapAddOnDtoToAddOnDetail(pluginDto);
+    const r2 = mapAddOnDtoToAddOnDetail(pluginDto);
     expect(r1).not.toBe(r2);
   });
 });
@@ -414,7 +414,7 @@ describe('mapPaginatedEnvelopeToMeta', () => {
   });
 
   it('should handle multi-page envelopes', () => {
-    const multiPage: PaginatedEnvelope<PluginDto> = {
+    const multiPage: PaginatedEnvelope<AddOnDto> = {
       data: [],
       totalCount: 100,
       page: 3,
@@ -440,16 +440,16 @@ describe('mapPaginatedEnvelopeToMeta', () => {
 
 describe('Mapper immutability — array independence', () => {
   it('mutating the mapped types array must not affect the original DTO', () => {
-    const r = mapPluginDtoToPluginSummary(pluginDto);
+    const r = mapAddOnDtoToAddOnSummary(pluginDto);
     const originalLength = pluginDto.types.length;
     (r.types as string[]).push('injected');
     expect(pluginDto.types).toHaveLength(originalLength);
   });
 
   it('mutating the mapped versions array must not affect the original DTO', () => {
-    const r = mapPluginDtoToPluginDetail(pluginDto);
+    const r = mapAddOnDtoToAddOnDetail(pluginDto);
     const originalLength = pluginDto.versions.length;
-    (r.versions as PluginVersion[]).push({ ...r.versions[0] });
+    (r.versions as AddOnVersion[]).push({ ...r.versions[0] });
     expect(pluginDto.versions).toHaveLength(originalLength);
   });
 });

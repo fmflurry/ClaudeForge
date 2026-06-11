@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output, Signal } from '@angular/core';
 import { DashboardFacade } from '../../application/facades/dashboard.facade';
-import type { InstalledPlugin } from '../../domain/models/dashboard.models';
+import type { InstalledAddOn } from '../../domain/models/dashboard.models';
 import { I18nFacade } from '../../../../application/i18n/i18n.facade';
 
 @Component({
-  selector: 'cf-installed-plugins-table',
+  selector: 'cf-installed-addons-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
@@ -66,12 +66,12 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
     }
   `,
 })
-export class InstalledPluginsTableComponent {
+export class InstalledAddOnsTableComponent {
   private readonly facade = inject(DashboardFacade);
   protected readonly i18n = inject(I18nFacade);
 
   // Derived signals from facade
-  readonly plugins: Signal<InstalledPlugin[]> = computed(() => this.facade.installedPlugins());
+  readonly plugins: Signal<InstalledAddOn[]> = computed(() => this.facade.installedPlugins());
   readonly isLoading: Signal<boolean> = computed(() => this.facade.isLoading());
   readonly hasError: Signal<boolean> = computed(() => this.facade.error() !== undefined);
   readonly hasUpdates: Signal<boolean> = computed(() => this.facade.hasUpdates());

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import type { PluginSummary } from '../../../features/catalog/domain/models/catalog.models';
+import type { AddOnSummary } from '../../../features/catalog/domain/models/catalog.models';
 
 interface OrganizationConfig {
   readonly organizationName: string;
@@ -87,14 +87,14 @@ export class StructuredDataService {
     this.upsertScript(ORG_WEBSITE_MARKER, json);
   }
 
-  injectPluginItemList(plugins: readonly PluginSummary[]): void {
-    const itemListElement: readonly ListItemSchema[] = plugins.map((plugin, index) => ({
+  injectPluginItemList(addOns: readonly AddOnSummary[]): void {
+    const itemListElement: readonly ListItemSchema[] = addOns.map((addOn, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      '@id': plugin.slug,
-      name: plugin.name,
-      description: plugin.description,
-      author: plugin.author,
+      '@id': addOn.slug,
+      name: addOn.name,
+      description: addOn.description,
+      author: addOn.author,
     }));
 
     const schema: ItemListSchema = {

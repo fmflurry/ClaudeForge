@@ -139,7 +139,7 @@ public sealed class DocsHttpTests : IAsyncLifetime
             LastUpdated = lastUpdated ?? DateTimeOffset.UtcNow,
         };
 
-    private static PluginEntity MakePlugin(string name, string slug) =>
+    private static AddOnEntity MakePlugin(string name, string slug) =>
         new()
         {
             Id = Guid.NewGuid(),
@@ -152,7 +152,7 @@ public sealed class DocsHttpTests : IAsyncLifetime
             UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-    private static PluginVersionEntity MakeVersion(
+    private static AddOnVersionEntity MakeVersion(
         Guid pluginId,
         string version,
         string? readmeText,
@@ -506,7 +506,7 @@ public sealed class DocsHttpTests : IAsyncLifetime
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("CoolPlugin", "cool-plugin");
+        AddOnEntity plugin = MakePlugin("CoolPlugin", "cool-plugin");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
@@ -546,7 +546,7 @@ public sealed class DocsHttpTests : IAsyncLifetime
         // Arrange
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
-        PluginEntity plugin = MakePlugin("BareBonePlugin", "bare-bone-plugin");
+        AddOnEntity plugin = MakePlugin("BareBonePlugin", "bare-bone-plugin");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 
@@ -589,7 +589,7 @@ public sealed class DocsHttpTests : IAsyncLifetime
         await using MarketplaceDbContext ctx = _fixture.CreateContext();
 
         // A plugin with no readme_text should not cause search errors
-        PluginEntity plugin = MakePlugin("IncompletePlugin", "incomplete-plugin");
+        AddOnEntity plugin = MakePlugin("IncompletePlugin", "incomplete-plugin");
         ctx.Plugins.Add(plugin);
         await ctx.SaveChangesAsync();
 

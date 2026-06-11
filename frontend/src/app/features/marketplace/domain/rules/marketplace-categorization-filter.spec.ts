@@ -6,7 +6,6 @@ import { describe, it, expect } from 'vitest';
 import type {
   PluginManifest,
   MarketplaceFilters,
-  DeprecatedFilters,
 } from './marketplace-categorization-filter.rules';
 import {
   filterByCategory,

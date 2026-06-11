@@ -38,6 +38,6 @@ public sealed class AppealEntity
     public DateTimeOffset CreatedAt { get; set; }
 
     // Navigation properties
-    public PluginEntity Plugin { get; set; } = null!;
+    public AddOnEntity AddOn { get; set; } = null!;
     public AnalysisResultEntity? AnalysisResult { get; set; }
 }

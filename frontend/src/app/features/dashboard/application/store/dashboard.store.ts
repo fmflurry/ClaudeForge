@@ -5,7 +5,7 @@
 import { Injectable } from '@angular/core';
 import { BaseStore } from '../../../../shared/application/store/base-store';
 import type { ResourceState } from '../../../../shared/application/store/resource-state.model';
-import type { InstalledPlugin } from '../../domain/models/dashboard.models';
+import type { InstalledAddOn } from '../../domain/models/dashboard.models';
 
 export enum DashboardStoreEnum {
   INSTALLED_PLUGINS = 'INSTALLED_PLUGINS',
@@ -13,7 +13,7 @@ export enum DashboardStoreEnum {
 }
 
 export interface DashboardState {
-  [DashboardStoreEnum.INSTALLED_PLUGINS]: ResourceState<InstalledPlugin[]>;
+  [DashboardStoreEnum.INSTALLED_PLUGINS]: ResourceState<InstalledAddOn[]>;
   [DashboardStoreEnum.UPDATE_CHECKS]: ResourceState<Record<string, string | null>>;
 }
 

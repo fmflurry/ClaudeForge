@@ -36,7 +36,7 @@
  *      * Uses injected DOCUMENT — safe for SSR.
  *      * Idempotent: calling again replaces the existing script, does NOT add a duplicate.
  *      *\/
- *     injectPluginItemList(plugins: readonly PluginSummary[]): void
+ *     injectPluginItemList(plugins: readonly AddOnSummary[]): void
  *
  *     /**
  *      * Removes all JSON-LD script tags injected by this service.
@@ -69,7 +69,7 @@
  *     }  // omit potentialAction if searchActionTemplate not provided
  *   }
  *
- *   ItemList (from plugins: PluginSummary[]):
+ *   ItemList (from plugins: AddOnSummary[]):
  *   {
  *     "@context": "https://schema.org",
  *     "@type": "ItemList",
@@ -94,7 +94,7 @@
 import { TestBed } from '@angular/core/testing';
 import { DOCUMENT } from '@angular/common';
 import { StructuredDataService } from './structured-data.service';
-import type { PluginSummary } from '../../../features/catalog/domain/models/catalog.models';
+import type { AddOnSummary } from '../../../features/catalog/domain/models/catalog.models';
 
 // ---------------------------------------------------------------------------
 // Fake DOCUMENT — simulates head element with script injection/removal
@@ -197,7 +197,7 @@ const ORG_CONFIG = {
   searchActionTemplate: 'https://claudeforge.example.com/search?q={search_term_string}',
 } as const;
 
-const PLUGIN_A: PluginSummary = {
+const PLUGIN_A: AddOnSummary = {
   pluginId: 'plugin-uuid-1',
   name: 'TypeScript Linter',
   slug: 'typescript-linter',
@@ -212,7 +212,7 @@ const PLUGIN_A: PluginSummary = {
   updatedAt: new Date('2024-06-01'),
 };
 
-const PLUGIN_B: PluginSummary = {
+const PLUGIN_B: AddOnSummary = {
   pluginId: 'plugin-uuid-2',
   name: 'Python Formatter',
   slug: 'python-formatter',
@@ -227,7 +227,7 @@ const PLUGIN_B: PluginSummary = {
   updatedAt: new Date('2024-07-01'),
 };
 
-const PLUGIN_C: PluginSummary = {
+const PLUGIN_C: AddOnSummary = {
   pluginId: 'plugin-uuid-3',
   name: 'Go Builder',
   slug: 'go-builder',
@@ -242,7 +242,7 @@ const PLUGIN_C: PluginSummary = {
   updatedAt: new Date('2024-08-01'),
 };
 
-const SIX_PLUGINS: readonly PluginSummary[] = [
+const SIX_PLUGINS: readonly AddOnSummary[] = [
   PLUGIN_A,
   PLUGIN_B,
   PLUGIN_C,

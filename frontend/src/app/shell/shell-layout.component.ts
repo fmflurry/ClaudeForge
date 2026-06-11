@@ -248,7 +248,7 @@ export class ShellLayoutComponent implements OnInit, OnDestroy {
     // Subscribe to org-switch events via the contextRegistry singleton.
     // No cross-domain facade injection — catalog reload is triggered by the event.
     this.unsubscribeOrgSwitch = contextRegistry.subscribe<ActiveOrgSwitchedPayload>(ORG_ACTIVE_ORG_SWITCHED, () => {
-      this.catalogFacade.loadPlugins();
+      this.catalogFacade.loadAddOns();
     });
   }
 

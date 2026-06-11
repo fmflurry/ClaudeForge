@@ -9,22 +9,22 @@
  * Production types the coder MUST define:
  *
  *   // dashboard.models.ts
- *   type PluginUpdateStatus = 'up-to-date' | 'update-available';
+ *   type AddOnUpdateStatus = 'up-to-date' | 'update-available';
  *
- *   type InstalledPlugin = {
+ *   type InstalledAddOn = {
  *     readonly name: string;
  *     readonly version: string;
  *     readonly installedAt: string;
- *     readonly status: PluginUpdateStatus;
+ *     readonly status: AddOnUpdateStatus;
  *     readonly latestVersion: string | null;
  *   };
  *
  *   type DashboardGroup = {
  *     readonly teamId: string;
- *     readonly plugins: readonly InstalledPlugin[];
+ *     readonly addOns: readonly InstalledAddOn[];
  *   };
  *
- *   type RecommendedPlugin = {
+ *   type RecommendedAddOn = {
  *     readonly name: string;
  *     readonly latestVersion: string | null;
  *     readonly teamId: string;
@@ -62,10 +62,10 @@
 
 import type { InstalledPluginRecord } from '../../../../shared/domain/ports/installed-plugins-storage.port';
 import type {
-  InstalledPlugin,
+  InstalledAddOn,
   DashboardGroup,
-  PluginUpdateStatus,
-  RecommendedPlugin,
+  AddOnUpdateStatus,
+  RecommendedAddOn,
 } from '../models/dashboard.models';
 import { compareSemVer, computeUpdateStatus, enrichInstalledPlugin } from '../rules/dashboard-update.rules';
 import { groupPluginsByTeam, deriveRecommended } from '../rules/dashboard-grouping.rules';
@@ -83,9 +83,9 @@ function makeRecord(overrides: Partial<InstalledPluginRecord> = {}): InstalledPl
   };
 }
 
-function makeInstalled(overrides: Partial<InstalledPlugin> = {}): InstalledPlugin {
+function makeInstalled(overrides: Partial<InstalledAddOn> = {}): InstalledAddOn {
   return {
-    name: 'my-plugin',
+    name: 'my-addon',
     version: '1.0.0',
     installedAt: '2024-01-01T00:00:00.000Z',
     status: 'up-to-date',
@@ -148,42 +148,42 @@ describe('compareSemVer', () => {
 
 describe('computeUpdateStatus', () => {
   it('returns "up-to-date" when installed equals latest', () => {
-    const status: PluginUpdateStatus = computeUpdateStatus('1.2.3', '1.2.3');
+    const status: AddOnUpdateStatus = computeUpdateStatus('1.2.3', '1.2.3');
     expect(status).toBe('up-to-date');
   });
 
   it('returns "update-available" when latest > installed', () => {
-    const status: PluginUpdateStatus = computeUpdateStatus('1.0.0', '1.0.1');
+    const status: AddOnUpdateStatus = computeUpdateStatus('1.0.0', '1.0.1');
     expect(status).toBe('update-available');
   });
 
   it('returns "update-available" for a major version bump', () => {
-    const status: PluginUpdateStatus = computeUpdateStatus('1.0.0', '2.0.0');
+    const status: AddOnUpdateStatus = computeUpdateStatus('1.0.0', '2.0.0');
     expect(status).toBe('update-available');
   });
 
   it('returns "update-available" for a minor version bump', () => {
-    const status: PluginUpdateStatus = computeUpdateStatus('1.0.0', '1.1.0');
+    const status: AddOnUpdateStatus = computeUpdateStatus('1.0.0', '1.1.0');
     expect(status).toBe('update-available');
   });
 
   it('returns "up-to-date" when installed is ahead of latest (should not happen but is safe)', () => {
-    const status: PluginUpdateStatus = computeUpdateStatus('2.0.0', '1.9.9');
+    const status: AddOnUpdateStatus = computeUpdateStatus('2.0.0', '1.9.9');
     expect(status).toBe('up-to-date');
   });
 
   it('returns "up-to-date" when latestVersion is null', () => {
-    const status: PluginUpdateStatus = computeUpdateStatus('1.0.0', null);
+    const status: AddOnUpdateStatus = computeUpdateStatus('1.0.0', null);
     expect(status).toBe('up-to-date');
   });
 
   it('returns "up-to-date" when latestVersion is empty string', () => {
-    const status: PluginUpdateStatus = computeUpdateStatus('1.0.0', '');
+    const status: AddOnUpdateStatus = computeUpdateStatus('1.0.0', '');
     expect(status).toBe('up-to-date');
   });
 
   it('returns one of the two valid union values', () => {
-    const statuses: PluginUpdateStatus[] = ['up-to-date', 'update-available'];
+    const statuses: AddOnUpdateStatus[] = ['up-to-date', 'update-available'];
     expect(statuses).toContain(computeUpdateStatus('1.0.0', '1.0.1'));
   });
 });
@@ -329,7 +329,7 @@ describe('deriveRecommended', () => {
       { name: 'already-installed', latestVersion: '2.0.0' },
     ];
     const installed = [makeInstalled({ name: 'already-installed' })];
-    const result: readonly RecommendedPlugin[] = deriveRecommended(catalog, installed, 'team-a');
+    const result: readonly RecommendedAddOn[] = deriveRecommended(catalog, installed, 'team-a');
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('not-installed');
   });

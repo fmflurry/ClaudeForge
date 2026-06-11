@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../../../core/config/api-config';
 import { ControlCenterPort } from '../../domain/ports/control-center.port';
 import type {

@@ -1,25 +1,25 @@
 /**
  * Unit tests for catalog use-cases:
- *   - LoadPluginsUseCase
- *   - LoadPluginDetailUseCase
+ *   - LoadAddOnsUseCase
+ *   - LoadAddOnDetailUseCase
  *   - LoadCategoriesUseCase
  */
 
 import { TestBed } from '@angular/core/testing';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { LoadPluginsUseCase } from './load-plugins.use-case';
-import { LoadPluginDetailUseCase } from './load-plugin-detail.use-case';
+import { LoadAddOnsUseCase } from './load-plugins.use-case';
+import { LoadAddOnDetailUseCase } from './load-plugin-detail.use-case';
 import { LoadCategoriesUseCase } from './load-categories.use-case';
 import { CatalogPort } from '../../domain/ports/catalog.port';
-import type { Categories, PaginationMeta, PluginDetail, PluginSummary } from '../../domain/models/catalog.models';
+import type { Categories, PaginationMeta, AddOnDetail, AddOnSummary } from '../../domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../../domain/rules/catalog-filter.rules';
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const SUMMARY: PluginSummary = {
+const SUMMARY: AddOnSummary = {
   pluginId: 'p-1',
   name: 'Awesome Plugin',
   slug: 'awesome',
@@ -36,7 +36,7 @@ const SUMMARY: PluginSummary = {
 
 const META: PaginationMeta = { totalCount: 1, page: 1, limit: 20, totalPages: 1 };
 
-const DETAIL: PluginDetail = { ...SUMMARY, versions: [] };
+const DETAIL: AddOnDetail = { ...SUMMARY, versions: [] };
 
 const CATEGORIES: Categories = {
   types: [{ value: 'formatter', displayName: 'Formatter', description: '', count: 1 }],
@@ -50,11 +50,11 @@ const CATEGORIES: Categories = {
 
 @Injectable()
 class FakeCatalogPort extends CatalogPort {
-  loadPlugins(_query: CatalogFilterQuery): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }> {
-    return of({ plugins: [SUMMARY], meta: META });
+  loadAddOns(_query: CatalogFilterQuery): Observable<{ addOns: AddOnSummary[]; meta: PaginationMeta }> {
+    return of({ addOns: [SUMMARY], meta: META });
   }
 
-  getPlugin(_pluginId: string): Observable<PluginDetail> {
+  getAddOn(_pluginId: string): Observable<AddOnDetail> {
     return of(DETAIL);
   }
 
@@ -64,29 +64,29 @@ class FakeCatalogPort extends CatalogPort {
 }
 
 // ---------------------------------------------------------------------------
-// LoadPluginsUseCase
+// LoadAddOnsUseCase
 // ---------------------------------------------------------------------------
 
-describe('LoadPluginsUseCase', () => {
-  function setup(): LoadPluginsUseCase {
+describe('LoadAddOnsUseCase', () => {
+  function setup(): LoadAddOnsUseCase {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [LoadPluginsUseCase, { provide: CatalogPort, useClass: FakeCatalogPort }],
+      providers: [LoadAddOnsUseCase, { provide: CatalogPort, useClass: FakeCatalogPort }],
     });
-    return TestBed.inject(LoadPluginsUseCase);
+    return TestBed.inject(LoadAddOnsUseCase);
   }
 
-  it('should return plugins from the port', () => {
+  it('should return addOns from the port', () => {
     const useCase = setup();
-    let result: { plugins: PluginSummary[]; meta: PaginationMeta } | undefined;
+    let result: { addOns: AddOnSummary[]; meta: PaginationMeta } | undefined;
     useCase.execute({ page: 1, limit: 20 }).subscribe((r) => (result = r));
-    expect(result!.plugins).toHaveLength(1);
-    expect(result!.plugins[0].pluginId).toBe('p-1');
+    expect(result!.addOns).toHaveLength(1);
+    expect(result!.addOns[0].pluginId).toBe('p-1');
   });
 
   it('should return pagination meta from the port', () => {
     const useCase = setup();
-    let result: { plugins: PluginSummary[]; meta: PaginationMeta } | undefined;
+    let result: { addOns: AddOnSummary[]; meta: PaginationMeta } | undefined;
     useCase.execute({}).subscribe((r) => (result = r));
     expect(result!.meta.totalCount).toBe(1);
   });
@@ -96,11 +96,11 @@ describe('LoadPluginsUseCase', () => {
 
     @Injectable()
     class SpyPort extends CatalogPort {
-      loadPlugins(q: CatalogFilterQuery): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }> {
+      loadAddOns(q: CatalogFilterQuery): Observable<{ addOns: AddOnSummary[]; meta: PaginationMeta }> {
         captured = q;
-        return of({ plugins: [], meta: { totalCount: 0, page: 1, limit: 20, totalPages: 0 } });
+        return of({ addOns: [], meta: { totalCount: 0, page: 1, limit: 20, totalPages: 0 } });
       }
-      getPlugin(_: string): Observable<PluginDetail> {
+      getAddOn(_: string): Observable<AddOnDetail> {
         return of(DETAIL);
       }
       getCategories(): Observable<Categories> {
@@ -110,9 +110,9 @@ describe('LoadPluginsUseCase', () => {
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [LoadPluginsUseCase, { provide: CatalogPort, useClass: SpyPort }],
+      providers: [LoadAddOnsUseCase, { provide: CatalogPort, useClass: SpyPort }],
     });
-    const uc = TestBed.inject(LoadPluginsUseCase);
+    const uc = TestBed.inject(LoadAddOnsUseCase);
     const q: CatalogFilterQuery = { page: 3, limit: 5 };
     uc.execute(q).subscribe();
     expect(captured).toEqual(q);
@@ -126,21 +126,21 @@ describe('LoadPluginsUseCase', () => {
 });
 
 // ---------------------------------------------------------------------------
-// LoadPluginDetailUseCase
+// LoadAddOnDetailUseCase
 // ---------------------------------------------------------------------------
 
-describe('LoadPluginDetailUseCase', () => {
-  function setup(): LoadPluginDetailUseCase {
+describe('LoadAddOnDetailUseCase', () => {
+  function setup(): LoadAddOnDetailUseCase {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [LoadPluginDetailUseCase, { provide: CatalogPort, useClass: FakeCatalogPort }],
+      providers: [LoadAddOnDetailUseCase, { provide: CatalogPort, useClass: FakeCatalogPort }],
     });
-    return TestBed.inject(LoadPluginDetailUseCase);
+    return TestBed.inject(LoadAddOnDetailUseCase);
   }
 
-  it('should return plugin detail from port', () => {
+  it('should return addon detail from port', () => {
     const useCase = setup();
-    let result: PluginDetail | undefined;
+    let result: AddOnDetail | undefined;
     useCase.execute('p-1').subscribe((d) => (result = d));
     expect(result!.pluginId).toBe('p-1');
   });
@@ -150,10 +150,10 @@ describe('LoadPluginDetailUseCase', () => {
 
     @Injectable()
     class SpyPort extends CatalogPort {
-      loadPlugins(_q: CatalogFilterQuery): Observable<{ plugins: PluginSummary[]; meta: PaginationMeta }> {
-        return of({ plugins: [], meta: { totalCount: 0, page: 1, limit: 20, totalPages: 0 } });
+      loadAddOns(_q: CatalogFilterQuery): Observable<{ addOns: AddOnSummary[]; meta: PaginationMeta }> {
+        return of({ addOns: [], meta: { totalCount: 0, page: 1, limit: 20, totalPages: 0 } });
       }
-      getPlugin(id: string): Observable<PluginDetail> {
+      getAddOn(id: string): Observable<AddOnDetail> {
         capturedId = id;
         return of(DETAIL);
       }
@@ -164,9 +164,9 @@ describe('LoadPluginDetailUseCase', () => {
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [LoadPluginDetailUseCase, { provide: CatalogPort, useClass: SpyPort }],
+      providers: [LoadAddOnDetailUseCase, { provide: CatalogPort, useClass: SpyPort }],
     });
-    const uc = TestBed.inject(LoadPluginDetailUseCase);
+    const uc = TestBed.inject(LoadAddOnDetailUseCase);
     uc.execute('plugin-xyz').subscribe();
     expect(capturedId).toBe('plugin-xyz');
   });

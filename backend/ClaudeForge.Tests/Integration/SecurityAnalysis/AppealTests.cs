@@ -34,11 +34,11 @@ public sealed class AppealTests : IDisposable
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private PluginEntity MakePlugin(Guid? id = null, string status = "in_review")
+    private AddOnEntity MakePlugin(Guid? id = null, string status = "in_review")
     {
         Guid pluginId = id ?? Guid.NewGuid();
         string shortId = pluginId.ToString("N")[..6];
-        return new PluginEntity
+        return new AddOnEntity
         {
             Id = pluginId,
             Name = $"TestPlugin-{shortId}",
@@ -78,7 +78,7 @@ public sealed class AppealTests : IDisposable
     public async Task AppealFlow_SubmitAndApprove_AnalysisStatusBecomesPassed()
     {
         // Arrange
-        PluginEntity plugin = MakePlugin(status: "in_review");
+        AddOnEntity plugin = MakePlugin(status: "in_review");
         _db.Plugins.Add(plugin);
 
         AnalysisResultEntity analysis = MakeAnalysisResult(plugin.Id, score: 65m, status: "failed");
@@ -120,7 +120,7 @@ public sealed class AppealTests : IDisposable
         resultEntity.Status = "passed";
 
         // Update plugin
-        PluginEntity? pluginEntity = await _db.Plugins.FindAsync(plugin.Id);
+        AddOnEntity? pluginEntity = await _db.Plugins.FindAsync(plugin.Id);
         Assert.NotNull(pluginEntity);
         pluginEntity.SecurityStatus = "passed";
         pluginEntity.SecurityScore = resultEntity.TotalScore;
@@ -128,7 +128,7 @@ public sealed class AppealTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Assert — plugin status changed
-        PluginEntity? updatedPlugin = await _db.Plugins.FindAsync(plugin.Id);
+        AddOnEntity? updatedPlugin = await _db.Plugins.FindAsync(plugin.Id);
         Assert.NotNull(updatedPlugin);
         Assert.Equal("passed", updatedPlugin.SecurityStatus);
         Assert.Equal(65m, updatedPlugin.SecurityScore);
@@ -152,7 +152,7 @@ public sealed class AppealTests : IDisposable
     public async Task AppealFlow_SubmitAndReject_AnalysisStatusUnchanged()
     {
         // Arrange
-        PluginEntity plugin = MakePlugin(status: "failed");
+        AddOnEntity plugin = MakePlugin(status: "failed");
         _db.Plugins.Add(plugin);
 
         AnalysisResultEntity analysis = MakeAnalysisResult(plugin.Id, score: 30m, status: "failed");
@@ -188,7 +188,7 @@ public sealed class AppealTests : IDisposable
         Assert.Equal("failed", unchangedAnalysis.Status);
 
         // Assert — plugin unchanged
-        PluginEntity? unchangedPlugin = await _db.Plugins.FindAsync(plugin.Id);
+        AddOnEntity? unchangedPlugin = await _db.Plugins.FindAsync(plugin.Id);
         Assert.NotNull(unchangedPlugin);
         Assert.Equal("failed", unchangedPlugin.SecurityStatus);
 
@@ -202,7 +202,7 @@ public sealed class AppealTests : IDisposable
     public async Task AppealFlow_DuplicatePendingAppeal_Detected()
     {
         // Arrange
-        PluginEntity plugin = MakePlugin(status: "in_review");
+        AddOnEntity plugin = MakePlugin(status: "in_review");
         _db.Plugins.Add(plugin);
         await _db.SaveChangesAsync();
 
@@ -239,7 +239,7 @@ public sealed class AppealTests : IDisposable
     public async Task AppealFlow_ResolvedAppeal_AllowsNewAppeal()
     {
         // Arrange
-        PluginEntity plugin = MakePlugin(status: "in_review");
+        AddOnEntity plugin = MakePlugin(status: "in_review");
         _db.Plugins.Add(plugin);
         await _db.SaveChangesAsync();
 
@@ -274,12 +274,12 @@ public sealed class AppealTests : IDisposable
     public async Task AppealFlow_PassedPlugin_AppealChecksPluginStatus()
     {
         // Arrange
-        PluginEntity plugin = MakePlugin(status: "passed");
+        AddOnEntity plugin = MakePlugin(status: "passed");
         _db.Plugins.Add(plugin);
         await _db.SaveChangesAsync();
 
         // Act — simulate the API handler logic: check if plugin is passed
-        PluginEntity? dbPlugin = await _db.Plugins.FindAsync(plugin.Id);
+        AddOnEntity? dbPlugin = await _db.Plugins.FindAsync(plugin.Id);
         Assert.NotNull(dbPlugin);
 
         bool isAlreadyPassed = dbPlugin.SecurityStatus == "passed";
@@ -295,7 +295,7 @@ public sealed class AppealTests : IDisposable
     public async Task AppealFlow_AnalysisResultLinked_Correctly()
     {
         // Arrange
-        PluginEntity plugin = MakePlugin(status: "failed");
+        AddOnEntity plugin = MakePlugin(status: "failed");
         _db.Plugins.Add(plugin);
 
         AnalysisResultEntity analysis = MakeAnalysisResult(plugin.Id, score: 30m, status: "failed");
@@ -332,7 +332,7 @@ public sealed class AppealTests : IDisposable
     [Fact]
     public async Task AppealFlow_NullAnalysisResult_Allowed()
     {
-        PluginEntity plugin = MakePlugin(status: "in_review");
+        AddOnEntity plugin = MakePlugin(status: "in_review");
         _db.Plugins.Add(plugin);
         await _db.SaveChangesAsync();
 

@@ -1,18 +1,18 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CatalogFacade } from '../application/facades/catalog.facade';
-import { PluginListComponent } from './list/plugin-list.component';
-import { PluginDetailComponent } from './detail/plugin-detail.component';
+import { AddOnListComponent } from './list/plugin-list.component';
+import { AddOnDetailComponent } from './detail/plugin-detail.component';
 
 @Component({
   selector: 'cf-catalog-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PluginListComponent, PluginDetailComponent],
+  imports: [AddOnListComponent, AddOnDetailComponent],
   template: `
     @if (showDetail()) {
-      <cf-plugin-detail (backRequested)="onBack()" />
+      <cf-addon-detail (backRequested)="onBack()" />
     } @else {
-      <cf-plugin-list (pluginSelected)="onPluginSelected($event)" />
+      <cf-addon-list (addOnSelected)="onAddOnSelected($event)" />
     }
   `,
 })
@@ -22,11 +22,11 @@ export class CatalogPageComponent implements OnInit {
   readonly showDetail = signal(false);
 
   ngOnInit(): void {
-    this.facade.loadPlugins();
+    this.facade.loadAddOns();
     this.facade.loadCategories();
   }
 
-  onPluginSelected(_pluginId: string): void {
+  onAddOnSelected(_pluginId: string): void {
     this.showDetail.set(true);
   }
 
