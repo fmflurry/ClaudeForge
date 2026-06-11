@@ -284,7 +284,7 @@ public sealed class PluginRepositoryAdapter : IPluginRepositoryPort, ICategoryRe
             CreatedAt = entity.CreatedAt,
             Types = types,
             Languages = languages,
-            UseCases = useCases,
+            UseCaseTags = useCases,
         };
     }
 
@@ -331,7 +331,7 @@ public sealed class PluginRepositoryAdapter : IPluginRepositoryPort, ICategoryRe
             CreatedAt = entity.CreatedAt,
             Types = types,
             Languages = languages,
-            UseCases = useCases,
+            UseCaseTags = useCases,
             Versions = versions,
         };
     }

@@ -587,7 +587,7 @@ public sealed class PluginRepositoryPortTests : IAsyncLifetime
         PluginSummaryDto summary = items[0];
         Assert.Contains("skill", summary.Types);
         Assert.Contains("typescript", summary.Languages);
-        Assert.Contains("dev-team", summary.UseCases);
+        Assert.Contains("dev-team", summary.UseCaseTags);
     }
 
     // -------------------------------------------------------------------------

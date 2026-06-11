@@ -15,5 +15,5 @@ public sealed record PluginSummaryDto
     public required DateTimeOffset CreatedAt { get; init; }
     public required IReadOnlyList<string> Types { get; init; }
     public required IReadOnlyList<string> Languages { get; init; }
-    public required IReadOnlyList<string> UseCases { get; init; }
+    public required IReadOnlyList<string> UseCaseTags { get; init; }
 }

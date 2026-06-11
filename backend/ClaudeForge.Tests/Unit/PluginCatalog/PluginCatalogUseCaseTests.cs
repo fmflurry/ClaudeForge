@@ -53,7 +53,7 @@ public sealed class PluginCatalogUseCaseTests
         CreatedAt = DateTimeOffset.UtcNow,
         Types = [],
         Languages = [],
-        UseCases = [],
+        UseCaseTags = [],
     };
 
     private static PluginDetailDto MakeDetail(string name, IReadOnlyList<PluginVersionDto>? versions = null) => new()
@@ -68,7 +68,7 @@ public sealed class PluginCatalogUseCaseTests
         CreatedAt = DateTimeOffset.UtcNow,
         Types = [],
         Languages = [],
-        UseCases = [],
+        UseCaseTags = [],
         Versions = versions ?? [],
     };
 
