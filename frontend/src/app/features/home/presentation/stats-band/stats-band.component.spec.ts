@@ -27,7 +27,7 @@ import { LanguageStoragePort } from '../../../../core/i18n/language-storage.port
 // Fr map returns French — fr assertions are RED until migration.
 //
 // Key list:
-//   home.stats.section-aria      → "Marketplace statistics" / "Statistiques de la place de marché"
+//   home.stats.section-aria      → "Marketplace statistics" / "Statistiques de la Marketplace"
 //   home.stats.total-plugins     → "Total plugins"          / "Total plugins"
 //   home.stats.total-downloads   → "Total downloads"        / "Total téléchargements"
 //   home.stats.publishers        → "Publishers"             / "Éditeurs"
@@ -50,7 +50,7 @@ const EN_STATS_LANGS: Record<string, string> = {
 };
 
 const FR_STATS_LANGS: Record<string, string> = {
-  'home.stats.section-aria': 'Statistiques de la place de marché',
+  'home.stats.section-aria': 'Statistiques de la Marketplace',
   'home.stats.total-plugins': 'Total plugins',
   'home.stats.total-downloads': 'Total téléchargements',
   'home.stats.publishers': 'Éditeurs',
@@ -638,7 +638,7 @@ describe('StatsBandComponent', () => {
       expect(el.textContent).toContain('Catégories');
     });
 
-    it('[FR] section aria-label is "Statistiques de la place de marché" when lang is fr', () => {
+    it('[FR] section aria-label is "Statistiques de la Marketplace" when lang is fr', () => {
       const { el, fixture, translocoService } = setup((stub) => {
         stub.setStats(SAMPLE_METRICS);
       });
@@ -647,7 +647,7 @@ describe('StatsBandComponent', () => {
       fixture.detectChanges();
 
       const section = el.querySelector('section') as HTMLElement | null;
-      expect(section?.getAttribute('aria-label')).toBe('Statistiques de la place de marché');
+      expect(section?.getAttribute('aria-label')).toBe('Statistiques de la Marketplace');
     });
   });
 });

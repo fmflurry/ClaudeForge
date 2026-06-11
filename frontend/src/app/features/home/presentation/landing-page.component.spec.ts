@@ -5,7 +5,7 @@ import { vi } from 'vitest';
 import { TranslocoTestingModule, TranslocoService } from '@jsverse/transloco';
 import { LandingPageComponent } from './landing-page.component';
 import { CatalogFacade } from '../../catalog/application/facades/catalog.facade';
-import type { Categories, PluginSummary } from '../../catalog/domain/models/catalog.models';
+import type { Categories, AddOnSummary } from '../../catalog/domain/models/catalog.models';
 import type { CatalogFilterQuery } from '../../catalog/domain/rules/catalog-filter.rules';
 import { SeoMetadataService } from '../../../shared/infrastructure/seo/seo-metadata.service';
 import { StructuredDataService } from '../../../shared/infrastructure/seo/structured-data.service';
@@ -14,8 +14,8 @@ import { HomeMetricsFacade } from '../application/facades/home-metrics.facade';
 import type { MarketplaceMetrics } from '../domain/models/marketplace-metrics.model';
 import { I18nFacade } from '../../../application/i18n/i18n.facade';
 import { LanguageStoragePort } from '../../../core/i18n/language-storage.port';
-import { FeaturedPluginFacade } from '../application/facades/featured-plugin.facade';
-import type { FeaturedPlugin } from '../domain/models/featured-plugin.model';
+import { FeaturedAddOnFacade } from '../application/facades/featured-plugin.facade';
+import type { FeaturedAddOn } from '../domain/models/featured-plugin.model';
 import { AuthFacade } from '../../auth/application/facades/auth.facade';
 import type { CurrentUser } from '../../auth/domain/models/auth.models';
 import { EmptyStateComponent } from '../../../shared/design-system/empty-state.component';
@@ -89,7 +89,7 @@ const EN_HOME_LANGS: Record<string, string> = {
 };
 
 const FR_HOME_LANGS: Record<string, string> = {
-  'home.hero-title': 'La place de marché de plugins pour Claude Code',
+  'home.hero-title': 'La Marketplace de plugins pour Claude Code',
   'home.hero-tagline': 'Découvrez, installez et publiez des plugins Claude Code de la communauté — au même endroit.',
   'home.browse-plugins': 'Parcourir les plugins',
   'home.publish-plugin': 'Publier un plugin',
@@ -131,11 +131,11 @@ const FR_HOME_LANGS: Record<string, string> = {
   'home.how.step-share-desc': 'Faire grandir la communauté',
   'home.plugin-card.by': 'par',
   'home.plugin-card.downloads': 'téléchargements',
-  'home.seo.title': 'ClaudeForge — La place de marché de plugins pour Claude Code',
+  'home.seo.title': 'ClaudeForge — La Marketplace de plugins pour Claude Code',
   'home.seo.description': 'Découvrez, installez et publiez des plugins Claude Code de la communauté.',
-  'home.seo.og-title': 'ClaudeForge — La place de marché de plugins pour Claude Code',
+  'home.seo.og-title': 'ClaudeForge — La Marketplace de plugins pour Claude Code',
   'home.seo.og-description': 'Découvrez, installez et publiez des plugins Claude Code de la communauté.',
-  'home.seo.twitter-title': 'ClaudeForge — La place de marché de plugins pour Claude Code',
+  'home.seo.twitter-title': 'ClaudeForge — La Marketplace de plugins pour Claude Code',
   'home.seo.twitter-description': 'Découvrez, installez et publiez des plugins Claude Code de la communauté.',
 };
 
@@ -145,21 +145,21 @@ const FR_HOME_LANGS: Record<string, string> = {
 
 @Injectable()
 class StubCatalogFacade {
-  private readonly _plugins = signal<PluginSummary[]>([]);
-  private readonly _isLoadingPlugins = signal(false);
-  private readonly _pluginsError = signal<{ code: string; message: string }[] | undefined>(undefined);
+  private readonly _addOns = signal<AddOnSummary[]>([]);
+  private readonly _isLoadingAddOns = signal(false);
+  private readonly _addOnsError = signal<{ code: string; message: string }[] | undefined>(undefined);
   private readonly _categories = signal<Categories | undefined>(undefined);
 
-  setPlugins(plugins: PluginSummary[]): void {
-    this._plugins.set(plugins);
+  setPlugins(addOns: AddOnSummary[]): void {
+    this._addOns.set(addOns);
   }
 
   setLoading(loading: boolean): void {
-    this._isLoadingPlugins.set(loading);
+    this._isLoadingAddOns.set(loading);
   }
 
   setError(errors: { code: string; message: string }[]): void {
-    this._pluginsError.set(errors);
+    this._addOnsError.set(errors);
   }
 
   setCategories(cats: Categories | undefined): void {
@@ -167,16 +167,16 @@ class StubCatalogFacade {
   }
 
   // Facade signal getters consumed by component
-  get plugins(): Signal<PluginSummary[]> {
-    return this._plugins;
+  get addOns(): Signal<AddOnSummary[]> {
+    return this._addOns;
   }
 
-  get isLoadingPlugins(): Signal<boolean> {
-    return this._isLoadingPlugins;
+  get isLoadingAddOns(): Signal<boolean> {
+    return this._isLoadingAddOns;
   }
 
-  get pluginsError(): Signal<{ code: string; message: string }[] | undefined> {
-    return this._pluginsError;
+  get addOnsError(): Signal<{ code: string; message: string }[] | undefined> {
+    return this._addOnsError;
   }
 
   get categories(): Signal<Categories | undefined> {
@@ -184,9 +184,9 @@ class StubCatalogFacade {
   }
 
   // Call tracking
-  loadPluginsCalls: Partial<CatalogFilterQuery>[] = [];
-  loadPlugins(query?: Partial<CatalogFilterQuery>): void {
-    this.loadPluginsCalls.push(query ?? {});
+  loadAddOnsCalls: Partial<CatalogFilterQuery>[] = [];
+  loadAddOns(query?: Partial<CatalogFilterQuery>): void {
+    this.loadAddOnsCalls.push(query ?? {});
   }
 
   loadCategoriesCalls = 0;
@@ -196,13 +196,13 @@ class StubCatalogFacade {
 }
 
 @Injectable()
-class StubFeaturedPluginFacade {
-  private readonly _featuredPlugin = signal<FeaturedPlugin | null>(null);
+class StubFeaturedAddOnFacade {
+  private readonly _featuredAddOn = signal<FeaturedAddOn | null>(null);
 
-  readonly featuredPlugin: Signal<FeaturedPlugin | null> = this._featuredPlugin.asReadonly();
+  readonly featuredAddOn: Signal<FeaturedAddOn | null> = this._featuredAddOn.asReadonly();
 
-  setFeaturedPlugin(plugin: FeaturedPlugin | null): void {
-    this._featuredPlugin.set(plugin);
+  setFeaturedPlugin(addOn: FeaturedAddOn | null): void {
+    this._featuredAddOn.set(addOn);
   }
 
   load = vi.fn();
@@ -235,7 +235,7 @@ class StubEmptyStateComponent {
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const makeSummary = (overrides: Partial<PluginSummary> = {}): PluginSummary => ({
+const makeSummary = (overrides: Partial<AddOnSummary> = {}): AddOnSummary => ({
   pluginId: 'plugin-1',
   name: 'Test Plugin',
   slug: 'test-plugin',
@@ -291,7 +291,7 @@ function setup(): {
   fixture: ComponentFixture<LandingPageComponent>;
   component: LandingPageComponent;
   stub: StubCatalogFacade;
-  featuredPluginStub: StubFeaturedPluginFacade;
+  featuredPluginStub: StubFeaturedAddOnFacade;
   authStub: StubAuthFacade;
   seoMetadataSpy: StubSeoMetadataService;
   structuredDataSpy: StubStructuredDataService;
@@ -301,7 +301,7 @@ function setup(): {
   const seoMetadataSpy = new StubSeoMetadataService();
   const structuredDataSpy = new StubStructuredDataService();
   const homeMetricsFacadeStub = new StubHomeMetricsFacade();
-  const featuredPluginStub = new StubFeaturedPluginFacade();
+  const featuredPluginStub = new StubFeaturedAddOnFacade();
   const authStub = new StubAuthFacade();
 
   TestBed.configureTestingModule({
@@ -318,7 +318,7 @@ function setup(): {
     providers: [
       provideRouter([]),
       { provide: CatalogFacade, useValue: stub },
-      { provide: FeaturedPluginFacade, useValue: featuredPluginStub },
+      { provide: FeaturedAddOnFacade, useValue: featuredPluginStub },
       { provide: AuthFacade, useValue: authStub },
       { provide: SeoMetadataService, useValue: seoMetadataSpy },
       { provide: StructuredDataService, useValue: structuredDataSpy },
@@ -695,7 +695,7 @@ describe('LandingPageComponent', () => {
 
   it('calls catalogFacade.loadPlugins on init with sort/order params', () => {
     const { stub } = setup();
-    expect(stub.loadPluginsCalls).toContainEqual({ sort: 'downloadCount', order: 'desc' });
+    expect(stub.loadAddOnsCalls).toContainEqual({ sort: 'downloadCount', order: 'desc' });
   });
 
   // =========================================================================
@@ -775,7 +775,7 @@ describe('LandingPageComponent', () => {
     fixture.detectChanges();
 
     expect(structuredDataSpy.injectPluginItemList).toHaveBeenCalled();
-    const calledWith = structuredDataSpy.injectPluginItemList.mock.calls[0][0] as readonly PluginSummary[];
+    const calledWith = structuredDataSpy.injectPluginItemList.mock.calls[0][0] as readonly AddOnSummary[];
     expect(calledWith.length).toBeGreaterThan(0);
   });
 
@@ -790,7 +790,7 @@ describe('LandingPageComponent', () => {
 
     const calledWith = structuredDataSpy.injectPluginItemList.mock.calls[
       structuredDataSpy.injectPluginItemList.mock.calls.length - 1
-    ][0] as readonly PluginSummary[];
+    ][0] as readonly AddOnSummary[];
     // first element should be the highest-downloaded plugin
     expect(calledWith[0].pluginId).toBe('high');
   });
@@ -805,7 +805,7 @@ describe('LandingPageComponent', () => {
     fixture.detectChanges();
 
     const h1 = fixture.nativeElement.querySelector('h1') as HTMLElement | null;
-    expect(h1?.textContent).toContain('La place de marché de plugins pour Claude Code');
+    expect(h1?.textContent).toContain('La Marketplace de plugins pour Claude Code');
   });
 
   it('[FR] Browse plugins CTA renders "Parcourir les plugins" when lang is fr', () => {

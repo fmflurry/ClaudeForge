@@ -83,7 +83,7 @@
 ## 12. Navy header + Marketplace wording + install page
 
 - [x] 12.1 Retune `--sidebar*` tokens in `theme.css` to a darker navy (deeper, less light; hue ~255–265) for light + dark; re-validate WCAG and update the contrast table.
-- [x] 12.2 i18n: change the hero title so "place de marché" is not translated — use "Marketplace" in both en and fr (`home.hero-title`).
+- [x] 12.2 i18n: change the hero title so "Marketplace" is not translated — use "Marketplace" in both en and fr (`home.hero-title`).
 - [x] 12.3 Create a new `/install` page (route + standalone component + en/fr i18n): how to install the ClaudeForge CLI, how to install plugins, and intro info about plugins.
 - [x] 12.4 Make the showcase caption "via the ClaudeForge CLI / via le CLI de ClaudeForge" a clickable link (routerLink) to `/install`.
 - [x] 12.5 Update landing-page spec/tests for the caption link.

@@ -2,17 +2,17 @@
  * Landing page for the ClaudeForge plugin marketplace.
  *
  * Sections:
- * - Hero: warm aurora surface, headline, install-showcase card (dark code block),
- *   primary CTAs (browse, publish)
- * - Stats band: marketplace-wide metrics
+     * - Hero: warm cream surface with amber/blue gradients, headline, amber-toned
+ *   install-showcase card, primary CTAs (browse, publish)
+ * - Stats band: marketplace-wide metrics (warm light surface)
  * - Featured plugins: real data via CatalogFacade (top-6 by downloadCount)
- * - How-it-works: 4 value-prop cards
- * - Footer: links to catalog and docs (dark surface)
+ * - How-it-works: 4 value-prop cards (warm light surface)
+ * - Footer: dark navy with amber link text (intentionally kept dark)
  *
- * Hero redesign (D3/D4):
- * - Background: wellness-inspired warm cream + slate/mint aurora surface
- * - Text: var(--foreground) — dark on light, WCAG AA compliant
- * - The install code block is the ONLY dark element in the hero
+ * Color scheme (body lightness pass):
+ * - Hero: warm cream (--lp-cream #fff8ee) with amber/blue radial gradients
+ * - Body sections (stats-band, how-it-works): swapped from dark slate to
+ *   warm cream/yellow surfaces with blue accents for a lighter, brighter look
  * - Featured plugin slug drives the CLI command; falls back to generic placeholder
  */
 
@@ -30,7 +30,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { CatalogFacade } from '../../catalog/application/facades/catalog.facade';
-import type { PluginSummary } from '../../catalog/domain/models/catalog.models';
+import type { AddOnSummary } from '../../catalog/domain/models/catalog.models';
 import { EmptyStateComponent } from '../../../shared/design-system/empty-state.component';
 import { ZardBadgeComponent } from '../../../shared/components/badge/badge.component';
 import { ZardButtonComponent } from '../../../shared/components/button/button.component';
@@ -40,15 +40,15 @@ import { StatsBandComponent } from './stats-band/stats-band.component';
 import { SeoMetadataService } from '../../../shared/infrastructure/seo/seo-metadata.service';
 import { StructuredDataService } from '../../../shared/infrastructure/seo/structured-data.service';
 import { I18nFacade } from '../../../application/i18n/i18n.facade';
-import { FeaturedPluginFacade } from '../application/facades/featured-plugin.facade';
-import type { FeaturedPlugin } from '../domain/models/featured-plugin.model';
+import { FeaturedAddOnFacade } from '../application/facades/featured-plugin.facade';
+import type { FeaturedAddOn } from '../domain/models/featured-plugin.model';
 import { AuthFacade } from '../../auth/application/facades/auth.facade';
 import type { CurrentUser } from '../../auth/domain/models/auth.models';
 
-/** Number of plugins shown in the featured section. */
+/** Number of add-ons shown in the featured section. */
 const FEATURED_LIMIT = 6;
 
-/** Fallback CLI command identifier shown when no plugin is featured. */
+/** Fallback CLI command identifier shown when no add-on is featured. */
 const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
 
 @Component({
@@ -65,7 +65,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
   ],
   template: `
     <!-- ================================================================= -->
-    <!-- HERO (warm aurora surface)                                          -->
+    <!-- HERO (warm cream surface with amber/blue gradients)                 -->
     <!-- ================================================================= -->
     <section class="lp-hero" aria-labelledby="lp-hero-title">
       <div class="lp-hero__inner">
@@ -100,16 +100,6 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
 
           <div class="lp-hero__ctas" role="group" [attr.aria-label]="i18n.t('home.aria.primary-actions')">
             <a
-              routerLink="/catalog"
-              z-button
-              zType="default"
-              zSize="lg"
-              class="lp-hero-cta-primary"
-              [attr.aria-label]="i18n.t('home.aria.browse-all')"
-              >{{ i18n.t('home.browse-plugins') }}</a
-            >
-
-            <a
               routerLink="/docs"
               z-button
               zType="outline"
@@ -124,11 +114,11 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         <!-- Install Showcase Card -->
         <div class="lp-showcase" [attr.aria-label]="i18n.t('home.install-showcase.heading')">
           <p class="lp-showcase__heading">{{ i18n.t('home.install-showcase.heading') }}</p>
-          @if (featuredPlugin(); as plugin) {
+          @if (featuredAddOn(); as addOn) {
             <p class="lp-showcase__plugin">
-              <span>{{ plugin.name }}</span>
-              @if (plugin.latestVersion) {
-                <span>v{{ plugin.latestVersion }}</span>
+              <span>{{ addOn.name }}</span>
+              @if (addOn.latestVersion) {
+                <span>v{{ addOn.latestVersion }}</span>
               }
             </p>
           }
@@ -168,55 +158,55 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
             {{ i18n.t('home.popular-heading') }}
           </h2>
 
-          @if (isLoadingPlugins()) {
+          @if (isLoadingAddOns()) {
             <div
               class="lp-featured__loading"
               aria-busy="true"
               role="status"
-              [attr.aria-label]="i18n.t('home.aria.loading-plugins')"
+              [attr.aria-label]="i18n.t('home.aria.loading-addons')"
             >
-              {{ i18n.t('home.loading-plugins') }}
+              {{ i18n.t('home.loading-addons') }}
             </div>
           }
 
-          @if (!isLoadingPlugins() && hasError()) {
+          @if (!isLoadingAddOns() && hasError()) {
             <div role="alert" class="lp-featured__error">
-              {{ i18n.t('home.error-plugins') }}
+              {{ i18n.t('home.error-addons') }}
               <a routerLink="/catalog" class="lp-link">{{ i18n.t('home.error.browse-catalog') }}</a
               >.
             </div>
           }
 
-          @if (!isLoadingPlugins() && !hasError() && featuredPlugins().length === 0) {
-            <cf-empty-state [message]="i18n.t('home.empty-plugins')" />
+          @if (!isLoadingAddOns() && !hasError() && featuredAddOns().length === 0) {
+            <cf-empty-state [message]="i18n.t('home.empty-addons')" />
           }
 
-          @if (!isLoadingPlugins() && !hasError() && featuredPlugins().length > 0) {
-            <ul class="lp-featured__grid" role="list" [attr.aria-label]="i18n.t('home.aria.popular-plugins')">
-              @for (plugin of featuredPlugins(); track plugin.pluginId) {
+          @if (!isLoadingAddOns() && !hasError() && featuredAddOns().length > 0) {
+            <ul class="lp-featured__grid" role="list" [attr.aria-label]="i18n.t('home.aria.popular-addons')">
+              @for (addOn of featuredAddOns(); track addOn.pluginId) {
                 <li class="lp-plugin-card">
                   <z-card class="lp-plugin-card__zcard">
                     <div class="lp-plugin-card__header">
-                      <span class="lp-plugin-card__name">{{ plugin.name }}</span>
-                      @if (plugin.latestVersion) {
-                        <z-badge zType="secondary" zShape="pill">v{{ plugin.latestVersion }}</z-badge>
+                      <span class="lp-plugin-card__name">{{ addOn.name }}</span>
+                      @if (addOn.latestVersion) {
+                        <z-badge zType="secondary" zShape="pill">v{{ addOn.latestVersion }}</z-badge>
                       }
                     </div>
-                    <p class="lp-plugin-card__description">{{ plugin.description }}</p>
+                    <p class="lp-plugin-card__description">{{ addOn.description }}</p>
                     <div class="lp-plugin-card__meta">
                       <span class="lp-plugin-card__author"
-                        >{{ i18n.t('home.plugin-card.by') }} {{ plugin.author }}</span
+                        >{{ i18n.t('home.plugin-card.by') }} {{ addOn.author }}</span
                       >
                       <span
                         class="lp-plugin-card__downloads"
-                        [attr.aria-label]="i18n.t('home.aria.plugin-downloads', { count: plugin.downloadCount })"
+                        [attr.aria-label]="i18n.t('home.aria.addon-downloads', { count: addOn.downloadCount })"
                       >
-                        {{ formatDownloads(plugin.downloadCount) }} {{ i18n.t('home.plugin-card.downloads') }}
+                        {{ formatDownloads(addOn.downloadCount) }} {{ i18n.t('home.plugin-card.downloads') }}
                       </span>
                     </div>
-                    @if (plugin.types.length > 0) {
-                      <div class="lp-plugin-card__tags" [attr.aria-label]="i18n.t('home.aria.plugin-types')">
-                        @for (type of plugin.types; track type) {
+                    @if (addOn.types.length > 0) {
+                      <div class="lp-plugin-card__tags" [attr.aria-label]="i18n.t('home.aria.addon-types')">
+                        @for (type of addOn.types; track type) {
                           <z-badge zType="outline">{{ type }}</z-badge>
                         }
                       </div>
@@ -227,7 +217,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
             </ul>
 
             <div class="lp-featured__cta">
-              <a routerLink="/catalog" z-button zType="outline" zSize="lg">{{ i18n.t('home.view-all-plugins') }}</a>
+              <a routerLink="/catalog" z-button zType="default" zSize="lg">{{ i18n.t('home.view-all-addons') }}</a>
             </div>
           }
         </div>
@@ -291,6 +281,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         --lp-slate-soft: #334155;
         --lp-mint-rgb: 34 197 94;
         --lp-coral-rgb: 251 140 90;
+        --lp-blue-rgb: 59 130 246;
         --lp-border: color-mix(in oklch, var(--lp-slate) 14%, transparent);
         --lp-shadow-soft: 0 18px 45px rgb(15 23 42 / 0.07);
         --lp-shadow-lifted: 0 28px 80px rgb(15 23 42 / 0.13);
@@ -319,28 +310,17 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         letter-spacing: -0.02em;
       }
 
-      /* ── Hero (warm aurora surface) ───────────────────────────────────── */
+      /* ── Hero (warm cream surface with amber/blue gradients) ──────────── */
       .lp-hero {
         position: relative;
         overflow: hidden;
         background:
-          radial-gradient(circle at 14% 18%, rgb(var(--lp-amber-rgb) / 0.48), transparent 24rem),
-          radial-gradient(circle at 78% 16%, rgb(var(--lp-mint-rgb) / 0.16), transparent 23rem),
-          radial-gradient(circle at 55% 95%, rgb(var(--lp-coral-rgb) / 0.13), transparent 25rem),
-          linear-gradient(135deg, var(--lp-cream-soft) 0%, var(--lp-cream) 48%, #ffffff 100%);
-        color: var(--foreground);
+          radial-gradient(circle at 14% 18%, rgb(var(--lp-amber-rgb) / 0.35), transparent 24rem),
+          radial-gradient(circle at 78% 16%, rgb(var(--lp-blue-rgb) / 0.10), transparent 23rem),
+          radial-gradient(circle at 55% 95%, rgb(var(--lp-mint-rgb) / 0.08), transparent 25rem),
+          var(--lp-cream);
+        color: var(--lp-slate);
         padding: 1.5rem 1.5rem 1.25rem;
-      }
-      .lp-hero::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background-image:
-          linear-gradient(rgb(148 163 184 / 0.08) 1px, transparent 1px),
-          linear-gradient(90deg, rgb(148 163 184 / 0.08) 1px, transparent 1px);
-        background-size: 36px 36px;
-        opacity: 0.55;
       }
       .lp-hero__inner {
         position: relative;
@@ -379,17 +359,17 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
       /* ── Search entry ─────────────────────────────────────────────────── */
       .lp-search-entry {
         display: flex;
+        align-items: center;
         gap: 0.625rem;
         width: 100%;
         max-width: 40rem;
         margin: 0 0 1rem;
         padding: 0.375rem;
         box-sizing: border-box;
-        border: 1px solid rgb(255 255 255 / 0.82);
+        border: 1px solid rgb(15 23 42 / 0.15);
         border-radius: 0.875rem;
-        background: rgb(255 255 255 / 0.72);
+        background: #ffffff;
         box-shadow: var(--lp-shadow-soft);
-        backdrop-filter: blur(14px);
       }
       .lp-search-entry__input {
         flex: 1;
@@ -397,57 +377,60 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         padding: 0.625rem 0.75rem;
         border: 1px solid transparent;
         border-radius: 0.625rem;
-        background: var(--lp-cream-soft);
+        background: rgb(255 248 238 / 0.60);
         color: var(--lp-slate);
         font-size: 0.9375rem;
         outline: none;
       }
+      .lp-search-entry__input::placeholder {
+        color: rgb(15 23 42 / 0.40);
+      }
       .lp-search-entry__input:focus {
-        border-color: var(--ring);
-        box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 22%, transparent);
+        border-color: rgb(var(--lp-amber-rgb) / 0.60);
+        box-shadow: 0 0 0 3px rgb(var(--lp-amber-rgb) / 0.18);
       }
       .lp-search-entry__btn {
         flex-shrink: 0;
-        background: var(--lp-slate);
-        color: var(--lp-cream-soft);
-        border-color: var(--lp-slate);
+        background: rgb(var(--lp-amber-rgb));
+        color: var(--lp-slate);
+        border-color: rgb(var(--lp-amber-rgb));
+        font-weight: 600;
       }
       .lp-search-entry__btn:hover {
-        background: #1e293b;
-        border-color: #1e293b;
+        background: rgb(253 224 71);
+        border-color: rgb(253 224 71);
       }
 
-      /* Override z-button defaults for hero CTAs on light background */
+      /* Override z-button defaults for hero CTAs on dark background */
       .lp-hero .lp-hero-cta-primary {
-        background: var(--lp-slate);
-        color: var(--lp-cream-soft);
-        border-color: var(--lp-slate);
-        box-shadow: 0 18px 40px rgb(15 23 42 / 0.18);
+        background: rgb(var(--lp-amber-rgb));
+        color: var(--lp-slate);
+        border-color: rgb(var(--lp-amber-rgb));
+        font-weight: 600;
+        box-shadow: 0 18px 40px rgb(0 0 0 / 0.25);
       }
       .lp-hero .lp-hero-cta-primary:hover {
-        background: #1e293b;
-        border-color: #1e293b;
+        background: rgb(253 224 71);
+        border-color: rgb(253 224 71);
       }
       .lp-hero .lp-hero-cta-primary:focus-visible {
-        outline: 3px solid var(--ring);
+        outline: 3px solid rgb(var(--lp-amber-rgb));
         outline-offset: 2px;
       }
       .lp-hero .lp-hero-cta-secondary {
         color: var(--lp-slate);
-        border-color: rgb(255 255 255 / 0.8);
-        background: rgb(255 255 255 / 0.72);
-        box-shadow: var(--lp-shadow-soft);
-        backdrop-filter: blur(14px);
+        border-color: rgb(15 23 42 / 0.25);
+        background: transparent;
       }
       .lp-hero .lp-hero-cta-secondary:hover {
-        border-color: var(--lp-amber-soft);
-        background: var(--lp-cream-soft);
+        border-color: rgb(15 23 42 / 0.50);
+        background: rgb(15 23 42 / 0.06);
       }
       .lp-hero .lp-hero-cta-secondary:focus-visible {
-        outline: 3px solid var(--ring);
+        outline: 3px solid rgb(var(--lp-amber-rgb));
         outline-offset: 2px;
       }
-      /* ── Install Showcase Card (dark code block — only dark element in hero) */
+      /* ── Install Showcase Card (slightly lighter code block on dark hero) */
       .lp-showcase {
         display: inline-flex;
         flex-direction: column;
@@ -482,12 +465,12 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         min-width: 0;
         box-sizing: border-box;
         overflow-x: auto;
-        background: var(--lp-slate);
-        color: var(--lp-cream-soft);
+        background: #1a273d;
+        color: var(--lp-amber-soft);
         padding: 0.75rem 1.25rem;
         border-radius: 0.5rem;
         font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-        box-shadow: var(--lp-shadow-lifted);
+        box-shadow: 0 28px 80px rgb(0 0 0 / 0.30);
       }
       .lp-showcase__code {
         display: block;
@@ -523,7 +506,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
       }
       .lp-showcase__caption {
         font-size: 0.8125rem;
-        color: color-mix(in oklch, var(--lp-slate) 62%, transparent);
+        color: var(--lp-slate-soft);
         margin: 0;
         text-decoration: underline;
         text-underline-offset: 2px;
@@ -545,7 +528,6 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         display: grid;
         grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
         gap: 1rem 1.5rem;
-        background: var(--background);
       }
       .lp-supporting cf-stats-band {
         grid-column: 1 / -1;
@@ -555,10 +537,12 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         padding: 0;
       }
 
-      /* ── Featured plugins ─────────────────────────────────────────────── */
+      /* ── Featured plugins (popular plugins) ──────────────────────────── */
       .lp-featured {
-        padding: 0;
-        background: var(--background);
+        padding: 1rem;
+        background: var(--lp-cream-soft);
+        border-radius: 1rem;
+        box-shadow: var(--lp-shadow-lifted);
       }
       .lp-featured__loading,
       .lp-featured__error {
@@ -580,6 +564,16 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
       }
       .lp-featured__cta {
         text-align: center;
+      }
+      .lp-featured__cta a {
+        background: rgb(var(--lp-amber-rgb));
+        color: var(--lp-slate);
+        border-color: rgb(var(--lp-amber-rgb));
+        font-weight: 600;
+      }
+      .lp-featured__cta a:hover {
+        background: rgb(253 224 71);
+        border-color: rgb(253 224 71);
       }
 
       /* ── Plugin card ──────────────────────────────────────────────────── */
@@ -634,14 +628,12 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
       /* ── How it works ─────────────────────────────────────────────────── */
       .lp-how {
         padding: 1rem;
-        background:
-          radial-gradient(circle at 12% 0%, rgb(var(--lp-amber-rgb) / 0.2), transparent 18rem),
-          radial-gradient(circle at 100% 100%, rgb(var(--lp-mint-rgb) / 0.14), transparent 18rem), var(--lp-slate);
+        background: var(--lp-cream-soft);
         border-radius: 1rem;
         box-shadow: var(--lp-shadow-lifted);
       }
       .lp-how .lp-section-title {
-        color: #ffffff;
+        color: var(--lp-slate);
       }
       .lp-how__steps {
         display: grid;
@@ -657,10 +649,10 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         gap: 0.375rem;
         min-height: 100%;
         padding: 0.875rem;
-        border: 1px solid rgb(255 255 255 / 0.12);
+        border: 1px solid rgb(15 23 42 / 0.10);
         border-radius: 0.875rem;
-        background: rgb(255 255 255 / 0.08);
-        backdrop-filter: blur(10px);
+        background: #ffffff;
+        box-shadow: 0 4px 16px rgb(15 23 42 / 0.06);
       }
       .lp-how__icon {
         font-size: 1.5rem;
@@ -671,17 +663,17 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         align-items: center;
         justify-content: center;
         border-radius: 0.75rem;
-        background: linear-gradient(135deg, var(--lp-amber-soft), rgb(var(--lp-mint-rgb) / 0.18));
+        background: linear-gradient(135deg, rgb(var(--lp-blue-rgb) / 0.15), rgb(var(--lp-mint-rgb) / 0.15));
       }
       .lp-how__step-title {
         font-size: 1.0625rem;
         font-weight: 700;
-        color: #ffffff;
+        color: var(--lp-slate);
         margin: 0;
       }
       .lp-how__step-desc {
         font-size: 0.9375rem;
-        color: rgb(255 255 255 / 0.72);
+        color: var(--lp-slate-soft);
         line-height: 1.6;
         margin: 0;
       }
@@ -799,7 +791,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
 })
 export class LandingPageComponent implements OnInit {
   private readonly catalogFacade = inject(CatalogFacade);
-  private readonly featuredPluginFacade = inject(FeaturedPluginFacade);
+  private readonly featuredAddOnFacade = inject(FeaturedAddOnFacade);
   private readonly authFacade = inject(AuthFacade);
   private readonly router = inject(Router);
   private readonly seoMetadata = inject(SeoMetadataService);
@@ -807,23 +799,23 @@ export class LandingPageComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   protected readonly i18n = inject(I18nFacade);
 
-  readonly isLoadingPlugins: Signal<boolean> = this.catalogFacade.isLoadingPlugins;
-  readonly hasError: Signal<boolean> = computed(() => this.catalogFacade.pluginsError() !== undefined);
+  readonly isLoadingAddOns: Signal<boolean> = this.catalogFacade.isLoadingAddOns;
+  readonly hasError: Signal<boolean> = computed(() => this.catalogFacade.addOnsError() !== undefined);
   readonly currentUser: Signal<CurrentUser | undefined> = this.authFacade.currentUser;
-  readonly featuredPlugin: Signal<FeaturedPlugin | null> = this.featuredPluginFacade.featuredPlugin;
+  readonly featuredAddOn: Signal<FeaturedAddOn | null> = this.featuredAddOnFacade.featuredAddOn;
 
-  readonly featuredPlugins: Signal<PluginSummary[]> = computed(() => {
-    const all = this.catalogFacade.plugins();
+  readonly featuredAddOns: Signal<AddOnSummary[]> = computed(() => {
+    const all = this.catalogFacade.addOns();
     return [...all].sort((a, b) => b.downloadCount - a.downloadCount).slice(0, FEATURED_LIMIT);
   });
 
   /**
    * The CLI install command to display in the showcase.
-   * Uses the featured plugin's slug when available; otherwise a generic fallback.
+   * Uses the featured add-on's slug when available; otherwise a generic fallback.
    */
   readonly installCommand: Signal<string> = computed(() => {
-    const plugin = this.featuredPlugin();
-    const identifier = plugin?.slug ?? FALLBACK_PLUGIN_SLUG;
+    const addOn = this.featuredAddOn();
+    const identifier = addOn?.slug ?? FALLBACK_PLUGIN_SLUG;
     return `claude-plugin install ${identifier}`;
   });
 
@@ -834,9 +826,9 @@ export class LandingPageComponent implements OnInit {
 
   constructor() {
     effect(() => {
-      const plugins = this.featuredPlugins();
-      if (plugins.length > 0) {
-        this.structuredData.injectPluginItemList(plugins);
+      const addOns = this.featuredAddOns();
+      if (addOns.length > 0) {
+        this.structuredData.injectPluginItemList(addOns);
       }
     });
   }
@@ -869,8 +861,8 @@ export class LandingPageComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.catalogFacade.loadPlugins({ sort: 'downloadCount', order: 'desc' });
-    this.featuredPluginFacade.load();
+    this.catalogFacade.loadAddOns({ sort: 'downloadCount', order: 'desc' });
+    this.featuredAddOnFacade.load();
 
     this.seoMetadata.setMetadata({
       title: this.i18n.t('home.seo.title'),

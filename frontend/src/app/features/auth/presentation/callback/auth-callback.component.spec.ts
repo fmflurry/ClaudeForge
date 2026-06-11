@@ -28,7 +28,7 @@ const EN_AUTH_LANGS: Record<string, string> = {
 };
 
 const FR_AUTH_LANGS: Record<string, string> = {
-  'auth.login.subtitle': 'Accédez à votre compte de la place de marché de plugins',
+  'auth.login.subtitle': 'Accédez à votre compte de la Marketplace de plugins',
   'auth.login.sign-in-google': 'Se connecter avec Google',
   'auth.login.sign-in-microsoft': 'Se connecter avec Microsoft',
   'auth.login.redirecting': 'Redirection vers le fournisseur…',
