@@ -7,7 +7,10 @@ import { NotificationsFacade } from '../../application/facades/notifications.fac
   providers: [NotificationsFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="notif-bell" (click)="open.set(!open())">
+    <div class="notif-bell" role="button" tabindex="0"
+      (click)="open.set(!open())"
+      (keydown.enter)="open.set(!open())"
+      (keydown.space)="open.set(!open())">
       <span>🔔</span>
       @if (facade.unreadCount() > 0) {
         <span class="badge">{{ facade.unreadCount() }}</span>
@@ -23,7 +26,10 @@ import { NotificationsFacade } from '../../application/facades/notifications.fac
           <p>Loading...</p>
         } @else {
           @for (n of facade.notifications(); track n.id) {
-            <div class="notif-item" [class.unread]="!n.isRead" (click)="facade.markRead(n.id)">
+            <div class="notif-item" [class.unread]="!n.isRead" role="button" tabindex="0"
+              (click)="facade.markRead(n.id)"
+              (keydown.enter)="facade.markRead(n.id)"
+              (keydown.space)="facade.markRead(n.id)">
               <p class="notif-title">{{ n.title }}</p>
               <p class="notif-msg">{{ n.message }}</p>
               <small>{{ n.createdAt }}</small>

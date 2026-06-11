@@ -5,12 +5,10 @@ import type {
   AnalysisConfig,
   Appeal,
   AppealDetail,
-  AppealFilter,
   AuditLogEntry,
   ConfigChangeLog,
   ControlCenterMetrics,
   Notification,
-  NotificationPreferences,
   Organization,
   OrgMember,
 } from '../../domain/models/control-center.models';

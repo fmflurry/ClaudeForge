@@ -17,35 +17,35 @@ import { ConfigFacade } from '../../application/facades/config.facade';
     @if (facade.analysisConfig(); as config) {
       <form (ngSubmit)="save()" class="config-form">
         <div class="field">
-          <label>Static Weight ({{ formValues().staticWeight }})</label>
-          <input type="range" min="0" max="1" step="0.05"
+          <label for="staticWeight">Static Weight ({{ formValues().staticWeight }})</label>
+          <input id="staticWeight" type="range" min="0" max="1" step="0.05"
             [value]="formValues().staticWeight"
             (input)="updateField('staticWeight', +$any($event.target).value)" />
         </div>
         <div class="field">
-          <label>Dynamic Weight ({{ formValues().dynamicWeight }})</label>
-          <input type="range" min="0" max="1" step="0.05"
+          <label for="dynamicWeight">Dynamic Weight ({{ formValues().dynamicWeight }})</label>
+          <input id="dynamicWeight" type="range" min="0" max="1" step="0.05"
             [value]="formValues().dynamicWeight"
             (input)="updateField('dynamicWeight', +$any($event.target).value)" />
         </div>
         <div class="field">
-          <label>Pass Threshold</label>
-          <input type="number" [value]="formValues().passThreshold"
+          <label for="passThreshold">Pass Threshold</label>
+          <input id="passThreshold" type="number" [value]="formValues().passThreshold"
             (input)="updateField('passThreshold', +$any($event.target).value)" />
         </div>
         <div class="field">
-          <label>Fail Threshold</label>
-          <input type="number" [value]="formValues().failThreshold"
+          <label for="failThreshold">Fail Threshold</label>
+          <input id="failThreshold" type="number" [value]="formValues().failThreshold"
             (input)="updateField('failThreshold', +$any($event.target).value)" />
         </div>
         <div class="field">
-          <label>Max Workers</label>
-          <input type="number" [value]="formValues().maxWorkers"
+          <label for="maxWorkers">Max Workers</label>
+          <input id="maxWorkers" type="number" [value]="formValues().maxWorkers"
             (input)="updateField('maxWorkers', +$any($event.target).value)" />
         </div>
         <div class="field">
-          <label>Retry Limit</label>
-          <input type="number" [value]="formValues().retryLimit"
+          <label for="retryLimit">Retry Limit</label>
+          <input id="retryLimit" type="number" [value]="formValues().retryLimit"
             (input)="updateField('retryLimit', +$any($event.target).value)" />
         </div>
         <button type="submit">Save Configuration</button>
