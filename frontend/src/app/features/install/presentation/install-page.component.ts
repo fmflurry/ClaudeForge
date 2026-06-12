@@ -167,14 +167,14 @@ const CLI_PACKAGE = '@claudeforge/claude-plugin-cli';
         padding: 4rem 1.5rem 3rem;
         text-align: center;
       }
-      .ip-hero__inner {
-        max-width: 52rem;
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-      }
+       .ip-hero__inner {
+         max-width: 96rem;
+         margin: 0 auto;
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         gap: 1rem;
+       }
       .ip-hero__badge {
         display: inline-flex;
       }
@@ -195,13 +195,13 @@ const CLI_PACKAGE = '@claudeforge/claude-plugin-cli';
       }
 
       /* ── Content wrapper ───────────────────────────────────────────────── */
-      .ip-content {
-        max-width: 52rem;
-        margin: 0 auto;
-        padding: 3rem 1.5rem 4rem;
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
+       .ip-content {
+         max-width: 96rem;
+         margin: 0 auto;
+         padding: 3rem 1.5rem 4rem;
+         display: flex;
+         flex-direction: column;
+         gap: 2rem;
       }
 
       /* ── Section + card ────────────────────────────────────────────────── */

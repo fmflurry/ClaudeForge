@@ -72,6 +72,7 @@
   "home.stats.total-downloads": "Total téléchargements",
   "home.stats.publishers": "Éditeurs",
   "home.stats.categories": "Catégories",
+  "home.stats.total-plugins": "Total des plugins",
   "home.stats.loading": "Chargement des statistiques…",
   "home.stats.error": "Impossible de charger les statistiques. Réessayez.",
   "home.stats.retry": "Réessayer",

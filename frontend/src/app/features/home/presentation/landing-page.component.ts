@@ -272,7 +272,6 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
       }
 
       :host {
-        --lp-footer-reserved-block-size: 5.75rem;
         --lp-cream: #fff8ee;
         --lp-cream-soft: #fffdf1;
         --lp-amber-soft: #fff7c2;
@@ -285,8 +284,9 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         --lp-border: color-mix(in oklch, var(--lp-slate) 14%, transparent);
         --lp-shadow-soft: 0 18px 45px rgb(15 23 42 / 0.07);
         --lp-shadow-lifted: 0 28px 80px rgb(15 23 42 / 0.13);
-        display: block;
-        padding-bottom: calc(var(--lp-footer-reserved-block-size) + env(safe-area-inset-bottom));
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
       }
 
       .lp-link {
@@ -298,15 +298,15 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
       }
 
       .lp-section-inner {
-        max-width: 72rem;
+        max-width: 90rem;
         margin: 0 auto;
         padding: 0 1.5rem;
       }
       .lp-section-title {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        color: var(--foreground);
-        margin: 0 0 1rem;
+        color: var(--lp-slate);
+        margin: 0 0 1.25rem;
         letter-spacing: -0.02em;
       }
 
@@ -325,7 +325,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
       .lp-hero__inner {
         position: relative;
         z-index: 1;
-        max-width: 84rem;
+        max-width: 90rem;
         margin: 0 auto;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -522,8 +522,11 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
       }
 
       .lp-supporting {
-        max-width: 84rem;
+        flex: 1;
+        max-width: 90rem;
         margin: 0 auto;
+        width: 100%;
+        box-sizing: border-box;
         padding: 0.75rem 1.5rem 1.5rem;
         display: grid;
         grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
@@ -543,24 +546,34 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         background: var(--lp-cream-soft);
         border-radius: 1rem;
         box-shadow: var(--lp-shadow-lifted);
+        display: flex;
+        flex-direction: column;
+      }
+      .lp-featured .lp-section-inner {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
       }
       .lp-featured__loading,
       .lp-featured__error {
         text-align: center;
         padding: 1rem 0;
-        color: var(--muted-foreground);
+        color: var(--lp-slate-soft);
         font-size: 0.9375rem;
       }
       .lp-featured__error {
-        color: var(--destructive);
+        color: #dc2626;
       }
       .lp-featured__grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-        gap: 0.75rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-auto-rows: 1fr;
+        align-items: stretch;
+        gap: 1rem;
         list-style: none;
-        margin: 0 0 1rem;
+        margin: 0 0 1.25rem;
         padding: 0;
+        flex: 1;
       }
       .lp-featured__cta {
         text-align: center;
@@ -581,6 +594,8 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         display: contents;
       }
       .lp-plugin-card__zcard {
+        height: 100%;
+        box-sizing: border-box;
         border-color: var(--lp-border);
         box-shadow: var(--lp-shadow-soft);
         transition:
@@ -600,12 +615,12 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
       .lp-plugin-card__name {
         font-size: 1rem;
         font-weight: 700;
-        color: var(--card-foreground);
+        color: var(--lp-slate);
         line-height: 1.3;
       }
       .lp-plugin-card__description {
         font-size: 0.875rem;
-        color: var(--muted-foreground);
+        color: var(--lp-slate-soft);
         line-height: 1.6;
         margin: 0;
         overflow: hidden;
@@ -615,7 +630,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         display: flex;
         justify-content: space-between;
         font-size: 0.8125rem;
-        color: var(--muted-foreground);
+        color: var(--lp-slate-soft);
         gap: 0.5rem;
         flex-wrap: wrap;
       }
@@ -627,35 +642,50 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
 
       /* ── How it works ─────────────────────────────────────────────────── */
       .lp-how {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         padding: 1rem;
         background: var(--lp-cream-soft);
         border-radius: 1rem;
         box-shadow: var(--lp-shadow-lifted);
+        display: flex;
+        flex-direction: column;
       }
-      .lp-how .lp-section-title {
-        color: var(--lp-slate);
+      .lp-how .lp-section-inner {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        /* Compensate for the addon section's CTA (grid-margin 1.25rem + button h-9 2.25rem)
+           so both grids have the same available height and their rows align. */
+        padding-bottom: 3.5rem;
       }
       .lp-how__steps {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: 1fr;
+        align-items: stretch;
         gap: 1rem;
         list-style: none;
         margin: 0;
         padding: 0;
+        flex: 1;
       }
       .lp-how__step {
         display: flex;
         flex-direction: column;
-        gap: 0.375rem;
-        min-height: 100%;
+        gap: 0.5rem;
         padding: 0.875rem;
         border: 1px solid rgb(15 23 42 / 0.10);
         border-radius: 0.875rem;
         background: #ffffff;
         box-shadow: 0 4px 16px rgb(15 23 42 / 0.06);
+        height: 100%;
+        box-sizing: border-box;
+        transition:
+          box-shadow 0.2s,
+          transform 0.2s;
+      }
+      .lp-how__step:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--lp-shadow-lifted);
       }
       .lp-how__icon {
         font-size: 1.5rem;
@@ -669,47 +699,25 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         background: linear-gradient(135deg, rgb(var(--lp-blue-rgb) / 0.15), rgb(var(--lp-mint-rgb) / 0.15));
       }
       .lp-how__step-title {
-        font-size: 1.0625rem;
+        font-size: 1rem;
         font-weight: 700;
         color: var(--lp-slate);
         margin: 0;
       }
       .lp-how__step-desc {
-        font-size: 0.9375rem;
+        font-size: 0.875rem;
         color: var(--lp-slate-soft);
         line-height: 1.6;
         margin: 0;
       }
-      @media (min-width: 900px) {
-        .lp-how__steps {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 0.5rem;
-        }
-        .lp-how__step {
-          gap: 0.25rem;
-          padding: 0.75rem;
-        }
-        .lp-how__icon {
-          font-size: 1.25rem;
-        }
-        .lp-how__step-title {
-          font-size: 0.875rem;
-        }
-        .lp-how__step-desc {
-          font-size: 0.8125rem;
-          line-height: 1.35;
-        }
-      }
-
       /* ── Footer (dark accent — intentional) ───────────────────────────── */
       .lp-footer {
-        position: fixed;
-        right: 0;
+        position: sticky;
         bottom: 0;
         left: 0;
+        right: 0;
         z-index: 20;
         width: 100%;
-        min-height: var(--lp-footer-reserved-block-size);
         box-sizing: border-box;
         background: var(--lp-slate);
         color: var(--lp-amber-soft);
@@ -745,9 +753,6 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
 
       /* ── Responsive ───────────────────────────────────────────────────── */
       @media (max-width: 640px) {
-        :host {
-          --lp-footer-reserved-block-size: 7.75rem;
-        }
         .lp-hero {
           padding: 3rem 1rem 2.5rem;
         }
@@ -775,16 +780,15 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
           text-align: center;
           width: 100%;
         }
-        .lp-featured__grid,
-        .lp-how__steps {
+        .lp-featured__grid {
           grid-template-columns: 1fr;
+        }
+        .lp-how__steps {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
 
       @media (max-width: 420px) {
-        :host {
-          --lp-footer-reserved-block-size: 9rem;
-        }
         .lp-footer__nav {
           row-gap: 0.5rem;
         }

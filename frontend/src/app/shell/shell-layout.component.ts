@@ -108,7 +108,8 @@ import { ZardButtonComponent } from '../shared/components/button';
       .cf-shell {
         display: flex;
         flex-direction: column;
-        min-height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
       }
 
       .cf-shell__header {
@@ -174,10 +175,24 @@ import { ZardButtonComponent } from '../shared/components/button';
         opacity: 1;
       }
 
-      .cf-shell__content {
-        flex: 1;
-        padding: 1.5rem;
-      }
+       .cf-shell__content {
+         flex: 1;
+         min-height: 0;
+         overflow-y: auto;
+         padding: 1.5rem;
+         max-width: 120rem;
+         margin: 0 auto;
+         box-sizing: border-box;
+         width: 100%;
+       }
+
+       /* Landing page is full-bleed: strip shell padding so the hero/footer
+          can stretch edge-to-edge. The landing page provides its own spacing. */
+       .cf-shell__content:has(> cf-landing-page) {
+         padding: 0;
+         max-width: none;
+         margin: 0;
+       }
 
       /* Right-aligned cluster: language → theme → auth (D8 revamp-landing-page).
          margin-left:auto pushes this entire cluster to the far right of the header. */
