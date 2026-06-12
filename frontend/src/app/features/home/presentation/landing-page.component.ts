@@ -414,19 +414,6 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         outline: 3px solid rgb(var(--lp-amber-rgb));
         outline-offset: 2px;
       }
-      .lp-hero .lp-hero-cta-secondary {
-        color: var(--lp-slate);
-        border-color: rgb(15 23 42 / 0.25);
-        background: transparent;
-      }
-      .lp-hero .lp-hero-cta-secondary:hover {
-        border-color: rgb(15 23 42 / 0.5);
-        background: rgb(15 23 42 / 0.06);
-      }
-      .lp-hero .lp-hero-cta-secondary:focus-visible {
-        outline: 3px solid rgb(var(--lp-amber-rgb));
-        outline-offset: 2px;
-      }
       /* ── Install Showcase Card (slightly lighter code block on dark hero) */
       .lp-showcase {
         display: inline-flex;

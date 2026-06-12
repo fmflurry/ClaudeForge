@@ -127,10 +127,7 @@ export async function runOrgList(_args: OrgListArgs, _deps: OrgDeps): Promise<Co
  * Request approval for a plugin to be added to the org safe zone.
  * CLI: claudeforge org request-approval <plugin-id> [--version]
  */
-export async function runOrgRequestApproval(
-  args: OrgRequestApprovalArgs,
-  deps: OrgDeps,
-): Promise<CommandResult> {
+export async function runOrgRequestApproval(args: OrgRequestApprovalArgs, deps: OrgDeps): Promise<CommandResult> {
   const { pluginId, version } = args;
   const { homeDir, client } = deps;
 
@@ -142,10 +139,7 @@ export async function runOrgRequestApproval(
   if (!activeOrg) {
     return {
       exitCode: 1,
-      output: [
-        'No active organization set.',
-        'Set one with `claudeforge org use <org-id>` first.',
-      ].join('\n'),
+      output: ['No active organization set.', 'Set one with `claudeforge org use <org-id>` first.'].join('\n'),
     };
   }
 
@@ -170,7 +164,7 @@ export async function runOrgRequestApproval(
   } catch (err) {
     const message =
       err instanceof MarketplaceApiError
-        ? err.problemDetails.detail ?? err.message
+        ? (err.problemDetails.detail ?? err.message)
         : err instanceof Error
           ? err.message
           : String(err);

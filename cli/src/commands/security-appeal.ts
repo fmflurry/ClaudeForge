@@ -39,10 +39,13 @@ export async function runAppeal(args: SecurityAppealArgs, deps: SecurityAppealDe
   const { client } = deps;
 
   try {
-    const result = await client.post<AppealSubmissionResponse>(`/api/v1/plugins/${encodeURIComponent(pluginId)}/appeal`, {
-      reason,
-      findingId,
-    });
+    const result = await client.post<AppealSubmissionResponse>(
+      `/api/v1/plugins/${encodeURIComponent(pluginId)}/appeal`,
+      {
+        reason,
+        findingId,
+      },
+    );
 
     return {
       exitCode: 0,

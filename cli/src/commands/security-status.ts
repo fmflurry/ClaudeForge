@@ -93,10 +93,7 @@ export async function runStatus(args: SecurityStatusArgs, deps: SecurityStatusDe
         if (result.security_status === 'complete' || result.security_status === 'failed') {
           return {
             exitCode: result.security_status === 'complete' ? 0 : 1,
-            output: [
-              `Analysis complete for ${pluginId}:`,
-              formatResult(result),
-            ].join('\n'),
+            output: [`Analysis complete for ${pluginId}:`, formatResult(result)].join('\n'),
           };
         }
 

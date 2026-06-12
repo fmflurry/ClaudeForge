@@ -13,10 +13,7 @@ import {
   generateMigrationReport,
   runMigration,
 } from '../commands/migrate-categorization.js';
-import type {
-  MigrationReport,
-  MigrationFsPort,
-} from '../commands/migrate-categorization.js';
+import type { MigrationReport, MigrationFsPort } from '../commands/migrate-categorization.js';
 
 // ---------------------------------------------------------------------------
 // Helpers

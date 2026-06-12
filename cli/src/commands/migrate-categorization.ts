@@ -113,7 +113,10 @@ const DEFAULT_DOMAIN_CATEGORY = 'productivity-utilities';
 // ---------------------------------------------------------------------------
 
 function normalize(raw: string): string {
-  return raw.trim().toLowerCase().replace(/[\s_]+/g, '-');
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-');
 }
 
 function firstMapped(values: string[] | undefined, map: Record<string, string>): string | undefined {
@@ -130,21 +133,14 @@ function firstMapped(values: string[] | undefined, map: Record<string, string>):
 // ---------------------------------------------------------------------------
 
 export function isAlreadyMigrated(manifest: Record<string, unknown>): boolean {
-  return (
-    'category' in manifest &&
-    !('types' in manifest) &&
-    !('useCaseTags' in manifest)
-  );
+  return 'category' in manifest && !('types' in manifest) && !('useCaseTags' in manifest);
 }
 
 // ---------------------------------------------------------------------------
 // Task 2.5: Migration core
 // ---------------------------------------------------------------------------
 
-export async function migratePlugin(
-  pluginPath: string,
-  fsPort: MigrationFsPort,
-): Promise<MigrationResult> {
+export async function migratePlugin(pluginPath: string, fsPort: MigrationFsPort): Promise<MigrationResult> {
   const manifestPath = path.join(pluginPath, 'plugin.json');
   const raw = await fsPort.readFile(manifestPath);
   const oldManifest = JSON.parse(raw) as OldManifest;
@@ -262,7 +258,9 @@ export function generateMigrationReport(report: MigrationReport): string {
       lines.push('| Field | Old | New |');
       lines.push('|-------|-----|-----|');
       lines.push(`| category | — | ${p.newManifest.category} |`);
-      lines.push(`| keywords | ${JSON.stringify((p.oldManifest as Record<string, unknown>)['types'] ?? [])} | ${JSON.stringify(p.newManifest.keywords ?? [])} |`);
+      lines.push(
+        `| keywords | ${JSON.stringify((p.oldManifest as Record<string, unknown>)['types'] ?? [])} | ${JSON.stringify(p.newManifest.keywords ?? [])} |`,
+      );
       lines.push(`| useCaseTags | ${JSON.stringify(p.oldManifest.useCaseTags ?? [])} | removed |`);
       lines.push(`| types | ${JSON.stringify(p.oldManifest.types ?? [])} | removed |`);
       lines.push('');
@@ -311,10 +309,7 @@ const realMigrationFsPort: MigrationFsPort = {
 // CLI entry point
 // ---------------------------------------------------------------------------
 
-export async function runMigration(
-  args: MigrationArgs,
-  deps: MigrationDeps,
-): Promise<CommandResult> {
+export async function runMigration(args: MigrationArgs, deps: MigrationDeps): Promise<CommandResult> {
   const { pluginPath: rawPluginPath, dryRun = false } = args;
   const { fs: fsPort = realMigrationFsPort, cwd = process.cwd() } = deps;
 
