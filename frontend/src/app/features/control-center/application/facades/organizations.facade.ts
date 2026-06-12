@@ -36,94 +36,109 @@ export class OrganizationsFacade {
 
   loadOrganizations(): void {
     this.store.startLoading(ControlCenterStoreEnum.ORGANIZATIONS);
-    this.port.getOrganizations().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (orgs) => {
-        this.store.update(ControlCenterStoreEnum.ORGANIZATIONS, {
-          data: orgs,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.ORGANIZATIONS, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getOrganizations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (orgs) => {
+          this.store.update(ControlCenterStoreEnum.ORGANIZATIONS, {
+            data: orgs,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.ORGANIZATIONS, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 
   selectOrg(orgId: string): void {
     this.store.startLoading(ControlCenterStoreEnum.ORG_DETAIL);
     this.store.startLoading(ControlCenterStoreEnum.ORG_MEMBERS);
-    this.port.getOrgDetail(orgId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (org) => {
-        this.store.update(ControlCenterStoreEnum.ORG_DETAIL, {
-          data: org,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.ORG_DETAIL, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
-    this.port.getOrgMembers(orgId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (members) => {
-        this.store.update(ControlCenterStoreEnum.ORG_MEMBERS, {
-          data: members,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.ORG_MEMBERS, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getOrgDetail(orgId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (org) => {
+          this.store.update(ControlCenterStoreEnum.ORG_DETAIL, {
+            data: org,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.ORG_DETAIL, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
+    this.port
+      .getOrgMembers(orgId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (members) => {
+          this.store.update(ControlCenterStoreEnum.ORG_MEMBERS, {
+            data: members,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.ORG_MEMBERS, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 
   inviteMember(orgId: string, email: string, role: string): void {
-    this.port.inviteMember(orgId, email, role).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.selectOrg(orgId);
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.ORG_MEMBERS, {
-          status: 'Error',
-          errors: [{ code: 'INVITE_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .inviteMember(orgId, email, role)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.selectOrg(orgId);
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.ORG_MEMBERS, {
+            status: 'Error',
+            errors: [{ code: 'INVITE_ERROR', message }],
+          });
+        },
+      });
   }
 
   removeMember(orgId: string, userId: string): void {
-    this.port.removeMember(orgId, userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.selectOrg(orgId);
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.ORG_MEMBERS, {
-          status: 'Error',
-          errors: [{ code: 'REMOVE_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .removeMember(orgId, userId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.selectOrg(orgId);
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.ORG_MEMBERS, {
+            status: 'Error',
+            errors: [{ code: 'REMOVE_ERROR', message }],
+          });
+        },
+      });
   }
 }

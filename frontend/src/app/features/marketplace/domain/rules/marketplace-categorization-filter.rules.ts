@@ -75,10 +75,7 @@ const USE_CASE_TO_DOMAIN: Record<string, string> = {
  * Domain filter: exact match on `category`.
  * AND with other filter dimensions.
  */
-export function filterByCategory(
-  plugins: readonly PluginManifest[],
-  category: string,
-): PluginManifest[] {
+export function filterByCategory(plugins: readonly PluginManifest[], category: string): PluginManifest[] {
   return plugins.filter((p) => p.category === category);
 }
 
@@ -91,9 +88,7 @@ export function filterByStructural(
   structural: readonly string[],
 ): PluginManifest[] {
   if (!structural || structural.length === 0) return [...plugins];
-  return plugins.filter(
-    (p) => p.keywords?.some((k) => structural.includes(k)) ?? false,
-  );
+  return plugins.filter((p) => p.keywords?.some((k) => structural.includes(k)) ?? false);
 }
 
 /**
@@ -101,17 +96,11 @@ export function filterByStructural(
  * Splits search string on whitespace; plugin matches if ANY keyword
  * contains ANY search term (case-insensitive substring match).
  */
-export function filterByKeywords(
-  plugins: readonly PluginManifest[],
-  keywords: string,
-): PluginManifest[] {
+export function filterByKeywords(plugins: readonly PluginManifest[], keywords: string): PluginManifest[] {
   if (!keywords || keywords.trim() === '') return [...plugins];
   const searchTerms = keywords.toLowerCase().split(/\s+/);
   return plugins.filter(
-    (p) =>
-      p.keywords?.some((k) =>
-        searchTerms.some((term) => k.toLowerCase().includes(term)),
-      ) ?? false,
+    (p) => p.keywords?.some((k) => searchTerms.some((term) => k.toLowerCase().includes(term))) ?? false,
   );
 }
 
@@ -132,10 +121,7 @@ export function filterByKeywords(
  *
  * Returns a NEW array — never mutates input.
  */
-export function applyFilters(
-  plugins: readonly PluginManifest[],
-  filters: MarketplaceFilters,
-): FilterResult {
+export function applyFilters(plugins: readonly PluginManifest[], filters: MarketplaceFilters): FilterResult {
   let result: PluginManifest[] = [...plugins];
 
   // Step 1: Domain filter (AND)
@@ -149,12 +135,8 @@ export function applyFilters(
 
   if (hasStructural || hasKeywords) {
     result = result.filter((plugin) => {
-      const matchesStructural = hasStructural
-        ? filterByStructural([plugin], filters.structural!).length > 0
-        : false;
-      const matchesKeywords = hasKeywords
-        ? filterByKeywords([plugin], filters.keywords!).length > 0
-        : false;
+      const matchesStructural = hasStructural ? filterByStructural([plugin], filters.structural!).length > 0 : false;
+      const matchesKeywords = hasKeywords ? filterByKeywords([plugin], filters.keywords!).length > 0 : false;
       // OR within structural+keywords group
       return matchesStructural || matchesKeywords;
     });
@@ -179,15 +161,11 @@ export function applyFilters(
  *
  * Returns a NEW object — never mutates input.
  */
-export function mapDeprecatedFilters(
-  deprecated: DeprecatedFilters,
-): MarketplaceFilters {
+export function mapDeprecatedFilters(deprecated: DeprecatedFilters): MarketplaceFilters {
   const filters: MarketplaceFilters = {};
 
   if (deprecated.types && deprecated.types.length > 0) {
-    const mapped = deprecated.types
-      .map((t) => TYPE_TO_STRUCTURAL[t])
-      .filter(Boolean) as string[];
+    const mapped = deprecated.types.map((t) => TYPE_TO_STRUCTURAL[t]).filter(Boolean) as string[];
     if (mapped.length > 0) {
       filters.structural = mapped;
     }
@@ -211,14 +189,10 @@ export function buildDeprecationHeader(deprecated: DeprecatedFilters): string {
   const warnings: string[] = [];
 
   if (deprecated.types) {
-    warnings.push(
-      `types=${deprecated.types.join(',')} is deprecated. Use structural instead.`,
-    );
+    warnings.push(`types=${deprecated.types.join(',')} is deprecated. Use structural instead.`);
   }
   if (deprecated.useCaseTags) {
-    warnings.push(
-      `useCaseTags=${deprecated.useCaseTags.join(',')} is deprecated. Use category instead.`,
-    );
+    warnings.push(`useCaseTags=${deprecated.useCaseTags.join(',')} is deprecated. Use category instead.`);
   }
 
   return warnings.join('; ');

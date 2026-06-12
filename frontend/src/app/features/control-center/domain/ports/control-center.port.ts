@@ -19,7 +19,9 @@ export abstract class ControlCenterPort {
   abstract getMetrics(): Observable<ControlCenterMetrics>;
 
   // Appeals
-  abstract getAppeals(filter: AppealFilter): Observable<{ items: Appeal[]; totalCount: number; page: number; pageSize: number }>;
+  abstract getAppeals(
+    filter: AppealFilter,
+  ): Observable<{ items: Appeal[]; totalCount: number; page: number; pageSize: number }>;
   abstract getAppealDetail(appealId: string): Observable<AppealDetail>;
   abstract resolveAppeal(appealId: string, resolution: string, notes?: string): Observable<unknown>;
 
@@ -32,7 +34,10 @@ export abstract class ControlCenterPort {
   abstract getAuditLogs(filter: AuditLogFilter): Observable<AuditLogResponse>;
 
   // Notifications
-  abstract getNotifications(unreadOnly?: boolean, page?: number): Observable<{ items: Notification[]; totalCount: number; page: number; pageSize: number }>;
+  abstract getNotifications(
+    unreadOnly?: boolean,
+    page?: number,
+  ): Observable<{ items: Notification[]; totalCount: number; page: number; pageSize: number }>;
   abstract markNotificationRead(notificationId: string): Observable<unknown>;
   abstract markAllNotificationsRead(): Observable<unknown>;
   abstract updateNotificationPreferences(prefs: NotificationPreferences): Observable<unknown>;

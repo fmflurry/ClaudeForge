@@ -3,10 +3,7 @@
  * No Angular or infrastructure dependencies — zero side effects.
  */
 
-import type {
-  DiscoverAddOnsParams,
-  SearchAddOnsParams,
-} from '../../../../shared/infrastructure/http/api-client.types';
+import type { DiscoverAddOnsParams, SearchAddOnsParams } from '../../../../shared/infrastructure/http/api-client.types';
 import type { DiscoveryCriteria } from '../models/search.models';
 
 export interface SearchFilterQuery {

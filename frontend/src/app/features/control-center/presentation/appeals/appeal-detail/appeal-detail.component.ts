@@ -38,8 +38,13 @@ import { AppealsFacade } from '../../../application/facades/appeals.facade';
       @if (detail.status === 'pending') {
         <div class="detail-card">
           <h2>Resolution</h2>
-          <textarea [value]="resolutionNotes()" (input)="resolutionNotes.set($any($event.target).value)"
-            placeholder="Resolution notes..." rows="3" style="width:100%"></textarea>
+          <textarea
+            [value]="resolutionNotes()"
+            (input)="resolutionNotes.set($any($event.target).value)"
+            placeholder="Resolution notes..."
+            rows="3"
+            style="width:100%"
+          ></textarea>
           <div class="actions">
             <button (click)="approve(detail.appealId)">Approve</button>
             <button (click)="reject(detail.appealId)">Reject</button>
@@ -48,11 +53,30 @@ import { AppealsFacade } from '../../../application/facades/appeals.facade';
       }
     }
   `,
-  styles: [`
-    .detail-card { background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.25rem; margin-bottom: 1rem; }
-    .actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
-    button { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 0.25rem; cursor: pointer; background: var(--primary); color: var(--primary-foreground); }
-  `],
+  styles: [
+    `
+      .detail-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+      }
+      .actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+      button {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        cursor: pointer;
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+    `,
+  ],
 })
 export class AppealDetailComponent implements OnInit {
   readonly facade = inject(AppealsFacade);

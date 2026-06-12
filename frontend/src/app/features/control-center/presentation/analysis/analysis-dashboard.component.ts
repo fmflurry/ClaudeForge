@@ -26,13 +26,31 @@ import { AnalysisFacade } from '../../application/facades/analysis.facade';
       <p><a routerLink="/control-center">Back to Overview</a></p>
     }
   `,
-  styles: [`
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.25rem; }
-    .stat-value { font-size: 2rem; font-weight: 700; margin: 0; }
-  `],
+  styles: [
+    `
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .stat-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+      }
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+      }
+    `,
+  ],
 })
 export class AnalysisDashboardComponent implements OnInit {
   readonly facade = inject(AnalysisFacade);
-  ngOnInit(): void { this.facade.loadQueue(); }
+  ngOnInit(): void {
+    this.facade.loadQueue();
+  }
 }

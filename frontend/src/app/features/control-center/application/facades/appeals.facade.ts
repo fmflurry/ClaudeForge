@@ -41,61 +41,70 @@ export class AppealsFacade {
 
   loadAppeals(filter: AppealFilter = {}): void {
     this.store.startLoading(ControlCenterStoreEnum.APPEALS);
-    this.port.getAppeals(filter).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (response) => {
-        this.store.update(ControlCenterStoreEnum.APPEALS, {
-          data: response.items,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.APPEALS, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getAppeals(filter)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.store.update(ControlCenterStoreEnum.APPEALS, {
+            data: response.items,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.APPEALS, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 
   loadAppealDetail(appealId: string): void {
     this.store.startLoading(ControlCenterStoreEnum.APPEAL_DETAIL);
-    this.port.getAppealDetail(appealId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (detail) => {
-        this.store.update(ControlCenterStoreEnum.APPEAL_DETAIL, {
-          data: detail,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.APPEAL_DETAIL, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getAppealDetail(appealId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (detail) => {
+          this.store.update(ControlCenterStoreEnum.APPEAL_DETAIL, {
+            data: detail,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.APPEAL_DETAIL, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 
   resolveAppeal(appealId: string, resolution: string, notes?: string): void {
-    this.port.resolveAppeal(appealId, resolution, notes).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.store.clear(ControlCenterStoreEnum.APPEAL_DETAIL);
-        this.loadAppeals();
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.APPEAL_DETAIL, {
-          status: 'Error',
-          errors: [{ code: 'RESOLVE_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .resolveAppeal(appealId, resolution, notes)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.store.clear(ControlCenterStoreEnum.APPEAL_DETAIL);
+          this.loadAppeals();
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.APPEAL_DETAIL, {
+            status: 'Error',
+            errors: [{ code: 'RESOLVE_ERROR', message }],
+          });
+        },
+      });
   }
 }

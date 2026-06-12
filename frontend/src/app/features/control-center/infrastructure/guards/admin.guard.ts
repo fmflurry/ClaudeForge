@@ -2,10 +2,7 @@ import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot } from '@angular/router';
 import { AuthFacade } from '../../../auth/application/facades/auth.facade';
 
-export const AdminGuard: CanActivateFn = (
-  _route: ActivatedRouteSnapshot,
-  _state: RouterStateSnapshot,
-): boolean => {
+export const AdminGuard: CanActivateFn = (_route: ActivatedRouteSnapshot, _state: RouterStateSnapshot): boolean => {
   const authFacade = inject(AuthFacade);
   const router = inject(Router);
 

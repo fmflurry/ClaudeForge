@@ -32,11 +32,11 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
   `,
   styles: [
     `
-       .cf-org-detail {
-         max-width: 96rem;
-         margin: 0 auto;
-         padding: 2rem 1.5rem;
-       }
+      .cf-org-detail {
+        max-width: 96rem;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+      }
 
       .cf-org-detail__back {
         color: #4f46e5;

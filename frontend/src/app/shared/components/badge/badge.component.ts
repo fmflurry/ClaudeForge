@@ -8,9 +8,7 @@ import { badgeVariants, type ZardBadgeShapeVariants, type ZardBadgeTypeVariants 
 
 @Component({
   selector: 'z-badge',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {

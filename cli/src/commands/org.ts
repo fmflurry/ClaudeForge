@@ -24,10 +24,12 @@ export interface OrgUseArgs {
   orgId: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface OrgShowArgs {
   // No args needed
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface OrgListArgs {
   // No args needed
 }

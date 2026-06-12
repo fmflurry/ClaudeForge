@@ -28,40 +28,49 @@ export class NotificationsFacade {
 
   loadNotifications(unreadOnly?: boolean): void {
     this.store.startLoading(ControlCenterStoreEnum.NOTIFICATIONS);
-    this.port.getNotifications(unreadOnly).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (response) => {
-        this.store.update(ControlCenterStoreEnum.NOTIFICATIONS, {
-          data: [...response.items],
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.NOTIFICATIONS, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getNotifications(unreadOnly)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.store.update(ControlCenterStoreEnum.NOTIFICATIONS, {
+            data: [...response.items],
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.NOTIFICATIONS, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 
   markRead(notificationId: string): void {
-    this.port.markNotificationRead(notificationId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.loadNotifications();
-      },
-    });
+    this.port
+      .markNotificationRead(notificationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loadNotifications();
+        },
+      });
   }
 
   markAllRead(): void {
-    this.port.markAllNotificationsRead().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.loadNotifications();
-      },
-    });
+    this.port
+      .markAllNotificationsRead()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loadNotifications();
+        },
+      });
   }
 
   updatePreferences(prefs: NotificationPreferences): void {

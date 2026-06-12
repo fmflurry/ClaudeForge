@@ -61,9 +61,14 @@ public sealed class PostgresFixture : IAsyncLifetime
             .Build();
 
         await using MarketplaceDbContext ctx = CreateContext();
-        // Apply all migrations (or create schema from model if no migrations exist yet).
-        // For integration tests we prefer EnsureCreated which reflects the EF model directly.
-        await ctx.Database.EnsureCreatedAsync();
+        // Apply all EF Core migrations so the __EFMigrationsHistory table is populated.
+        // This is critical: using EnsureCreated() instead would create the schema without
+        // recording any migration history. When DatabaseMigrationHostedService then calls
+        // MigrateAsync() during WebApplicationFactory host startup it would find no history,
+        // assume the DB is empty, and attempt to re-CREATE every table — failing with
+        // "42P07: relation already exists". MigrateAsync() is idempotent: a second call
+        // inside the hosted service sees all migrations already applied and skips them.
+        await ctx.Database.MigrateAsync();
     }
 
     public async Task DisposeAsync()

@@ -14,7 +14,6 @@ import {
   runMigration,
 } from '../commands/migrate-categorization.js';
 import type {
-  MigrationResult,
   MigrationReport,
   MigrationFsPort,
 } from '../commands/migrate-categorization.js';

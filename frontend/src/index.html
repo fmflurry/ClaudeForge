@@ -24,8 +24,7 @@
       (function () {
         try {
           var stored = localStorage.getItem('cf.theme');
-          var prefersDark =
-            !stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var prefersDark = !stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
           if (stored === 'dark' || prefersDark) {
             document.documentElement.classList.add('dark');
           }

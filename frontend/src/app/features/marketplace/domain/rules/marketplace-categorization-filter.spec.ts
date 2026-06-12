@@ -3,10 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type {
-  PluginManifest,
-  MarketplaceFilters,
-} from './marketplace-categorization-filter.rules';
+import type { PluginManifest, MarketplaceFilters } from './marketplace-categorization-filter.rules';
 import {
   filterByCategory,
   filterByStructural,

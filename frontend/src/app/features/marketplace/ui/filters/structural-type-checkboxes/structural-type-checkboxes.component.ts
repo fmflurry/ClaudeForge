@@ -30,54 +30,56 @@ export interface StructuralType {
       </div>
     </div>
   `,
-  styles: [`
-    .cf-structural-types {
-      padding: 1rem;
-      border-top: 1px solid #e0e0e0;
-    }
+  styles: [
+    `
+      .cf-structural-types {
+        padding: 1rem;
+        border-top: 1px solid #e0e0e0;
+      }
 
-    .cf-structural-types__title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0 0 1rem 0;
-      color: #1a1a1a;
-    }
+      .cf-structural-types__title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+        color: #1a1a1a;
+      }
 
-    .cf-structural-types__list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
+      .cf-structural-types__list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
 
-    .cf-structural-types__item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      padding: 0.5rem;
-      border-radius: 4px;
-      transition: background-color 0.15s ease;
-    }
+      .cf-structural-types__item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.15s ease;
+      }
 
-    .cf-structural-types__item:hover {
-      background-color: #f5f5f5;
-    }
+      .cf-structural-types__item:hover {
+        background-color: #f5f5f5;
+      }
 
-    .cf-structural-types__checkbox {
-      margin: 0;
-      cursor: pointer;
-    }
+      .cf-structural-types__checkbox {
+        margin: 0;
+        cursor: pointer;
+      }
 
-    .cf-structural-types__label {
-      flex: 1;
-      font-size: 0.875rem;
-    }
+      .cf-structural-types__label {
+        flex: 1;
+        font-size: 0.875rem;
+      }
 
-    .cf-structural-types__count {
-      color: #666;
-      font-size: 0.8125rem;
-    }
-  `],
+      .cf-structural-types__count {
+        color: #666;
+        font-size: 0.8125rem;
+      }
+    `,
+  ],
 })
 export class StructuralTypeCheckboxesComponent {
   readonly types = input.required<readonly StructuralType[]>();
@@ -91,9 +93,7 @@ export class StructuralTypeCheckboxesComponent {
 
   onTypeToggle(typeId: string): void {
     const current = this.selectedTypes();
-    const updated = current.includes(typeId)
-      ? current.filter((t) => t !== typeId)
-      : [...current, typeId];
+    const updated = current.includes(typeId) ? current.filter((t) => t !== typeId) : [...current, typeId];
     this.typesChanged.emit(updated);
   }
 }

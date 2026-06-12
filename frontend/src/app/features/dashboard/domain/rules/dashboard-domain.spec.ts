@@ -61,12 +61,7 @@
  */
 
 import type { InstalledPluginRecord } from '../../../../shared/domain/ports/installed-plugins-storage.port';
-import type {
-  InstalledAddOn,
-  DashboardGroup,
-  AddOnUpdateStatus,
-  RecommendedAddOn,
-} from '../models/dashboard.models';
+import type { InstalledAddOn, DashboardGroup, AddOnUpdateStatus, RecommendedAddOn } from '../models/dashboard.models';
 import { compareSemVer, computeUpdateStatus, enrichInstalledPlugin } from '../rules/dashboard-update.rules';
 import { groupPluginsByTeam, deriveRecommended } from '../rules/dashboard-grouping.rules';
 

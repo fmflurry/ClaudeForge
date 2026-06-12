@@ -2,9 +2,7 @@ import { cva } from 'class-variance-authority';
 
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
-export const cardVariants = cva(
-  'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
-);
+export const cardVariants = cva('bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm');
 
 export const cardHeaderVariants = cva(
   mergeClasses(
@@ -13,12 +11,8 @@ export const cardHeaderVariants = cva(
   ),
 );
 
-export const cardActionVariants = cva(
-  'col-start-2 row-span-2 row-start-1 self-start justify-self-end',
-);
+export const cardActionVariants = cva('col-start-2 row-span-2 row-start-1 self-start justify-self-end');
 
 export const cardBodyVariants = cva('px-6');
 
-export const cardFooterVariants = cva(
-  'flex flex-col gap-2 items-center px-6 [.border-t]:pt-6',
-);
+export const cardFooterVariants = cva('flex flex-col gap-2 items-center px-6 [.border-t]:pt-6');

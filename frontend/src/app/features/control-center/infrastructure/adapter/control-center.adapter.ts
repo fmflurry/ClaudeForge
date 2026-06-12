@@ -32,7 +32,9 @@ export class ControlCenterAdapter extends ControlCenterPort {
 
   // ── Appeals ──────────────────────────────────────────────────────────────
 
-  getAppeals(filter: AppealFilter): Observable<{ items: Appeal[]; totalCount: number; page: number; pageSize: number }> {
+  getAppeals(
+    filter: AppealFilter,
+  ): Observable<{ items: Appeal[]; totalCount: number; page: number; pageSize: number }> {
     let params = new HttpParams();
     if (filter.status) params = params.set('status', filter.status);
     if (filter.page) params = params.set('page', filter.page);
@@ -79,7 +81,10 @@ export class ControlCenterAdapter extends ControlCenterPort {
 
   // ── Notifications ───────────────────────────────────────────────────────
 
-  getNotifications(unreadOnly?: boolean, page?: number): Observable<{ items: Notification[]; totalCount: number; page: number; pageSize: number }> {
+  getNotifications(
+    unreadOnly?: boolean,
+    page?: number,
+  ): Observable<{ items: Notification[]; totalCount: number; page: number; pageSize: number }> {
     let params = new HttpParams();
     if (unreadOnly) params = params.set('unreadOnly', 'true');
     if (page) params = params.set('page', page);

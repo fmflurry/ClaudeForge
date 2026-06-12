@@ -2,7 +2,7 @@
  * Landing page for the ClaudeForge plugin marketplace.
  *
  * Sections:
-     * - Hero: warm cream surface with amber/blue gradients, headline, amber-toned
+ * - Hero: warm cream surface with amber/blue gradients, headline, amber-toned
  *   install-showcase card, primary CTAs (browse, publish)
  * - Stats band: marketplace-wide metrics (warm light surface)
  * - Featured plugins: real data via CatalogFacade (top-6 by downloadCount)
@@ -194,9 +194,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
                     </div>
                     <p class="lp-plugin-card__description">{{ addOn.description }}</p>
                     <div class="lp-plugin-card__meta">
-                      <span class="lp-plugin-card__author"
-                        >{{ i18n.t('home.plugin-card.by') }} {{ addOn.author }}</span
-                      >
+                      <span class="lp-plugin-card__author">{{ i18n.t('home.plugin-card.by') }} {{ addOn.author }}</span>
                       <span
                         class="lp-plugin-card__downloads"
                         [attr.aria-label]="i18n.t('home.aria.addon-downloads', { count: addOn.downloadCount })"
@@ -316,9 +314,8 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         overflow: hidden;
         background:
           radial-gradient(circle at 14% 18%, rgb(var(--lp-amber-rgb) / 0.35), transparent 24rem),
-          radial-gradient(circle at 78% 16%, rgb(var(--lp-blue-rgb) / 0.10), transparent 23rem),
-          radial-gradient(circle at 55% 95%, rgb(var(--lp-mint-rgb) / 0.08), transparent 25rem),
-          var(--lp-cream);
+          radial-gradient(circle at 78% 16%, rgb(var(--lp-blue-rgb) / 0.1), transparent 23rem),
+          radial-gradient(circle at 55% 95%, rgb(var(--lp-mint-rgb) / 0.08), transparent 25rem), var(--lp-cream);
         color: var(--lp-slate);
         padding: 1.5rem 1.5rem 1.25rem;
       }
@@ -377,16 +374,16 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         padding: 0.625rem 0.75rem;
         border: 1px solid transparent;
         border-radius: 0.625rem;
-        background: rgb(255 248 238 / 0.60);
+        background: rgb(255 248 238 / 0.6);
         color: var(--lp-slate);
         font-size: 0.9375rem;
         outline: none;
       }
       .lp-search-entry__input::placeholder {
-        color: rgb(15 23 42 / 0.40);
+        color: rgb(15 23 42 / 0.4);
       }
       .lp-search-entry__input:focus {
-        border-color: rgb(var(--lp-amber-rgb) / 0.60);
+        border-color: rgb(var(--lp-amber-rgb) / 0.6);
         box-shadow: 0 0 0 3px rgb(var(--lp-amber-rgb) / 0.18);
       }
       .lp-search-entry__btn {
@@ -423,7 +420,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         background: transparent;
       }
       .lp-hero .lp-hero-cta-secondary:hover {
-        border-color: rgb(15 23 42 / 0.50);
+        border-color: rgb(15 23 42 / 0.5);
         background: rgb(15 23 42 / 0.06);
       }
       .lp-hero .lp-hero-cta-secondary:focus-visible {
@@ -470,7 +467,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         padding: 0.75rem 1.25rem;
         border-radius: 0.5rem;
         font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-        box-shadow: 0 28px 80px rgb(0 0 0 / 0.30);
+        box-shadow: 0 28px 80px rgb(0 0 0 / 0.3);
       }
       .lp-showcase__code {
         display: block;
@@ -673,7 +670,7 @@ const FALLBACK_PLUGIN_SLUG = '<plugin-name>';
         flex-direction: column;
         gap: 0.5rem;
         padding: 0.875rem;
-        border: 1px solid rgb(15 23 42 / 0.10);
+        border: 1px solid rgb(15 23 42 / 0.1);
         border-radius: 0.875rem;
         background: #ffffff;
         box-shadow: 0 4px 16px rgb(15 23 42 / 0.06);

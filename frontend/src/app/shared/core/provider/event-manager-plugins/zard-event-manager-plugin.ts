@@ -5,7 +5,7 @@ export class ZardEventManagerPlugin extends EventManagerPlugin {
   #keywords = ['prevent', 'stop', 'stop-immediate', 'prevent-with-stop'];
 
   override supports(eventName: string): boolean {
-    return this.#keywords.some(keyword => eventName.endsWith(`.${keyword}`));
+    return this.#keywords.some((keyword) => eventName.endsWith(`.${keyword}`));
   }
 
   override addEventListener(
@@ -75,7 +75,7 @@ export class ZardEventManagerPlugin extends EventManagerPlugin {
     const stringList = substring.substring(1, substring.length - 1);
     return stringList
       .split(',')
-      .map(raw => {
+      .map((raw) => {
         const s = raw.toLowerCase().trim();
         return s === 'space' ? ' ' : s;
       })

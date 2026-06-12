@@ -11,7 +11,12 @@ export class MetricsFacade {
 
   readonly dateRange: WritableSignal<'7d' | '30d' | '90d'> = signal('7d');
 
-  get analysisMetrics(): Signal<{ totalAnalyzed: number; totalPassed: number; totalFailed: number; totalInReview: number }> {
+  get analysisMetrics(): Signal<{
+    totalAnalyzed: number;
+    totalPassed: number;
+    totalFailed: number;
+    totalInReview: number;
+  }> {
     return computed(() => {
       const m = this.store.get(ControlCenterStoreEnum.METRICS)().data;
       return {
@@ -42,23 +47,26 @@ export class MetricsFacade {
   }
 
   loadMetrics(): void {
-    this.port.getMetrics().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (metrics) => {
-        this.store.update(ControlCenterStoreEnum.METRICS, {
-          data: metrics,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.METRICS, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getMetrics()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (metrics) => {
+          this.store.update(ControlCenterStoreEnum.METRICS, {
+            data: metrics,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.METRICS, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 }

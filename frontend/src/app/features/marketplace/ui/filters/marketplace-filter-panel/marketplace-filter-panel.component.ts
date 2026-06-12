@@ -1,13 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   DomainCategorySidebarComponent,
@@ -25,30 +16,17 @@ import { MarketplaceFilters } from '../../../domain/rules/marketplace-categoriza
   selector: 'cf-marketplace-filter-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    DomainCategorySidebarComponent,
-    StructuralTypeCheckboxesComponent,
-    KeywordSearchComponent,
-  ],
+  imports: [DomainCategorySidebarComponent, StructuralTypeCheckboxesComponent, KeywordSearchComponent],
   template: `
     <div class="cf-filter-panel">
       <div class="cf-filter-panel__header">
         <h2 class="cf-filter-panel__title">Filters</h2>
         @if (hasActiveFilters()) {
-          <button
-            type="button"
-            class="cf-filter-panel__clear"
-            (click)="clearAll()"
-          >
-            Clear all
-          </button>
+          <button type="button" class="cf-filter-panel__clear" (click)="clearAll()">Clear all</button>
         }
       </div>
 
-      <cf-keyword-search
-        [searchQuery]="keyword()"
-        (searchChanged)="onKeywordChange($event)"
-      />
+      <cf-keyword-search [searchQuery]="keyword()" (searchChanged)="onKeywordChange($event)" />
 
       <div class="cf-filter-panel__body">
         <cf-domain-category-sidebar
@@ -65,48 +43,50 @@ import { MarketplaceFilters } from '../../../domain/rules/marketplace-categoriza
       </div>
     </div>
   `,
-  styles: [`
-    .cf-filter-panel {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      background: #fff;
-      border-right: 1px solid #e0e0e0;
-    }
+  styles: [
+    `
+      .cf-filter-panel {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: #fff;
+        border-right: 1px solid #e0e0e0;
+      }
 
-    .cf-filter-panel__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem;
-      border-bottom: 1px solid #e0e0e0;
-    }
+      .cf-filter-panel__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+      }
 
-    .cf-filter-panel__title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin: 0;
-      color: #1a1a1a;
-    }
+      .cf-filter-panel__title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0;
+        color: #1a1a1a;
+      }
 
-    .cf-filter-panel__clear {
-      font-size: 0.8125rem;
-      color: #1976d2;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0;
-    }
+      .cf-filter-panel__clear {
+        font-size: 0.8125rem;
+        color: #1976d2;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+      }
 
-    .cf-filter-panel__clear:hover {
-      text-decoration: underline;
-    }
+      .cf-filter-panel__clear:hover {
+        text-decoration: underline;
+      }
 
-    .cf-filter-panel__body {
-      flex: 1;
-      overflow-y: auto;
-    }
-  `],
+      .cf-filter-panel__body {
+        flex: 1;
+        overflow-y: auto;
+      }
+    `,
+  ],
 })
 export class MarketplaceFilterPanelComponent {
   private readonly router = inject(Router);
@@ -195,10 +175,7 @@ export class MarketplaceFilterPanelComponent {
 
   readonly currentFilters = computed<MarketplaceFilters>(() => ({
     category: this.selectedCategory(),
-    structural:
-      this.selectedStructuralTypes().length > 0
-        ? this.selectedStructuralTypes()
-        : undefined,
+    structural: this.selectedStructuralTypes().length > 0 ? this.selectedStructuralTypes() : undefined,
     keywords: this.keyword() || undefined,
   }));
 

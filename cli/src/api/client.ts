@@ -62,6 +62,32 @@ export interface UploadResponse {
   version: string;
 }
 
+export interface AnalysisFinding {
+  id: string;
+  type: string;
+  severity: string;
+  title: string;
+  description?: string;
+}
+
+export interface AnalysisResult {
+  security_status: string;
+  security_score: number | null;
+  findings: AnalysisFinding[];
+}
+
+export interface AnalysisSubmissionResponse {
+  pluginId: string;
+  version: string;
+  jobId: string;
+  status: string;
+}
+
+export interface AppealSubmissionResponse {
+  appealId: string;
+  status: string;
+}
+
 // ---------------------------------------------------------------------------
 // Error
 // ---------------------------------------------------------------------------
@@ -94,6 +120,8 @@ export interface IMarketplaceClient {
   uploadPlugin(formData: FormData, headers?: Record<string, string>): Promise<UploadResponse>;
   getLatestVersion(pluginId: string): Promise<VersionSummary>;
   checkVersionExists(pluginId: string, version: string): Promise<boolean>;
+  get<T>(path: string, headers?: Record<string, string>): Promise<T>;
+  post<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T>;
 }
 
 // ---------------------------------------------------------------------------
@@ -190,6 +218,22 @@ export function createMarketplaceClient(apiUrl: string): IMarketplaceClient {
       } catch {
         return false;
       }
+    },
+
+    async get<T>(urlPath: string, headers?: Record<string, string>): Promise<T> {
+      const url = `${base}${urlPath}`;
+      const response = await fetch(url, headers ? { headers } : undefined);
+      return handleResponse<T>(response);
+    },
+
+    async post<T>(urlPath: string, body: unknown, headers?: Record<string, string>): Promise<T> {
+      const url = `${base}${urlPath}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(headers ?? {}) },
+        body: JSON.stringify(body),
+      });
+      return handleResponse<T>(response);
     },
   };
 }

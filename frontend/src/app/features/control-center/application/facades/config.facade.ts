@@ -28,68 +28,77 @@ export class ConfigFacade {
 
   loadConfig(): void {
     this.store.startLoading(ControlCenterStoreEnum.CONFIG);
-    this.port.getAnalysisConfig().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (config) => {
-        this.store.update(ControlCenterStoreEnum.CONFIG, {
-          data: config,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.CONFIG, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getAnalysisConfig()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (config) => {
+          this.store.update(ControlCenterStoreEnum.CONFIG, {
+            data: config,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.CONFIG, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 
   updateConfig(config: Partial<AnalysisConfig>): void {
     this.store.startLoading(ControlCenterStoreEnum.CONFIG);
-    this.port.updateAnalysisConfig(config).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.store.update(ControlCenterStoreEnum.CONFIG, {
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-        this.loadConfig();
-        this.loadHistory();
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.CONFIG, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'UPDATE_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .updateAnalysisConfig(config)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.store.update(ControlCenterStoreEnum.CONFIG, {
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+          this.loadConfig();
+          this.loadHistory();
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.CONFIG, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'UPDATE_ERROR', message }],
+          });
+        },
+      });
   }
 
   loadHistory(): void {
     this.store.startLoading(ControlCenterStoreEnum.CONFIG_HISTORY);
-    this.port.getConfigHistory().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (response) => {
-        this.store.update(ControlCenterStoreEnum.CONFIG_HISTORY, {
-          data: [...response.items],
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.CONFIG_HISTORY, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getConfigHistory()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.store.update(ControlCenterStoreEnum.CONFIG_HISTORY, {
+            data: [...response.items],
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.CONFIG_HISTORY, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 }

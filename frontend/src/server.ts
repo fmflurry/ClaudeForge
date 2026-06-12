@@ -25,47 +25,42 @@ const angularApp = new AngularNodeAppEngine();
  *                              matching the host port mapped by docker-compose
  */
 if (process.env['NODE_ENV'] !== 'production') {
-  const proxyTarget =
-    process.env['DEV_API_PROXY_TARGET'] ??
-    process.env['SSR_API_BASE_URL'] ??
-    'http://localhost:5010';
+  const proxyTarget = process.env['DEV_API_PROXY_TARGET'] ?? process.env['SSR_API_BASE_URL'] ?? 'http://localhost:5010';
   const proxyPrefixes = ['/api', '/auth', '/health'];
 
-  app.use(
-    (req: express.Request, res: express.Response, next: express.NextFunction): void => {
-      const shouldProxy = proxyPrefixes.some((prefix) => req.url.startsWith(prefix));
-      if (!shouldProxy) {
-        next();
-        return;
+  app.use((req: express.Request, res: express.Response, next: express.NextFunction): void => {
+    const shouldProxy = proxyPrefixes.some((prefix) => req.url.startsWith(prefix));
+    if (!shouldProxy) {
+      next();
+      return;
+    }
+
+    const targetUrl = new URL(req.url, proxyTarget);
+    const options = {
+      hostname: targetUrl.hostname,
+      port: targetUrl.port || 80,
+      path: targetUrl.pathname + targetUrl.search,
+      method: req.method,
+      headers: {
+        ...req.headers,
+        host: targetUrl.host,
+      },
+    };
+
+    const proxyReq = httpRequest(options, (proxyRes) => {
+      res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers as Record<string, string>);
+      proxyRes.pipe(res, { end: true });
+    });
+
+    proxyReq.on('error', (err: Error) => {
+      console.error(`[dev-proxy] Failed to proxy ${req.method} ${req.url} → ${proxyTarget}:`, err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Dev proxy upstream unavailable', detail: err.message });
       }
+    });
 
-      const targetUrl = new URL(req.url, proxyTarget);
-      const options = {
-        hostname: targetUrl.hostname,
-        port: targetUrl.port || 80,
-        path: targetUrl.pathname + targetUrl.search,
-        method: req.method,
-        headers: {
-          ...req.headers,
-          host: targetUrl.host,
-        },
-      };
-
-      const proxyReq = httpRequest(options, (proxyRes) => {
-        res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers as Record<string, string>);
-        proxyRes.pipe(res, { end: true });
-      });
-
-      proxyReq.on('error', (err: Error) => {
-        console.error(`[dev-proxy] Failed to proxy ${req.method} ${req.url} → ${proxyTarget}:`, err.message);
-        if (!res.headersSent) {
-          res.status(502).json({ error: 'Dev proxy upstream unavailable', detail: err.message });
-        }
-      });
-
-      req.pipe(proxyReq, { end: true });
-    },
-  );
+    req.pipe(proxyReq, { end: true });
+  });
 }
 
 /**

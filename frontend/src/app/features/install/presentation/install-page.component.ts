@@ -6,14 +6,7 @@
  * SSR-safe: clipboard access guarded behind isPlatformBrowser.
  */
 
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  OnInit,
-  PLATFORM_ID,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ZardBadgeComponent } from '../../../shared/components/badge/badge.component';
@@ -45,7 +38,6 @@ const CLI_PACKAGE = '@claudeforge/claude-plugin-cli';
     </section>
 
     <div class="ip-content">
-
       <!-- ================================================================= -->
       <!-- SECTION 1: Install the CLI                                         -->
       <!-- ================================================================= -->
@@ -142,20 +134,9 @@ const CLI_PACKAGE = '@claudeforge/claude-plugin-cli';
       <!-- CTA                                                                -->
       <!-- ================================================================= -->
       <div class="ip-cta">
-        <a
-          routerLink="/catalog"
-          z-button
-          zType="default"
-          zSize="lg"
-        >{{ i18n.t('install.cta-browse') }}</a>
-        <a
-          routerLink="/docs"
-          z-button
-          zType="outline"
-          zSize="lg"
-        >{{ i18n.t('install.cta-docs') }}</a>
+        <a routerLink="/catalog" z-button zType="default" zSize="lg">{{ i18n.t('install.cta-browse') }}</a>
+        <a routerLink="/docs" z-button zType="outline" zSize="lg">{{ i18n.t('install.cta-docs') }}</a>
       </div>
-
     </div>
   `,
   styles: [
@@ -167,14 +148,14 @@ const CLI_PACKAGE = '@claudeforge/claude-plugin-cli';
         padding: 4rem 1.5rem 3rem;
         text-align: center;
       }
-       .ip-hero__inner {
-         max-width: 96rem;
-         margin: 0 auto;
-         display: flex;
-         flex-direction: column;
-         align-items: center;
-         gap: 1rem;
-       }
+      .ip-hero__inner {
+        max-width: 96rem;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
       .ip-hero__badge {
         display: inline-flex;
       }
@@ -195,13 +176,13 @@ const CLI_PACKAGE = '@claudeforge/claude-plugin-cli';
       }
 
       /* ── Content wrapper ───────────────────────────────────────────────── */
-       .ip-content {
-         max-width: 96rem;
-         margin: 0 auto;
-         padding: 3rem 1.5rem 4rem;
-         display: flex;
-         flex-direction: column;
-         gap: 2rem;
+      .ip-content {
+        max-width: 96rem;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
       }
 
       /* ── Section + card ────────────────────────────────────────────────── */
@@ -271,7 +252,9 @@ const CLI_PACKAGE = '@claudeforge/claude-plugin-cli';
         color: var(--background);
         font-size: 0.8125rem;
         cursor: pointer;
-        transition: background 0.15s, color 0.15s;
+        transition:
+          background 0.15s,
+          color 0.15s;
         line-height: 1.4;
       }
       .ip-code-block__copy-btn:hover {

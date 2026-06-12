@@ -81,24 +81,27 @@ export class OverviewFacade {
 
   loadMetrics(): void {
     this.store.startLoading(ControlCenterStoreEnum.METRICS);
-    this.port.getMetrics().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (metrics) => {
-        this.store.update(ControlCenterStoreEnum.METRICS, {
-          data: metrics,
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-        this.startPolling();
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.METRICS, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getMetrics()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (metrics) => {
+          this.store.update(ControlCenterStoreEnum.METRICS, {
+            data: metrics,
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+          this.startPolling();
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.METRICS, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 }

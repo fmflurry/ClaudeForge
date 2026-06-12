@@ -22,12 +22,22 @@ import { OrganizationsFacade } from '../../../application/facades/organizations.
         <p>Loading members...</p>
       } @else {
         <table class="table">
-          <thead><tr><th>User ID</th><th>Role</th></tr></thead>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Role</th>
+            </tr>
+          </thead>
           <tbody>
             @for (m of facade.orgMembers(); track m.userId) {
-              <tr><td>{{ m.userId }}</td><td>{{ m.role }}</td></tr>
+              <tr>
+                <td>{{ m.userId }}</td>
+                <td>{{ m.role }}</td>
+              </tr>
             } @empty {
-              <tr><td colspan="2">No members</td></tr>
+              <tr>
+                <td colspan="2">No members</td>
+              </tr>
             }
           </tbody>
         </table>
@@ -41,14 +51,46 @@ import { OrganizationsFacade } from '../../../application/facades/organizations.
       </div>
     }
   `,
-  styles: [`
-    .detail-card { background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.25rem; margin-bottom: 1rem; }
-    .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--border); }
-    .invite-section { margin-top: 2rem; display: flex; gap: 0.5rem; align-items: center; }
-    input { padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.25rem; }
-    button { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 0.25rem; cursor: pointer; background: var(--primary); color: var(--primary-foreground); }
-  `],
+  styles: [
+    `
+      .detail-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table th,
+      .table td {
+        text-align: left;
+        padding: 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .invite-section {
+        margin-top: 2rem;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      input {
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+      }
+      button {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        cursor: pointer;
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+    `,
+  ],
 })
 export class OrgDetailComponent implements OnInit {
   readonly facade = inject(OrganizationsFacade);

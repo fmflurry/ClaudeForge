@@ -28,24 +28,27 @@ export class AuditFacade {
     const mergedFilter = { ...this.filters(), ...filter };
     this.filters.set(mergedFilter);
     this.store.startLoading(ControlCenterStoreEnum.AUDIT_LOGS);
-    this.port.getAuditLogs(mergedFilter).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (response) => {
-        this.store.update(ControlCenterStoreEnum.AUDIT_LOGS, {
-          data: [...response.items],
-          status: 'Success',
-          isLoading: false,
-          errors: undefined,
-        });
-      },
-      error: (err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        this.store.update(ControlCenterStoreEnum.AUDIT_LOGS, {
-          status: 'Error',
-          isLoading: false,
-          errors: [{ code: 'LOAD_ERROR', message }],
-        });
-      },
-    });
+    this.port
+      .getAuditLogs(mergedFilter)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.store.update(ControlCenterStoreEnum.AUDIT_LOGS, {
+            data: [...response.items],
+            status: 'Success',
+            isLoading: false,
+            errors: undefined,
+          });
+        },
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          this.store.update(ControlCenterStoreEnum.AUDIT_LOGS, {
+            status: 'Error',
+            isLoading: false,
+            errors: [{ code: 'LOAD_ERROR', message }],
+          });
+        },
+      });
   }
 
   setFilters(filter: Partial<AuditLogFilter>): void {

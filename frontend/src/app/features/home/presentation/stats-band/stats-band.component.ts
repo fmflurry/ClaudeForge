@@ -68,7 +68,7 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         --sb-slate: #0f172a;
         --sb-mint-rgb: 34 197 94;
         --sb-blue-rgb: 59 130 246;
-        --sb-shadow: 0 22px 60px rgb(15 23 42 / 0.10);
+        --sb-shadow: 0 22px 60px rgb(15 23 42 / 0.1);
       }
 
       .sb-error {
@@ -98,9 +98,8 @@ import { I18nFacade } from '../../../../application/i18n/i18n.facade';
         gap: 0.875rem;
         padding: 1rem;
         background:
-          radial-gradient(circle at 12% 0%, rgb(var(--sb-amber-rgb) / 0.30), transparent 18rem),
-          radial-gradient(circle at 100% 100%, rgb(var(--sb-blue-rgb) / 0.10), transparent 18rem),
-          var(--sb-cream);
+          radial-gradient(circle at 12% 0%, rgb(var(--sb-amber-rgb) / 0.3), transparent 18rem),
+          radial-gradient(circle at 100% 100%, rgb(var(--sb-blue-rgb) / 0.1), transparent 18rem), var(--sb-cream);
         border-radius: 1rem;
         box-shadow: var(--sb-shadow);
       }

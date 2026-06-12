@@ -19,10 +19,14 @@ export interface PluginManifest {
   version: string;
   description: string;
   author: string;
-  types: string[];
+  /** @deprecated Use `category` instead */
+  types?: string[];
   languages: string[];
   entrypoints: string[];
+  /** @deprecated Use `keywords` instead */
   useCaseTags?: string[];
+  category?: string;
+  keywords?: string[];
   dependencies?: Record<string, string>;
   license?: string;
   docsUrl?: string;

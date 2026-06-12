@@ -130,5 +130,30 @@ export function createAuthenticatedClient(
         handleError(err);
       }
     },
+
+    async get<T>(urlPath: string, extraHeaders?: Record<string, string>): Promise<T> {
+      if (credentials) {
+        checkLocalExpiry();
+      }
+      const headers = credentials ? { ...getAuthHeader(), ...(extraHeaders ?? {}) } : extraHeaders;
+      try {
+        return await baseClient.get<T>(urlPath, headers);
+      } catch (err) {
+        handleError(err);
+      }
+    },
+
+    async post<T>(urlPath: string, body: unknown, extraHeaders?: Record<string, string>): Promise<T> {
+      if (!credentials) {
+        throw new SessionExpiredError();
+      }
+      checkLocalExpiry();
+      const headers = { ...getAuthHeader(), ...(extraHeaders ?? {}) };
+      try {
+        return await baseClient.post<T>(urlPath, body, headers);
+      } catch (err) {
+        handleError(err);
+      }
+    },
   };
 }
