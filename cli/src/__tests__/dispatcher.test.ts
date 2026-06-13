@@ -47,6 +47,7 @@ const SUBCOMMANDS = [
   'scaffold',
   'validate',
   'config',
+  'addon',
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -54,7 +55,7 @@ const SUBCOMMANDS = [
 // ---------------------------------------------------------------------------
 
 describe('createProgram – subcommand registration', () => {
-  it('registers all 9 subcommands', () => {
+  it('registers all 10 top-level subcommands (including addon)', () => {
     const program = createProgram();
     const names = program.commands.map((c) => c.name());
     for (const sub of SUBCOMMANDS) {
@@ -190,5 +191,134 @@ describe('createProgram – --help', () => {
   it('does not throw when outputHelp() is called', () => {
     const program = createProgram();
     expect(() => program.outputHelp()).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// addon sub-command routing
+// ---------------------------------------------------------------------------
+
+describe('createProgram – addon routing', () => {
+  it('addon add subcommand invokes runAddonAdd', async () => {
+    const runAddonAdd = vi.fn().mockResolvedValue({ exitCode: 0, output: '' });
+    const program = createProgram({ runAddonAdd });
+    await program.parseAsync(
+      ['node', 'claude-plugin', 'addon', 'add', 'my-source', '--scope', 'local'],
+      { from: 'user' },
+    );
+    expect(runAddonAdd).toHaveBeenCalled();
+  });
+
+  it('addon list subcommand invokes runAddonList', async () => {
+    const runAddonList = vi.fn().mockResolvedValue({ exitCode: 0, output: '' });
+    const program = createProgram({ runAddonList });
+    await program.parseAsync(['node', 'claude-plugin', 'addon', 'list'], { from: 'user' });
+    expect(runAddonList).toHaveBeenCalled();
+  });
+
+  it('addon update subcommand invokes runAddonUpdate', async () => {
+    const runAddonUpdate = vi.fn().mockResolvedValue({ exitCode: 0, output: '' });
+    const program = createProgram({ runAddonUpdate });
+    await program.parseAsync(
+      ['node', 'claude-plugin', 'addon', 'update', 'my-source', '--scope', 'local'],
+      { from: 'user' },
+    );
+    expect(runAddonUpdate).toHaveBeenCalled();
+  });
+
+  it('addon remove subcommand invokes runAddonRemove', async () => {
+    const runAddonRemove = vi.fn().mockResolvedValue({ exitCode: 0, output: '' });
+    const program = createProgram({ runAddonRemove });
+    await program.parseAsync(
+      ['node', 'claude-plugin', 'addon', 'remove', 'my-addon', '--type', 'skill', '--scope', 'local'],
+      { from: 'user' },
+    );
+    expect(runAddonRemove).toHaveBeenCalled();
+  });
+
+  it('addon rollback subcommand invokes runAddonRollback', async () => {
+    const runAddonRollback = vi.fn().mockResolvedValue({ exitCode: 0, output: '' });
+    const program = createProgram({ runAddonRollback });
+    await program.parseAsync(
+      ['node', 'claude-plugin', 'addon', 'rollback', 'my-addon', '--type', 'skill', '--scope', 'local'],
+      { from: 'user' },
+    );
+    expect(runAddonRollback).toHaveBeenCalled();
+  });
+
+  it('addon add passes --scope flag to runAddonAdd', async () => {
+    let capturedArgs: Record<string, unknown> = {};
+    const runAddonAdd = vi.fn().mockImplementation((args: Record<string, unknown>) => {
+      capturedArgs = args;
+      return Promise.resolve({ exitCode: 0, output: '' });
+    });
+    const program = createProgram({ runAddonAdd });
+    await program.parseAsync(
+      ['node', 'claude-plugin', 'addon', 'add', 'my-source', '--scope', 'global'],
+      { from: 'user' },
+    );
+    expect(capturedArgs['scope']).toBe('global');
+  });
+
+  it('addon add passes --force flag to runAddonAdd', async () => {
+    let capturedArgs: Record<string, unknown> = {};
+    const runAddonAdd = vi.fn().mockImplementation((args: Record<string, unknown>) => {
+      capturedArgs = args;
+      return Promise.resolve({ exitCode: 0, output: '' });
+    });
+    const program = createProgram({ runAddonAdd });
+    await program.parseAsync(
+      ['node', 'claude-plugin', 'addon', 'add', 'my-source', '--scope', 'local', '--force'],
+      { from: 'user' },
+    );
+    expect(capturedArgs['force']).toBe(true);
+  });
+
+  it('addon remove passes --type and --scope to runAddonRemove', async () => {
+    let capturedArgs: Record<string, unknown> = {};
+    const runAddonRemove = vi.fn().mockImplementation((args: Record<string, unknown>) => {
+      capturedArgs = args;
+      return Promise.resolve({ exitCode: 0, output: '' });
+    });
+    const program = createProgram({ runAddonRemove });
+    await program.parseAsync(
+      ['node', 'claude-plugin', 'addon', 'remove', 'my-skill', '--type', 'skill', '--scope', 'global'],
+      { from: 'user' },
+    );
+    expect(capturedArgs['type']).toBe('skill');
+    expect(capturedArgs['scope']).toBe('global');
+    expect(capturedArgs['name']).toBe('my-skill');
+  });
+
+  it('addon rollback passes --to version to runAddonRollback', async () => {
+    let capturedArgs: Record<string, unknown> = {};
+    const runAddonRollback = vi.fn().mockImplementation((args: Record<string, unknown>) => {
+      capturedArgs = args;
+      return Promise.resolve({ exitCode: 0, output: '' });
+    });
+    const program = createProgram({ runAddonRollback });
+    await program.parseAsync(
+      ['node', 'claude-plugin', 'addon', 'rollback', 'my-skill', '--type', 'skill', '--scope', 'local', '--to', '1.0.0'],
+      { from: 'user' },
+    );
+    expect(capturedArgs['to']).toBe('1.0.0');
+  });
+
+  it('addon command group is registered under program commands', () => {
+    const program = createProgram();
+    const addonCmd = program.commands.find((c) => c.name() === 'addon');
+    expect(addonCmd).toBeDefined();
+    const subNames = addonCmd!.commands.map((c) => c.name());
+    expect(subNames).toContain('add');
+    expect(subNames).toContain('list');
+    expect(subNames).toContain('update');
+    expect(subNames).toContain('remove');
+    expect(subNames).toContain('rollback');
+  });
+
+  it('default injection uses real runAddonAdd function', () => {
+    // When no dep is injected, the dispatcher uses the real default
+    // We just verify the program can be created without errors (real function is wired)
+    expect(() => createProgram()).not.toThrow();
   });
 });

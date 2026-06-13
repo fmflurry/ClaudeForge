@@ -35,6 +35,11 @@
  *   - at minimum a src/ subdirectory and plugin.json are created
  */
 
+// ---------------------------------------------------------------------------
+// Characterization tests — lock the EXACT observable output of runScaffold
+// per language. These must stay GREEN before and after any refactor.
+// ---------------------------------------------------------------------------
+
 import { describe, it, expect, vi } from 'vitest';
 
 // These imports WILL FAIL until src/commands/scaffold.ts is created (RED state).
@@ -206,5 +211,318 @@ describe('runScaffold – --interactive', () => {
     const parsed = JSON.parse(fakeFs.written[manifestPath]) as PluginManifest;
     const validation = validateManifest(parsed);
     expect(validation.valid).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Characterization tests — lock exact observable output per language
+// These capture the current contract and must remain GREEN after any refactor.
+// ---------------------------------------------------------------------------
+
+describe('runScaffold characterization — typescript', () => {
+  const PLUGIN_NAME = '@char/ts-plugin';
+  const TARGET_DIR = '/projects/char-ts';
+  const AUTHOR = 'testuser';
+
+  it('writes exactly plugin.json and src/index.ts (two files, no extras)', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const writtenKeys = Object.keys(fakeFs.written).sort();
+    expect(writtenKeys).toContain(`${TARGET_DIR}/plugin.json`);
+    expect(writtenKeys).toContain(`${TARGET_DIR}/src/index.ts`);
+    // Exactly two files — no extra scaffolded files from a richer generator
+    expect(writtenKeys).toHaveLength(2);
+  });
+
+  it('plugin.json has types: ["skill"]', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['types']).toEqual(['skill']);
+  });
+
+  it('plugin.json has languages: ["typescript"]', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['languages']).toEqual(['typescript']);
+  });
+
+  it('plugin.json has entrypoints: ["src/index.ts"] (string array, not object array)', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['entrypoints']).toEqual(['src/index.ts']);
+  });
+
+  it('plugin.json has version: "0.1.0", description: "A Claude plugin"', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['version']).toBe('0.1.0');
+    expect(parsed['description']).toBe('A Claude plugin');
+  });
+
+  it('src/index.ts contains the minimal entrypoint stub (comment + export default)', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const content = fakeFs.written[`${TARGET_DIR}/src/index.ts`];
+    expect(content).toBe(`// ${PLUGIN_NAME} — Claude plugin entry point\nexport default {};\n`);
+  });
+
+  it('plugin.json does NOT contain a "dependencies" or "license" field (scaffold-only shape)', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(Object.keys(parsed)).not.toContain('license');
+    // dependencies may or may not be present but must not be present per scaffold contract
+    expect(Object.keys(parsed)).not.toContain('dependencies');
+  });
+
+  it('output message matches "Scaffolded plugin <name> (<lang>) at <dir>"', async () => {
+    const fakeFs = makeCapturingFs();
+    const result = await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    expect(result.output).toBe(`Scaffolded plugin ${PLUGIN_NAME} (typescript) at ${TARGET_DIR}`);
+  });
+
+  it('provides author from the non-interactive path default', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    // author is set to os.userInfo().username — just verify it is a non-empty string
+    expect(typeof parsed['author']).toBe('string');
+    expect((parsed['author'] as string).length).toBeGreaterThan(0);
+  });
+
+  it('passes validateManifest for typescript', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'typescript', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as PluginManifest;
+    expect(validateManifest(parsed).valid).toBe(true);
+    expect(validateManifest(parsed).errors).toEqual([]);
+  });
+
+  it('provides explicit author when passed via interactive prompter', async () => {
+    const fakeFs = makeCapturingFs();
+    const prompter = makePrompter([PLUGIN_NAME, 'typescript', 'A Claude plugin', AUTHOR]);
+    await runScaffold({ interactive: true, targetDir: TARGET_DIR }, { fs: fakeFs, prompter });
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['author']).toBe(AUTHOR);
+  });
+});
+
+describe('runScaffold characterization — python', () => {
+  const PLUGIN_NAME = '@char/py-plugin';
+  const TARGET_DIR = '/projects/char-py';
+
+  it('entrypoint is src/main.py with python comment stub', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'python', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    expect(Object.keys(fakeFs.written)).toContain(`${TARGET_DIR}/src/main.py`);
+    const content = fakeFs.written[`${TARGET_DIR}/src/main.py`];
+    expect(content).toBe(`# ${PLUGIN_NAME} — Claude plugin entry point\n`);
+  });
+
+  it('plugin.json has entrypoints: ["src/main.py"]', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'python', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['entrypoints']).toEqual(['src/main.py']);
+  });
+
+  it('plugin.json has languages: ["python"]', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'python', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['languages']).toEqual(['python']);
+  });
+
+  it('writes exactly two files for python (plugin.json + src/main.py)', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'python', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    expect(Object.keys(fakeFs.written)).toHaveLength(2);
+  });
+
+  it('passes validateManifest for python', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'python', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as PluginManifest;
+    expect(validateManifest(parsed).valid).toBe(true);
+  });
+});
+
+describe('runScaffold characterization — go', () => {
+  const PLUGIN_NAME = 'my-go-plugin';
+  const TARGET_DIR = '/projects/char-go';
+
+  it('entrypoint is src/main.go with go comment stub', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'go', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    expect(Object.keys(fakeFs.written)).toContain(`${TARGET_DIR}/src/main.go`);
+    const content = fakeFs.written[`${TARGET_DIR}/src/main.go`];
+    expect(content).toBe(
+      `// ${PLUGIN_NAME} — Claude plugin entry point\npackage main\n\nfunc main() {}\n`,
+    );
+  });
+
+  it('plugin.json has entrypoints: ["src/main.go"]', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'go', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['entrypoints']).toEqual(['src/main.go']);
+  });
+
+  it('plugin.json has languages: ["go"]', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'go', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['languages']).toEqual(['go']);
+  });
+
+  it('writes exactly two files for go (plugin.json + src/main.go)', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'go', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    expect(Object.keys(fakeFs.written)).toHaveLength(2);
+  });
+
+  it('passes validateManifest for go', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'go', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as PluginManifest;
+    expect(validateManifest(parsed).valid).toBe(true);
+  });
+});
+
+describe('runScaffold characterization — rust', () => {
+  const PLUGIN_NAME = 'my-rust-plugin';
+  const TARGET_DIR = '/projects/char-rust';
+
+  it('entrypoint is src/main.rs with rust comment stub', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'rust', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    expect(Object.keys(fakeFs.written)).toContain(`${TARGET_DIR}/src/main.rs`);
+    const content = fakeFs.written[`${TARGET_DIR}/src/main.rs`];
+    expect(content).toBe(
+      `// ${PLUGIN_NAME} — Claude plugin entry point\nfn main() {}\n`,
+    );
+  });
+
+  it('plugin.json has entrypoints: ["src/main.rs"]', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'rust', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['entrypoints']).toEqual(['src/main.rs']);
+  });
+
+  it('plugin.json has languages: ["rust"]', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'rust', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['languages']).toEqual(['rust']);
+  });
+
+  it('writes exactly two files for rust (plugin.json + src/main.rs)', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'rust', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    expect(Object.keys(fakeFs.written)).toHaveLength(2);
+  });
+
+  it('passes validateManifest for rust', async () => {
+    const fakeFs = makeCapturingFs();
+    await runScaffold(
+      { name: PLUGIN_NAME, language: 'rust', targetDir: TARGET_DIR },
+      { fs: fakeFs },
+    );
+    const raw = fakeFs.written[`${TARGET_DIR}/plugin.json`];
+    const parsed = JSON.parse(raw) as PluginManifest;
+    expect(validateManifest(parsed).valid).toBe(true);
   });
 });

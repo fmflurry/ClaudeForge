@@ -1,5 +1,20 @@
 /**
  * Scaffold command — generate a minimal plugin project structure.
+ *
+ * Design note (task 11.2): This command intentionally does NOT delegate to
+ * `generatePluginTemplate` from `@claudeforge/plugin-template`. The generator
+ * produces a richer, incompatible output (object-array entrypoints, extra fields
+ * like `dependencies`/`license`, many extra files, and different source file
+ * paths for python/go/rust). Delegating while preserving exact observable output
+ * would require post-processing that is more complex than the current inline
+ * implementation and would couple the scaffold contract to generator internals.
+ *
+ * Characterization tests in `command-scaffold.test.ts` lock the exact per-language
+ * output (file set, plugin.json shape, entrypoint content) as the stable contract.
+ *
+ * The addon scaffold path (`cli/src/addon/scaffold-source.ts`) is the primary
+ * consumer of `generatePluginTemplate` — it handles path remapping and manifest
+ * synthesis for the addon model where the richer generator output is appropriate.
  */
 
 import * as nodeFsPromises from 'node:fs/promises';

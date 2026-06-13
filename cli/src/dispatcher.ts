@@ -5,6 +5,7 @@
 
 import { Command } from 'commander';
 import type { ParseOptions } from 'commander';
+import * as os from 'node:os';
 import { resolveHome, resolveApiUrl, readConfig } from './config/config.js';
 import { createMarketplaceClient } from './api/client.js';
 import { readCredentials } from './auth/credentials-store.js';
@@ -24,6 +25,11 @@ import { runScaffold as defaultRunScaffold } from './commands/scaffold.js';
 import { runLogin as defaultRunLogin } from './commands/login.js';
 import { runLogout as defaultRunLogout } from './commands/logout.js';
 import { runWhoami as defaultRunWhoami } from './commands/whoami.js';
+import { runAddonAdd as defaultRunAddonAdd } from './commands/addon-add.js';
+import { runAddonList as defaultRunAddonList } from './commands/addon-list.js';
+import { runAddonUpdate as defaultRunAddonUpdate } from './commands/addon-update.js';
+import { runAddonRemove as defaultRunAddonRemove } from './commands/addon-remove.js';
+import { runAddonRollback as defaultRunAddonRollback } from './commands/addon-rollback.js';
 
 import type { runInstall } from './commands/install.js';
 import type { runRemove } from './commands/remove.js';
@@ -38,6 +44,11 @@ import type { ScaffoldLanguage } from './commands/scaffold.js';
 import type { runLogin } from './commands/login.js';
 import type { runLogout } from './commands/logout.js';
 import type { runWhoami } from './commands/whoami.js';
+import type { runAddonAdd } from './commands/addon-add.js';
+import type { runAddonList } from './commands/addon-list.js';
+import type { runAddonUpdate } from './commands/addon-update.js';
+import type { runAddonRemove } from './commands/addon-remove.js';
+import type { runAddonRollback } from './commands/addon-rollback.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,6 +68,11 @@ export interface DispatcherDeps {
   runLogin?: typeof runLogin;
   runLogout?: typeof runLogout;
   runWhoami?: typeof runWhoami;
+  runAddonAdd?: typeof runAddonAdd;
+  runAddonList?: typeof runAddonList;
+  runAddonUpdate?: typeof runAddonUpdate;
+  runAddonRemove?: typeof runAddonRemove;
+  runAddonRollback?: typeof runAddonRollback;
 }
 
 // ---------------------------------------------------------------------------
@@ -129,7 +145,15 @@ export function createProgram(deps: DispatcherDeps = {}): Command {
     runLogin: injectedLogin = defaultRunLogin,
     runLogout: injectedLogout = defaultRunLogout,
     runWhoami: injectedWhoami = defaultRunWhoami,
+    runAddonAdd: injectedAddonAdd = defaultRunAddonAdd,
+    runAddonList: injectedAddonList = defaultRunAddonList,
+    runAddonUpdate: injectedAddonUpdate = defaultRunAddonUpdate,
+    runAddonRemove: injectedAddonRemove = defaultRunAddonRemove,
+    runAddonRollback: injectedAddonRollback = defaultRunAddonRollback,
   } = deps;
+
+  const addonCwd = process.cwd();
+  const addonHomeDir = os.homedir();
 
   // ── install ──────────────────────────────────────────────────────────────
   program
@@ -250,6 +274,100 @@ export function createProgram(deps: DispatcherDeps = {}): Command {
       );
       printResult(result);
     });
+
+  // ── addon ─────────────────────────────────────────────────────────────────
+  const addonCmd = new Command('addon').description('Manage installed add-ons').exitOverride();
+
+  addonCmd
+    .command('add <source>')
+    .description('Install an add-on from a source directory, or scaffold from a bare name')
+    .option('--scope <scope>', 'Installation scope: local or global')
+    .option('--force', 'Overwrite existing installation')
+    .option('--type <type>', 'Add-on type for scaffold path: agent|skill|hook|plugin')
+    .option('--lang <lang>', 'Template language for scaffold path')
+    .exitOverride()
+    .action(async (source: string, options: { scope?: string; force?: boolean; type?: string; lang?: string }) => {
+      const result = await injectedAddonAdd(
+        {
+          source,
+          ...(options.scope !== undefined ? { scope: options.scope } : {}),
+          ...(options.force !== undefined ? { force: options.force } : {}),
+          ...(options.type !== undefined ? { type: options.type } : {}),
+          ...(options.lang !== undefined ? { lang: options.lang } : {}),
+        },
+        { cwd: addonCwd, homeDir: addonHomeDir },
+      );
+      printResult(result);
+    });
+
+  addonCmd
+    .command('list')
+    .description('List installed add-ons')
+    .option('--scope <scope>', 'Filter by scope: local or global')
+    .exitOverride()
+    .action(async (options: { scope?: string }) => {
+      const result = await injectedAddonList(
+        { ...(options.scope !== undefined ? { scope: options.scope } : {}) },
+        { cwd: addonCwd, homeDir: addonHomeDir },
+      );
+      printResult(result);
+    });
+
+  addonCmd
+    .command('update <source>')
+    .description('Update an installed add-on from a source directory')
+    .option('--scope <scope>', 'Scope of the installed add-on: local or global')
+    .exitOverride()
+    .action(async (source: string, options: { scope?: string }) => {
+      const result = await injectedAddonUpdate(
+        {
+          source,
+          ...(options.scope !== undefined ? { scope: options.scope } : {}),
+        },
+        { cwd: addonCwd, homeDir: addonHomeDir },
+      );
+      printResult(result);
+    });
+
+  addonCmd
+    .command('remove <name>')
+    .description('Remove an installed add-on')
+    .option('--type <type>', 'Add-on type: agent|skill|hook|plugin')
+    .option('--scope <scope>', 'Scope of the installed add-on: local or global')
+    .exitOverride()
+    .action(async (name: string, options: { type?: string; scope?: string }) => {
+      const result = await injectedAddonRemove(
+        {
+          name,
+          ...(options.type !== undefined ? { type: options.type } : {}),
+          ...(options.scope !== undefined ? { scope: options.scope } : {}),
+        },
+        { cwd: addonCwd, homeDir: addonHomeDir },
+      );
+      printResult(result);
+    });
+
+  addonCmd
+    .command('rollback <name>')
+    .description('Roll back an installed add-on to a prior stored version')
+    .option('--type <type>', 'Add-on type: agent|skill|hook|plugin')
+    .option('--scope <scope>', 'Scope of the installed add-on: local or global')
+    .option('--to <version>', 'Target version to roll back to (defaults to latest prior)')
+    .exitOverride()
+    .action(async (name: string, options: { type?: string; scope?: string; to?: string }) => {
+      const result = await injectedAddonRollback(
+        {
+          name,
+          ...(options.type !== undefined ? { type: options.type } : {}),
+          ...(options.scope !== undefined ? { scope: options.scope } : {}),
+          ...(options.to !== undefined ? { to: options.to } : {}),
+        },
+        { cwd: addonCwd, homeDir: addonHomeDir },
+      );
+      printResult(result);
+    });
+
+  program.addCommand(addonCmd);
 
   // ── config ───────────────────────────────────────────────────────────────
   const configCmd = new Command('config').description('Configure CLI settings').exitOverride();
