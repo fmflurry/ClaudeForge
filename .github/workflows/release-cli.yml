@@ -1,0 +1,54 @@
+# Release workflow for @claudeforge/claude-plugin-cli
+#
+# Triggered by a tag push matching cli-v* (e.g. cli-v0.1.0).
+# IMPORTANT: before pushing the tag, ensure the tag version matches
+# cli/package.json "version" (e.g. tag cli-v0.1.0 ↔ version "0.1.0").
+#
+# Prerequisites (one-time manual setup):
+#   1. Create the @claudeforge org on npmjs.com (or publish under a personal scope).
+#   2. Generate an npm Automation token (npmjs.com → Access Tokens → Granular or Classic).
+#   3. Add it as a GitHub Actions secret: Settings → Secrets → Actions → NPM_TOKEN.
+
+name: Release CLI
+
+on:
+  push:
+    tags:
+      - 'cli-v*'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release-cli:
+    name: Publish @claudeforge/claude-plugin-cli to npm
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          # Cache the root lock file (workspaces share one node_modules at root)
+          cache-dependency-path: package-lock.json
+
+      # Install all workspace packages from the root so the workspace
+      # symlinks (@claudeforge/plugin-template) are available at build time.
+      - name: Install dependencies (workspace root)
+        run: npm ci
+
+      - name: Build CLI
+        run: npm run build:cli
+
+      - name: Test CLI (gate — publish only on green)
+        run: npm run test:cli
+
+      - name: Publish to npm
+        run: npm publish --workspace=cli --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

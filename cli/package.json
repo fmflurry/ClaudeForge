@@ -1,21 +1,25 @@
 {
   "name": "@claudeforge/claude-plugin-cli",
   "version": "0.1.0",
-  "description": "Claude Code plugin marketplace CLI — install, publish, search, scaffold plugins",
-  "main": "dist/index.js",
+  "description": "Command-line tool to install, update, remove and roll back Claude Code add-ons — hooks, skills, agents, plugins — locally or globally.",
+  "main": "dist/index.cjs",
   "bin": {
-    "claude-plugin": "dist/index.js"
+    "claude-plugin": "dist/index.cjs"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs --dts --target node18",
-    "build:watch": "tsup src/index.ts --format cjs --dts --target node18 --watch",
+    "build": "tsup",
+    "build:watch": "tsup --watch",
     "dev": "ts-node src/index.ts",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
   },
   "prettier": {
     "printWidth": 120,
@@ -25,18 +29,34 @@
   },
   "keywords": [
     "claude",
-    "plugins",
+    "claude-code",
     "cli",
-    "marketplace"
+    "plugin",
+    "addon",
+    "hooks",
+    "skills",
+    "agents"
   ],
   "author": "Florian Michel",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fmflurry/ClaudeForge.git",
+    "directory": "cli"
+  },
+  "homepage": "https://github.com/fmflurry/ClaudeForge/tree/main/cli#readme",
+  "bugs": {
+    "url": "https://github.com/fmflurry/ClaudeForge/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@claudeforge/plugin-template": "*",
     "chalk": "^5.3.0",
     "commander": "^12.0.0"
   },
   "devDependencies": {
+    "@claudeforge/plugin-template": "*",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
@@ -50,7 +70,7 @@
     "vitest": "^2.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22"
   },
   "type": "module"
 }
