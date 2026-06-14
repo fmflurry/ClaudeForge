@@ -2,7 +2,7 @@
  * Config command — get/set CLI configuration.
  */
 
-import { DEFAULT_API_URL, readConfig, writeConfig, validateUrl, resolveApiUrl } from '../config/config.js';
+import { API_URL_ENV, readConfig, writeConfig, validateUrl, resolveApiUrl } from '../config/config.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -104,11 +104,20 @@ export async function runConfigShow(deps: ConfigShowDeps): Promise<CommandResult
   const { homeDir, env } = deps;
   const config = await readConfig(homeDir);
 
-  // When config.json has the default value, the file may not exist; prefer env override.
-  const displayUrl = config.apiUrl !== DEFAULT_API_URL ? config.apiUrl : resolveApiUrl(undefined, env);
+  // resolveApiUrl applies precedence: CLAUDEFORGE_API_URL env > persisted config > default.
+  const resolvedEnv = env ?? process.env;
+  const effectiveUrl = resolveApiUrl(config, resolvedEnv);
+
+  const lines: string[] = [`API URL: ${effectiveUrl}`];
+
+  // Inform the user when an ephemeral env override is shadowing the persisted value.
+  const envOverride = resolvedEnv[API_URL_ENV]?.trim();
+  if (envOverride && envOverride.length > 0 && envOverride !== config.apiUrl) {
+    lines.push(`(Note: ${API_URL_ENV} env override is active; persisted config value is: ${config.apiUrl})`);
+  }
 
   return {
     exitCode: 0,
-    output: `API URL: ${displayUrl}`,
+    output: lines.join('\n'),
   };
 }

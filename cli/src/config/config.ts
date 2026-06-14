@@ -13,8 +13,17 @@ import * as os from 'node:os';
 // ---------------------------------------------------------------------------
 
 export const DEFAULT_API_URL = 'https://plugins.claudeforge.dev';
+/** @deprecated Use API_URL_ENV. Kept for backward compatibility with CLAUDE_PLUGINS_API_URL consumers. */
 export const ENV_KEY_API_URL = 'CLAUDE_PLUGINS_API_URL';
 export const ENV_KEY_HOME = 'CLAUDE_PLUGINS_HOME';
+
+/**
+ * Environment variable name for the ephemeral API URL override.
+ * Set this to point the CLI at a local backend (e.g. a Docker test container)
+ * without touching the persisted config.json.
+ * Example: CLAUDEFORGE_API_URL=http://localhost:9999 claude-plugin search foo
+ */
+export const API_URL_ENV = 'CLAUDEFORGE_API_URL';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,13 +41,25 @@ export function resolveHome(env?: NodeJS.ProcessEnv): string {
   return env?.[ENV_KEY_HOME] ?? path.join(os.homedir(), '.claude-plugins');
 }
 
-export function resolveApiUrl(explicit: string | undefined, env?: NodeJS.ProcessEnv): string {
-  if (explicit && explicit.length > 0) {
-    return explicit;
-  }
-  const fromEnv = env?.[ENV_KEY_API_URL];
+/**
+ * Resolve the effective API URL applying the following precedence (highest first):
+ *   1. process.env.CLAUDEFORGE_API_URL — ephemeral override for local/docker/staging.
+ *      Trimmed; empty or whitespace-only values are ignored (fall through to next tier).
+ *      This value is NEVER persisted — a subsequent call without the env var reverts to
+ *      the persisted/default value.
+ *   2. config.apiUrl — persisted value from ~/.claude-plugins/config.json.
+ *   3. DEFAULT_API_URL — production default; never mutated.
+ *
+ * @param config  Loaded CliConfig (contains the persisted apiUrl).
+ * @param env     Environment map to read; defaults to process.env. Injected in tests.
+ */
+export function resolveApiUrl(config: CliConfig, env: NodeJS.ProcessEnv = process.env): string {
+  const fromEnv = env[API_URL_ENV]?.trim();
   if (fromEnv && fromEnv.length > 0) {
     return fromEnv;
+  }
+  if (config.apiUrl && config.apiUrl.length > 0) {
+    return config.apiUrl;
   }
   return DEFAULT_API_URL;
 }

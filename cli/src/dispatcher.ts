@@ -85,10 +85,10 @@ function printResult(result: CommandResult): void {
   }
 }
 
-async function getClient(env?: NodeJS.ProcessEnv): Promise<ReturnType<typeof createMarketplaceClient>> {
+async function getClient(env: NodeJS.ProcessEnv = process.env): Promise<ReturnType<typeof createMarketplaceClient>> {
   const homeDir = resolveHome(env);
   const config = await readConfig(homeDir);
-  const apiUrl = resolveApiUrl(config.apiUrl, env);
+  const apiUrl = resolveApiUrl(config, env);
   return createMarketplaceClient(apiUrl);
 }
 
@@ -98,11 +98,11 @@ async function getClient(env?: NodeJS.ProcessEnv): Promise<ReturnType<typeof cre
  * SessionExpiredError when credentials are absent or locally expired.
  */
 async function getAuthenticatedPublishClient(
-  env?: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv = process.env,
 ): Promise<ReturnType<typeof createAuthenticatedClient>> {
   const homeDir = resolveHome(env);
   const config = await readConfig(homeDir);
-  const apiUrl = resolveApiUrl(config.apiUrl, env);
+  const apiUrl = resolveApiUrl(config, env);
   const base = createMarketplaceClient(apiUrl);
   const credentials = await readCredentials(homeDir);
   return createAuthenticatedClient(base, { credentials });
@@ -114,10 +114,10 @@ async function getAuthenticatedPublishClient(
  * (enabling private pulls). If credentials are absent the client falls
  * back to anonymous downloads — preserving the public-pull guarantee.
  */
-async function getInstallClient(env?: NodeJS.ProcessEnv): Promise<ReturnType<typeof createAuthenticatedClient>> {
+async function getInstallClient(env: NodeJS.ProcessEnv = process.env): Promise<ReturnType<typeof createAuthenticatedClient>> {
   const homeDir = resolveHome(env);
   const config = await readConfig(homeDir);
-  const apiUrl = resolveApiUrl(config.apiUrl, env);
+  const apiUrl = resolveApiUrl(config, env);
   const base = createMarketplaceClient(apiUrl);
   const credentials = await readCredentials(homeDir);
   return createAuthenticatedClient(base, { credentials });
@@ -403,7 +403,7 @@ export function createProgram(deps: DispatcherDeps = {}): Command {
     .action(async (options: { provider?: string; deviceCode?: boolean }) => {
       const homeDir = resolveHome();
       const config = await readConfig(homeDir);
-      const apiUrl = resolveApiUrl(config.apiUrl);
+      const apiUrl = resolveApiUrl(config);
       const provider = (options.provider ?? 'google') as 'google' | 'microsoft';
       const result = await injectedLogin(
         { provider, ...(options.deviceCode !== undefined ? { deviceCode: options.deviceCode } : {}) },

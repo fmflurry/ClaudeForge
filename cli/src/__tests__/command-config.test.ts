@@ -162,12 +162,12 @@ describe('runConfigShow', () => {
     }
   });
 
-  it('falls back to CLAUDE_PLUGINS_API_URL env when no config file set', async () => {
+  it('uses CLAUDEFORGE_API_URL env override when no config file is set', async () => {
     const homeDir = await makeTmpDir();
     try {
       const result = await runConfigShow({
         homeDir,
-        env: { CLAUDE_PLUGINS_API_URL: 'https://env-override.example.com' },
+        env: { CLAUDEFORGE_API_URL: 'https://env-override.example.com' },
       });
       expect(result.output).toContain('https://env-override.example.com');
       expect(result.exitCode).toBe(0);

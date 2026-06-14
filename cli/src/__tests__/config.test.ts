@@ -4,12 +4,14 @@
  * Production module path: src/config/config.ts
  * Exported functions / types:
  *   - DEFAULT_API_URL: string = 'https://plugins.claudeforge.dev'
- *   - ENV_KEY_API_URL: string = 'CLAUDE_PLUGINS_API_URL'
+ *   - ENV_KEY_API_URL: string = 'CLAUDE_PLUGINS_API_URL'  (deprecated, kept for compat)
  *   - ENV_KEY_HOME: string = 'CLAUDE_PLUGINS_HOME'
+ *   - API_URL_ENV: string = 'CLAUDEFORGE_API_URL'
  *   - resolveHome(env?: NodeJS.ProcessEnv): string
  *       → returns env.CLAUDE_PLUGINS_HOME or os.homedir() + '/.claude-plugins'
- *   - resolveApiUrl(explicit: string | undefined, env?: NodeJS.ProcessEnv): string
- *       → precedence: explicit > env.CLAUDE_PLUGINS_API_URL > DEFAULT_API_URL
+ *   - resolveApiUrl(config: CliConfig, env?: NodeJS.ProcessEnv): string
+ *       → precedence: env.CLAUDEFORGE_API_URL (trimmed) > config.apiUrl > DEFAULT_API_URL
+ *       → env value is NEVER persisted; ephemeral only
  *   - validateUrl(url: string): boolean
  *       → returns true only for well-formed http/https URLs
  *   - readConfig(homeDir: string): Promise<CliConfig>
@@ -33,6 +35,7 @@ import {
   DEFAULT_API_URL,
   ENV_KEY_API_URL,
   ENV_KEY_HOME,
+  API_URL_ENV,
   resolveHome,
   resolveApiUrl,
   validateUrl,
@@ -62,12 +65,16 @@ describe('config – constants', () => {
     expect(DEFAULT_API_URL).toBe('https://plugins.claudeforge.dev');
   });
 
-  it('ENV_KEY_API_URL is CLAUDE_PLUGINS_API_URL', () => {
+  it('ENV_KEY_API_URL is CLAUDE_PLUGINS_API_URL (deprecated compat)', () => {
     expect(ENV_KEY_API_URL).toBe('CLAUDE_PLUGINS_API_URL');
   });
 
   it('ENV_KEY_HOME is CLAUDE_PLUGINS_HOME', () => {
     expect(ENV_KEY_HOME).toBe('CLAUDE_PLUGINS_HOME');
+  });
+
+  it('API_URL_ENV is CLAUDEFORGE_API_URL', () => {
+    expect(API_URL_ENV).toBe('CLAUDEFORGE_API_URL');
   });
 });
 
@@ -98,31 +105,73 @@ describe('resolveHome', () => {
 // ---------------------------------------------------------------------------
 
 describe('resolveApiUrl', () => {
-  it('returns explicit URL when provided, ignoring env and default', () => {
-    const result = resolveApiUrl('https://explicit.example.com', { CLAUDE_PLUGINS_API_URL: 'https://env.example.com' });
-    expect(result).toBe('https://explicit.example.com');
+  // --- Tier 1: CLAUDEFORGE_API_URL env override (highest priority) ---
+
+  it('returns env URL when CLAUDEFORGE_API_URL is set, regardless of config and default', () => {
+    const config: CliConfig = { apiUrl: 'https://persisted.example.com' };
+    const result = resolveApiUrl(config, { CLAUDEFORGE_API_URL: 'http://localhost:9999' });
+    expect(result).toBe('http://localhost:9999');
   });
 
-  it('returns env URL when no explicit URL provided', () => {
-    const result = resolveApiUrl(undefined, { CLAUDE_PLUGINS_API_URL: 'https://env.example.com' });
-    expect(result).toBe('https://env.example.com');
+  it('trims whitespace from env value before using it', () => {
+    const config: CliConfig = { apiUrl: DEFAULT_API_URL };
+    const result = resolveApiUrl(config, { CLAUDEFORGE_API_URL: '  http://localhost:8080  ' });
+    expect(result).toBe('http://localhost:8080');
   });
 
-  it('returns DEFAULT_API_URL when neither explicit nor env is set', () => {
-    const result = resolveApiUrl(undefined, {});
+  it('ignores env value that is empty string and falls through to config', () => {
+    const config: CliConfig = { apiUrl: 'https://persisted.example.com' };
+    const result = resolveApiUrl(config, { CLAUDEFORGE_API_URL: '' });
+    expect(result).toBe('https://persisted.example.com');
+  });
+
+  it('ignores env value that is whitespace-only and falls through to config', () => {
+    const config: CliConfig = { apiUrl: 'https://persisted.example.com' };
+    const result = resolveApiUrl(config, { CLAUDEFORGE_API_URL: '   ' });
+    expect(result).toBe('https://persisted.example.com');
+  });
+
+  it('ignores env value that is whitespace-only and falls through to DEFAULT_API_URL when no config set', () => {
+    const config: CliConfig = { apiUrl: DEFAULT_API_URL };
+    const result = resolveApiUrl(config, { CLAUDEFORGE_API_URL: '   ' });
+    // config.apiUrl === DEFAULT_API_URL so this should still return DEFAULT_API_URL
     expect(result).toBe(DEFAULT_API_URL);
   });
 
-  it('returns DEFAULT_API_URL when explicit is empty string and env is not set', () => {
-    const result = resolveApiUrl('', {});
+  // --- Tier 2: persisted config.apiUrl ---
+
+  it('returns config.apiUrl when env is not set', () => {
+    const config: CliConfig = { apiUrl: 'https://persisted.example.com' };
+    const result = resolveApiUrl(config, {});
+    expect(result).toBe('https://persisted.example.com');
+  });
+
+  // --- Tier 3: DEFAULT_API_URL (fallback) ---
+
+  it('returns DEFAULT_API_URL when no env is set and config holds default', () => {
+    const config: CliConfig = { apiUrl: DEFAULT_API_URL };
+    const result = resolveApiUrl(config, {});
     expect(result).toBe(DEFAULT_API_URL);
   });
 
-  it('prefers explicit over env when both present', () => {
-    const result = resolveApiUrl('https://explicit.test', {
-      CLAUDE_PLUGINS_API_URL: 'https://env.test',
-    });
-    expect(result).toBe('https://explicit.test');
+  // --- Ephemerality: env override does NOT leak across calls ---
+
+  it('is ephemeral: resolving again with empty env returns persisted config value', () => {
+    const config: CliConfig = { apiUrl: 'https://persisted.example.com' };
+    // First call WITH env override
+    const withOverride = resolveApiUrl(config, { CLAUDEFORGE_API_URL: 'http://localhost:9999' });
+    expect(withOverride).toBe('http://localhost:9999');
+    // Second call WITHOUT env override — must return persisted value, not the env one
+    const withoutOverride = resolveApiUrl(config, {});
+    expect(withoutOverride).toBe('https://persisted.example.com');
+  });
+
+  it('is ephemeral: resolving again with no env set returns DEFAULT_API_URL when config is default', () => {
+    const config: CliConfig = { apiUrl: DEFAULT_API_URL };
+    const withOverride = resolveApiUrl(config, { CLAUDEFORGE_API_URL: 'http://localhost:7777' });
+    expect(withOverride).toBe('http://localhost:7777');
+    const withoutOverride = resolveApiUrl(config, {});
+    expect(withoutOverride).toBe(DEFAULT_API_URL);
   });
 });
 
