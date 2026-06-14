@@ -1,5 +1,5 @@
 {
-  "name": "@claudeforge/claude-plugin-cli",
+  "name": "@leclaudeforge/claude-plugin-cli",
   "version": "0.1.0",
   "description": "Command-line tool to install, update, remove and roll back Claude Code add-ons — hooks, skills, agents, plugins — locally or globally.",
   "main": "dist/index.cjs",

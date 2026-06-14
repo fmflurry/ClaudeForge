@@ -1,4 +1,4 @@
-# Release workflow for @claudeforge/claude-plugin-cli
+# Release workflow for @leclaudeforge/claude-plugin-cli
 #
 # Triggered by a tag push matching cli-v* (e.g. cli-v0.1.0).
 # IMPORTANT: before pushing the tag, ensure the tag version matches
@@ -21,7 +21,7 @@ env:
 
 jobs:
   release-cli:
-    name: Publish @claudeforge/claude-plugin-cli to npm
+    name: Publish @leclaudeforge/claude-plugin-cli to npm
     runs-on: ubuntu-latest
 
     steps:

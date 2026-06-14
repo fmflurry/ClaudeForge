@@ -16,7 +16,7 @@ import { SeoMetadataService } from '../../../shared/infrastructure/seo/seo-metad
 import { I18nFacade } from '../../../application/i18n/i18n.facade';
 
 /** npm package name for the ClaudeForge CLI, from cli/package.json */
-const CLI_PACKAGE = '@claudeforge/claude-plugin-cli';
+const CLI_PACKAGE = '@leclaudeforge/claude-plugin-cli';
 
 @Component({
   selector: 'cf-install-page',
