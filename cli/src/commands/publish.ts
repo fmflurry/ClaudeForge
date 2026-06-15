@@ -123,7 +123,7 @@ export async function runPublish(args: PublishArgs, deps: PublishDeps): Promise<
 
   try {
     const response = await client.uploadPlugin(formData);
-    const marketplaceUrl = `https://plugins.claudeforge.dev/plugins/${response.slug ?? m.name}`;
+    const marketplaceUrl = `https://api.claudeforge.fr/plugins/${response.slug ?? m.name}`;
     return {
       exitCode: 0,
       output: `Published ${m.name}@${m.version} at ${marketplaceUrl}`,

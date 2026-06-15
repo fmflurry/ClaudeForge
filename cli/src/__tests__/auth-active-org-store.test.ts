@@ -77,14 +77,14 @@ describe('readActiveOrg', () => {
   });
 
   it('returns null when config.json has no activeOrg field', async () => {
-    const fakeFs = makeFakeFs({ apiUrl: 'https://plugins.claudeforge.dev' });
+    const fakeFs = makeFakeFs({ apiUrl: 'https://api.claudeforge.fr' });
     const result = await readActiveOrg('/home/.claude-plugins', fakeFs);
     expect(result).toBeNull();
   });
 
   it('returns the activeOrg string when present', async () => {
     const fakeFs = makeFakeFs({
-      apiUrl: 'https://plugins.claudeforge.dev',
+      apiUrl: 'https://api.claudeforge.fr',
       activeOrg: 'org-uuid-123',
     });
     const result = await readActiveOrg('/home/.claude-plugins', fakeFs);
@@ -124,7 +124,7 @@ describe('readActiveOrg', () => {
 
 describe('writeActiveOrg – set an org', () => {
   it('writes config.json with activeOrg when setting a non-null value', async () => {
-    const fakeFs = makeFakeFs({ apiUrl: 'https://plugins.claudeforge.dev' });
+    const fakeFs = makeFakeFs({ apiUrl: 'https://api.claudeforge.fr' });
     await writeActiveOrg('/home/.claude-plugins', 'my-org-id', fakeFs);
     const written = JSON.parse(fakeFs.lastWrite?.content ?? '{}') as Record<string, unknown>;
     expect(written['activeOrg']).toBe('my-org-id');
@@ -155,7 +155,7 @@ describe('writeActiveOrg – set an org', () => {
 describe('writeActiveOrg – clear an org (null)', () => {
   it('removes activeOrg from config.json when set to null', async () => {
     const fakeFs = makeFakeFs({
-      apiUrl: 'https://plugins.claudeforge.dev',
+      apiUrl: 'https://api.claudeforge.fr',
       activeOrg: 'existing-org',
     });
     await writeActiveOrg('/home/.claude-plugins', null, fakeFs);
@@ -176,7 +176,7 @@ describe('writeActiveOrg – clear an org (null)', () => {
 
 describe('writeActiveOrg – immutability', () => {
   it('does not mutate any in-memory objects', async () => {
-    const fakeFs = makeFakeFs({ apiUrl: 'https://plugins.claudeforge.dev' });
+    const fakeFs = makeFakeFs({ apiUrl: 'https://api.claudeforge.fr' });
     const orgId = 'org-123';
     await writeActiveOrg('/home/.claude-plugins', orgId, fakeFs);
     // orgId string is a primitive — we just verify the function returns void

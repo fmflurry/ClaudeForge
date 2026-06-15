@@ -12,7 +12,11 @@ import * as os from 'node:os';
 // Constants
 // ---------------------------------------------------------------------------
 
-export const DEFAULT_API_URL = 'https://plugins.claudeforge.dev';
+// PROVISIONAL: The production API endpoint is not yet finalised.
+// This matches the claudeforge.fr website domain and the infra `api.` subdomain
+// convention used by JWT issuers and OIDC callbacks in infra/docker-compose*.yml.
+// Override at runtime without touching this file: CLAUDEFORGE_API_URL=<url> (see API_URL_ENV below).
+export const DEFAULT_API_URL = 'https://api.claudeforge.fr';
 /** @deprecated Use API_URL_ENV. Kept for backward compatibility with CLAUDE_PLUGINS_API_URL consumers. */
 export const ENV_KEY_API_URL = 'CLAUDE_PLUGINS_API_URL';
 export const ENV_KEY_HOME = 'CLAUDE_PLUGINS_HOME';

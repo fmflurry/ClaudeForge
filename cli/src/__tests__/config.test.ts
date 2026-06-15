@@ -3,7 +3,7 @@
  *
  * Production module path: src/config/config.ts
  * Exported functions / types:
- *   - DEFAULT_API_URL: string = 'https://plugins.claudeforge.dev'
+ *   - DEFAULT_API_URL: string = 'https://api.claudeforge.fr'
  *   - ENV_KEY_API_URL: string = 'CLAUDE_PLUGINS_API_URL'  (deprecated, kept for compat)
  *   - ENV_KEY_HOME: string = 'CLAUDE_PLUGINS_HOME'
  *   - API_URL_ENV: string = 'CLAUDEFORGE_API_URL'
@@ -62,7 +62,7 @@ async function removeTmpDir(dir: string): Promise<void> {
 
 describe('config – constants', () => {
   it('DEFAULT_API_URL is the official marketplace URL', () => {
-    expect(DEFAULT_API_URL).toBe('https://plugins.claudeforge.dev');
+    expect(DEFAULT_API_URL).toBe('https://api.claudeforge.fr');
   });
 
   it('ENV_KEY_API_URL is CLAUDE_PLUGINS_API_URL (deprecated compat)', () => {
@@ -181,7 +181,7 @@ describe('resolveApiUrl', () => {
 
 describe('validateUrl', () => {
   it('accepts a valid https URL', () => {
-    expect(validateUrl('https://plugins.claudeforge.dev')).toBe(true);
+    expect(validateUrl('https://api.claudeforge.fr')).toBe(true);
   });
 
   it('accepts a valid http URL', () => {
