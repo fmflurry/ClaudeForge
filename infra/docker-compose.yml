@@ -40,7 +40,7 @@ services:
       OIDC__MICROSOFT__TENANT: "${OIDC__MICROSOFT__TENANT:-common}"
       OIDC__MICROSOFT__REDIRECTURI: "${OIDC__MICROSOFT__REDIRECTURI:-http://localhost:5010/auth/callback}"
       # ── JWT ───────────────────────────────────────────────────────────────
-      JWT__ISSUER: "${JWT__ISSUER:-https://api.claudeforge.dev}"
+      JWT__ISSUER: "${JWT__ISSUER:-https://api.claudeforge.fr}"
       JWT__AUDIENCE: "${JWT__AUDIENCE:-claudeforge-spa-cli}"
       JWT__ACCESSTOKENMINUTES: "${JWT__ACCESSTOKENMINUTES:-15}"
       JWT__REFRESHTOKENDAYS: "${JWT__REFRESHTOKENDAYS:-30}"
@@ -52,7 +52,7 @@ services:
       EMAIL__SMTPPORT: "${EMAIL__SMTPPORT:-587}"
       EMAIL__SMTPUSER: "${EMAIL__SMTPUSER}"
       EMAIL__SMTPPASSWORD: "${EMAIL__SMTPPASSWORD}"
-      EMAIL__FROM: "${EMAIL__FROM:-noreply@claudeforge.dev}"
+      EMAIL__FROM: "${EMAIL__FROM:-noreply@claudeforge.fr}"
     ports:
       - "5010:8080"
     depends_on:

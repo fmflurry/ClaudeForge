@@ -9,4 +9,4 @@ Disallow: /auth
 Disallow: /activate
 Disallow: /orgs
 
-Sitemap: https://claudeforge.dev/sitemap.xml
+Sitemap: https://claudeforge.fr/sitemap.xml

@@ -861,8 +861,8 @@ export class LandingPageComponent implements OnInit {
       ogTitle: this.i18n.t('home.seo.og-title'),
       ogDescription: this.i18n.t('home.seo.og-description'),
       ogType: 'website',
-      ogUrl: 'https://claudeforge.dev/',
-      ogImage: 'https://claudeforge.dev/assets/og-image.png',
+      ogUrl: 'https://claudeforge.fr/',
+      ogImage: 'https://claudeforge.fr/assets/og-image.png',
       twitterCard: 'summary_large_image',
       twitterTitle: this.i18n.t('home.seo.twitter-title'),
       twitterDescription: this.i18n.t('home.seo.twitter-description'),
@@ -870,9 +870,9 @@ export class LandingPageComponent implements OnInit {
 
     this.structuredData.injectOrganizationAndWebSite({
       organizationName: 'ClaudeForge',
-      siteUrl: 'https://claudeforge.dev',
-      logoUrl: 'https://claudeforge.dev/assets/logo.png',
-      searchActionTemplate: 'https://claudeforge.dev/search?q={search_term_string}',
+      siteUrl: 'https://claudeforge.fr',
+      logoUrl: 'https://claudeforge.fr/assets/logo.png',
+      searchActionTemplate: 'https://claudeforge.fr/search?q={search_term_string}',
     });
   }
 

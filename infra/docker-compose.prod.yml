@@ -60,13 +60,13 @@ services:
       OIDC__ALLOWEDLOOPBACKREDIRECT: "${OIDC__ALLOWEDLOOPBACKREDIRECT:-http://127.0.0.1}"
       OIDC__GOOGLE__CLIENTID: "${OIDC__GOOGLE__CLIENTID}"
       OIDC__GOOGLE__CLIENTSECRET: "${OIDC__GOOGLE__CLIENTSECRET}"
-      OIDC__GOOGLE__REDIRECTURI: "${OIDC__GOOGLE__REDIRECTURI:-https://api.claudeforge.dev/auth/callback}"
+      OIDC__GOOGLE__REDIRECTURI: "${OIDC__GOOGLE__REDIRECTURI:-https://api.claudeforge.fr/auth/callback}"
       OIDC__MICROSOFT__CLIENTID: "${OIDC__MICROSOFT__CLIENTID}"
       OIDC__MICROSOFT__CLIENTSECRET: "${OIDC__MICROSOFT__CLIENTSECRET}"
       OIDC__MICROSOFT__TENANT: "${OIDC__MICROSOFT__TENANT:-common}"
-      OIDC__MICROSOFT__REDIRECTURI: "${OIDC__MICROSOFT__REDIRECTURI:-https://api.claudeforge.dev/auth/callback}"
+      OIDC__MICROSOFT__REDIRECTURI: "${OIDC__MICROSOFT__REDIRECTURI:-https://api.claudeforge.fr/auth/callback}"
       # ── JWT ───────────────────────────────────────────────────────────────
-      JWT__ISSUER: "${JWT__ISSUER:-https://api.claudeforge.dev}"
+      JWT__ISSUER: "${JWT__ISSUER:-https://api.claudeforge.fr}"
       JWT__AUDIENCE: "${JWT__AUDIENCE:-claudeforge-spa-cli}"
       JWT__ACCESSTOKENMINUTES: "${JWT__ACCESSTOKENMINUTES:-15}"
       JWT__REFRESHTOKENDAYS: "${JWT__REFRESHTOKENDAYS:-30}"
@@ -77,7 +77,7 @@ services:
       EMAIL__SMTPPORT: "${EMAIL__SMTPPORT:-587}"
       EMAIL__SMTPUSER: "${EMAIL__SMTPUSER}"
       EMAIL__SMTPPASSWORD: "${EMAIL__SMTPPASSWORD}"
-      EMAIL__FROM: "${EMAIL__FROM:-noreply@claudeforge.dev}"
+      EMAIL__FROM: "${EMAIL__FROM:-noreply@claudeforge.fr}"
     secrets:
       - jwt_private_pem
     volumes: []             # no source bind-mounts in production
@@ -99,8 +99,8 @@ services:
       # Internal API URL for server-side rendering requests (container network)
       SSR_API_BASE_URL: "${SSR_API_BASE_URL:-http://api:8080}"
       # Allowed Host header values — set to the production hostname(s)
-      # e.g. claudeforge.dev,www.claudeforge.dev
-      NG_ALLOWED_HOSTS: "${NG_ALLOWED_HOSTS:-claudeforge.dev,www.claudeforge.dev}"
+      # e.g. claudeforge.fr,www.claudeforge.fr
+      NG_ALLOWED_HOSTS: "${NG_ALLOWED_HOSTS:-claudeforge.fr,www.claudeforge.fr}"
     volumes: []
     restart: on-failure:3
     deploy:

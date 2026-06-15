@@ -50,7 +50,7 @@ service definitions in `infra/docker-compose.yml` (dev) and `infra/docker-compos
    | Environment | Redirect URI |
    |-------------|-------------|
    | Development | `http://localhost:5010/auth/callback` |
-   | Production  | `https://api.claudeforge.dev/auth/callback` |
+   | Production  | `https://api.claudeforge.fr/auth/callback` |
    | CLI loopback | Not added here — the CLI uses dynamic loopback ports validated by `OIDC__ALLOWEDLOOPBACKREDIRECT` on the backend; Google does not need the individual loopback port registered |
 
 5. Click **Create**. Copy the **Client ID** and **Client Secret**.
@@ -61,7 +61,7 @@ service definitions in `infra/docker-compose.yml` (dev) and `infra/docker-compos
 OIDC__GOOGLE__CLIENTID=<client-id>.apps.googleusercontent.com
 OIDC__GOOGLE__CLIENTSECRET=<client-secret>
 OIDC__GOOGLE__REDIRECTURI=http://localhost:5010/auth/callback   # dev
-# OIDC__GOOGLE__REDIRECTURI=https://api.claudeforge.dev/auth/callback  # prod
+# OIDC__GOOGLE__REDIRECTURI=https://api.claudeforge.fr/auth/callback  # prod
 ```
 
 ### Notes
@@ -97,7 +97,7 @@ In the registered app, go to **Authentication > Platform configurations > Web** 
 | Environment | Redirect URI |
 |-------------|-------------|
 | Development | `http://localhost:5010/auth/callback` |
-| Production  | `https://api.claudeforge.dev/auth/callback` |
+| Production  | `https://api.claudeforge.fr/auth/callback` |
 
 The CLI loopback flow uses `http://127.0.0.1:<random-port>/callback`. Azure requires you to
 enable **Allow public client flows** (under **Authentication > Advanced settings**) for
@@ -134,7 +134,7 @@ OIDC__MICROSOFT__CLIENTID=<application-client-id>
 OIDC__MICROSOFT__CLIENTSECRET=<client-secret-value>
 OIDC__MICROSOFT__TENANT=common
 OIDC__MICROSOFT__REDIRECTURI=http://localhost:5010/auth/callback   # dev
-# OIDC__MICROSOFT__REDIRECTURI=https://api.claudeforge.dev/auth/callback  # prod
+# OIDC__MICROSOFT__REDIRECTURI=https://api.claudeforge.fr/auth/callback  # prod
 ```
 
 ### Notes
@@ -238,7 +238,7 @@ All variables are described with their defaults in `.env.example` at the reposit
 | `OIDC__MICROSOFT__CLIENTSECRET` | If microsoft enabled | — | Azure Entra client secret |
 | `OIDC__MICROSOFT__TENANT` | If microsoft enabled | `common` | Tenant ID or `common` |
 | `OIDC__MICROSOFT__REDIRECTURI` | If microsoft enabled | (per env) | Registered redirect URI for Microsoft |
-| `JWT__ISSUER` | Yes | `https://api.claudeforge.dev` | JWT `iss` claim |
+| `JWT__ISSUER` | Yes | `https://api.claudeforge.fr` | JWT `iss` claim |
 | `JWT__AUDIENCE` | Yes | `claudeforge-spa-cli` | JWT `aud` claim |
 | `JWT__ACCESSTOKENMINUTES` | No | `15` | Access token lifetime in minutes |
 | `JWT__REFRESHTOKENDAYS` | No | `30` | Refresh token lifetime in days |
@@ -248,5 +248,5 @@ All variables are described with their defaults in `.env.example` at the reposit
 | `EMAIL__SMTPPORT` | No | `587` | SMTP port (587 = STARTTLS, 465 = SMTPS) |
 | `EMAIL__SMTPUSER` | Yes | — | SMTP username |
 | `EMAIL__SMTPPASSWORD` | Yes | — | SMTP password |
-| `EMAIL__FROM` | No | `noreply@claudeforge.dev` | From address on outbound emails |
+| `EMAIL__FROM` | No | `noreply@claudeforge.fr` | From address on outbound emails |
 | `Features__RequireAuthForUpload` | No | `false` | Phase 3 gate: set to `true` to require auth on upload |
