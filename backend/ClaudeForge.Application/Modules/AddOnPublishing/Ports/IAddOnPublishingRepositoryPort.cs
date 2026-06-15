@@ -63,12 +63,11 @@ public interface IAddOnPublishingRepositoryPort
         CancellationToken ct = default);
 
     /// <summary>
-    /// Updates the visibility and optionally the ownerOrgId of a plugin.
-    /// When changing to "public", ownerOrgId should be null.
-    /// When changing to "private", ownerOrgId must be provided.
-    /// Returns (currentVisibility, currentOwnerOrgId) before the update, or null if the plugin is not found.
+    /// Returns the current visibility, ownerOrgId, and ownerUserId of the plugin,
+    /// or null if the plugin is not found.
+    /// Used to authorize write operations before mutating the plugin.
     /// </summary>
-    Task<(string Visibility, Guid? OwnerOrgId)?> GetPluginVisibilityAsync(
+    Task<(string Visibility, Guid? OwnerOrgId, Guid? OwnerUserId)?> GetPluginVisibilityAsync(
         Guid pluginId,
         CancellationToken ct = default);
 

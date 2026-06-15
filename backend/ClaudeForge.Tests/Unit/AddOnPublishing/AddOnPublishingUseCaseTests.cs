@@ -5,9 +5,9 @@ using ClaudeForge.Application.Modules.AddOnPublishing.UseCases;
 using ClaudeForge.Core.Domain.Packaging;
 using ClaudeForge.Core.Domain.Plugins;
 using ClaudeForge.Core.Ports;
+using ClaudeForge.Core.Shared.Authorization;
 using ClaudeForge.Infrastructure.Packaging;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 
 namespace ClaudeForge.Tests.Unit.AddOnPublishing;
 
@@ -204,14 +204,36 @@ public sealed class PluginPublishingUseCaseTests
         PublishVersionUseCase useCase) BuildPublishVersionUseCase(
         bool pluginExists = true,
         bool versionExists = false,
-        AddOnVersionPublishResult? publishResult = null)
+        AddOnVersionPublishResult? publishResult = null,
+        Guid? ownerUserId = null)
     {
         IAddOnPublishingRepositoryPort repo = Substitute.For<IAddOnPublishingRepositoryPort>();
         IPackageStoragePort storage = Substitute.For<IPackageStoragePort>();
         IPackageReader reader = new PackageReader();
 
-        repo.PluginExistsAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(pluginExists);
+        // Authenticated test user — matches the ownerUserId seeded in the plugin ownership stub.
+        Guid testUserId = ownerUserId ?? Guid.NewGuid();
+        ICurrentUser currentUser = Substitute.For<ICurrentUser>();
+        currentUser.IsAuthenticated.Returns(true);
+        currentUser.UserId.Returns(testUserId);
+        currentUser.Email.Returns("unit-test@example.com");
+
+        IOrgMembershipQueryPort membershipQuery = Substitute.For<IOrgMembershipQueryPort>();
+        membershipQuery
+            .GetOrgIdsForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<Guid>());
+
+        IAddOnAccessPolicy accessPolicy = new AddOnAccessPolicy();
+
+        // The use case now calls GetPluginVisibilityAsync instead of PluginExistsAsync for the
+        // ownership check. Return an ownerless plugin owned by the test user so that
+        // mechanics tests (which don't test auth) pass through the auth gate.
+        (string, Guid?, Guid?)? ownershipResult = pluginExists
+            ? ("public", (Guid?)null, testUserId)
+            : ((string, Guid?, Guid?)?)null;
+
+        repo.GetPluginVisibilityAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(ownershipResult);
 
         repo.VersionExistsAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(versionExists);
@@ -220,7 +242,7 @@ public sealed class PluginPublishingUseCaseTests
         repo.AddVersionAsync(Arg.Any<Guid>(), Arg.Any<AddVersionCommand>(), Arg.Any<CancellationToken>())
             .Returns(publishResult);
 
-        PublishVersionUseCase useCase = new(repo, storage, reader);
+        PublishVersionUseCase useCase = new(repo, storage, reader, currentUser, membershipQuery, accessPolicy);
         return (repo, storage, useCase);
     }
 

@@ -3,11 +3,15 @@ using ClaudeForge.Application.Modules.AddOnPublishing.Ports;
 using ClaudeForge.Core.Domain.Packaging;
 using ClaudeForge.Core.Domain.Plugins;
 using ClaudeForge.Core.Ports;
+using ClaudeForge.Core.Shared.Authorization;
+using ClaudeForge.Core.Shared.Exceptions;
 
 namespace ClaudeForge.Application.Modules.AddOnPublishing.UseCases;
 
 /// <summary>
 /// Orchestrates publishing a new version to an existing plugin:
+/// 0. Enforces authentication and authorization — only the org that owns the plugin
+///    (or the original creator for ownerless public plugins) may publish a new version.
 /// 1. Verifies the plugin exists (404 if not).
 /// 2. Validates the version format via SemVer.Parse.
 /// 3. Checks for duplicate (pluginId, version).
@@ -22,25 +26,42 @@ public sealed class PublishVersionUseCase
     private readonly IAddOnPublishingRepositoryPort _repository;
     private readonly IPackageStoragePort _storage;
     private readonly IPackageReader _packageReader;
+    private readonly ICurrentUser _currentUser;
+    private readonly IOrgMembershipQueryPort _membershipQuery;
+    private readonly IAddOnAccessPolicy _accessPolicy;
 
     public PublishVersionUseCase(
         IAddOnPublishingRepositoryPort repository,
         IPackageStoragePort storage,
-        IPackageReader packageReader)
+        IPackageReader packageReader,
+        ICurrentUser currentUser,
+        IOrgMembershipQueryPort membershipQuery,
+        IAddOnAccessPolicy accessPolicy)
     {
         _repository = repository;
         _storage = storage;
         _packageReader = packageReader;
+        _currentUser = currentUser;
+        _membershipQuery = membershipQuery;
+        _accessPolicy = accessPolicy;
     }
 
     public async Task<AddOnVersionPublishResult> ExecuteAsync(
         PublishVersionCommand command,
         CancellationToken ct = default)
     {
-        // Step 1: verify plugin exists
-        bool pluginExists = await _repository.PluginExistsAsync(command.PluginId, ct);
-        if (!pluginExists)
+        // Step 0: authenticate + authorize before touching any data.
+        // Load the plugin's persisted owner information (never trusting caller-supplied org).
+        (string Visibility, Guid? OwnerOrgId, Guid? OwnerUserId)? pluginOwnership =
+            await _repository.GetPluginVisibilityAsync(command.PluginId, ct);
+
+        if (pluginOwnership is null)
             throw new AddOnNotFoundForVersionException();
+
+        await AuthorizeWriteAsync(pluginOwnership.Value, ct);
+
+        // Step 1: verify plugin exists (redundant after the ownership load, but kept for clarity)
+        // The existence check is already satisfied by GetPluginVisibilityAsync returning non-null above.
 
         // Step 2: validate version format
         SemVer semVer = ParseVersionOrThrow(command.Version);
@@ -86,6 +107,51 @@ public sealed class PublishVersionUseCase
             try { await _storage.DeleteAsync(packageKey, ct); } catch { /* ignore cleanup errors */ }
             throw;
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Authorization
+    // -------------------------------------------------------------------------
+
+    private async Task AuthorizeWriteAsync(
+        (string Visibility, Guid? OwnerOrgId, Guid? OwnerUserId) ownership,
+        CancellationToken ct)
+    {
+        // Authentication is always required to publish a version.
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+            throw new AuthenticationException("Authentication is required to publish a plugin version.");
+
+        if (ownership.OwnerOrgId is not null)
+        {
+            // Plugin is org-owned — caller must be a member of that org.
+            IReadOnlySet<Guid> callerOrgIds = await ResolveCallerOrgIdsAsync(ct);
+            AccessDecision decision = _accessPolicy.DecideWrite(
+                _currentUser, ownership.OwnerOrgId.Value, callerOrgIds);
+
+            if (decision == AccessDecision.Forbidden)
+                throw new AddOnWriteForbiddenException();
+        }
+        else
+        {
+            // Ownerless plugin: only the original creator (OwnerUserId) may publish a version.
+            // If there is no OwnerUserId, the plugin is fully anonymous — reject all writes
+            // (defense-in-depth; anonymous plugins should not exist after the upload auth gate
+            // is fully enforced, but we must fail-secure here regardless).
+            if (ownership.OwnerUserId is null ||
+                _currentUser.UserId != ownership.OwnerUserId)
+            {
+                throw new AddOnWriteForbiddenException();
+            }
+        }
+    }
+
+    private async Task<IReadOnlySet<Guid>> ResolveCallerOrgIdsAsync(CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+            return new HashSet<Guid>();
+
+        Guid[] orgIds = await _membershipQuery.GetOrgIdsForUserAsync(_currentUser.UserId.Value, ct);
+        return new HashSet<Guid>(orgIds);
     }
 
     // -------------------------------------------------------------------------

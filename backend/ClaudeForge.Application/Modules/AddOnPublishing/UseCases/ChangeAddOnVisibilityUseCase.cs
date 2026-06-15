@@ -61,42 +61,50 @@ public sealed class ChangeAddOnVisibilityUseCase
             throw new PrivateAddOnRequiresOrgException();
 
         // Load current plugin state
-        (string Visibility, Guid? OwnerOrgId)? current =
+        (string Visibility, Guid? OwnerOrgId, Guid? OwnerUserId)? current =
             await _repository.GetPluginVisibilityAsync(pluginId, ct);
 
         if (current is null)
             throw new AddOnNotFoundException();
 
-        // Determine the org to use for write authorization.
-        // Use current ownerOrgId if available, otherwise use the requested newOwnerOrgId.
-        Guid? authOrgId = current.Value.OwnerOrgId ?? newOwnerOrgId;
-
-        // If we have no org to check against, the caller cannot be a member → 403
-        if (authOrgId is null)
+        if (current.Value.OwnerOrgId is not null)
         {
-            throw new AddOnWriteForbiddenException();
+            // Plugin is already owned by an org — use DecideWrite against that org.
+            IReadOnlySet<Guid> callerOrgIds = await ResolveCallerOrgIdsAsync(ct);
+            AccessDecision decision = _accessPolicy.DecideWrite(
+                _currentUser, current.Value.OwnerOrgId.Value, callerOrgIds);
+
+            if (decision == AccessDecision.Forbidden)
+                throw new AddOnWriteForbiddenException();
         }
-
-        IReadOnlySet<Guid> callerOrgIds = await ResolveCallerOrgIdsAsync(ct);
-
-        AccessDecision decision = _accessPolicy.DecideWrite(
-            _currentUser, authOrgId.Value, callerOrgIds);
-
-        if (decision == AccessDecision.Forbidden)
-            throw new AddOnWriteForbiddenException();
+        else
+        {
+            // Ownerless plugin: only the original creator (OwnerUserId) may adopt it.
+            // If there is no OwnerUserId either, the plugin is fully anonymous — reject all writes.
+            if (current.Value.OwnerUserId is null ||
+                _currentUser.UserId != current.Value.OwnerUserId)
+            {
+                throw new AddOnWriteForbiddenException();
+            }
+        }
 
         // When →public: clear ownerOrgId; when →private: set ownerOrgId
         Guid? resolvedOwnerOrgId = normalizedVisibility == "public" ? null : newOwnerOrgId;
 
         await _repository.UpdateVisibilityAsync(pluginId, normalizedVisibility, resolvedOwnerOrgId, ct);
 
-        // Audit log entry
-        await _auditLog.AppendAsync(
-            orgId: authOrgId.Value,
-            actorUserId: _currentUser.UserId.Value,
-            action: "plugin.visibility_changed",
-            target: $"plugin:{pluginId}",
-            ct: ct);
+        // Audit log entry — use the authoritative org ID: current owner org if present,
+        // otherwise the new owner org (set when going private), otherwise skip the audit entry.
+        Guid? auditOrgId = current.Value.OwnerOrgId ?? newOwnerOrgId;
+        if (auditOrgId is not null)
+        {
+            await _auditLog.AppendAsync(
+                orgId: auditOrgId.Value,
+                actorUserId: _currentUser.UserId.Value,
+                action: "plugin.visibility_changed",
+                target: $"plugin:{pluginId}",
+                ct: ct);
+        }
     }
 
     private async Task<IReadOnlySet<Guid>> ResolveCallerOrgIdsAsync(CancellationToken ct)

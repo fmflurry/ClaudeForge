@@ -16,7 +16,6 @@ using ClaudeForge.Infrastructure.Packaging;
 using ClaudeForge.Infrastructure.Persistence;
 using ClaudeForge.Infrastructure.Storage;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 
 
@@ -107,7 +106,13 @@ public sealed class AddOnPublishingModule : IModule
 
         // Use cases
         services.AddScoped<UploadAddOnUseCase>();
-        services.AddScoped<PublishVersionUseCase>();
+        services.AddScoped<PublishVersionUseCase>(sp => new PublishVersionUseCase(
+            sp.GetRequiredService<IAddOnPublishingRepositoryPort>(),
+            sp.GetRequiredService<IPackageStoragePort>(),
+            sp.GetRequiredService<IPackageReader>(),
+            sp.GetRequiredService<ICurrentUser>(),
+            sp.GetRequiredService<IOrgMembershipQueryPort>(),
+            sp.GetRequiredService<IAddOnAccessPolicy>()));
         services.AddScoped<ChangeAddOnVisibilityUseCase>();
 
         // Per-IP rate limiting for upload and version-publish endpoints
@@ -134,7 +139,7 @@ public sealed class AddOnPublishingModule : IModule
     {
         // Read the feature flag from the registered IConfiguration service.
         IConfiguration configuration = endpoints.ServiceProvider.GetRequiredService<IConfiguration>();
-        bool requireAuthForUpload = configuration.GetValue<bool>("Features:RequireAuthForUpload");
+        bool requireAuthForUpload = configuration.GetValue<bool>("Features:RequireAuthForUpload", true);
 
         // Capture flag value for use in handler closure
         endpoints

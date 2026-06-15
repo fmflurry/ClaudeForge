@@ -208,20 +208,26 @@ public sealed class AddOnPublishingRepositoryAdapter : IAddOnPublishingRepositor
     // GetPluginVisibilityAsync / UpdateVisibilityAsync
     // -------------------------------------------------------------------------
 
-    public async Task<(string Visibility, Guid? OwnerOrgId)?> GetPluginVisibilityAsync(
+    public async Task<(string Visibility, Guid? OwnerOrgId, Guid? OwnerUserId)?> GetPluginVisibilityAsync(
         Guid pluginId,
         CancellationToken ct = default)
     {
         AddOnEntity? plugin = await _context.Plugins
             .AsNoTracking()
             .Where(p => p.Id == pluginId)
-            .Select(p => new AddOnEntity { Id = p.Id, Visibility = p.Visibility, OwnerOrgId = p.OwnerOrgId })
+            .Select(p => new AddOnEntity
+            {
+                Id = p.Id,
+                Visibility = p.Visibility,
+                OwnerOrgId = p.OwnerOrgId,
+                OwnerUserId = p.OwnerUserId,
+            })
             .FirstOrDefaultAsync(ct);
 
         if (plugin is null)
             return null;
 
-        return (plugin.Visibility, plugin.OwnerOrgId);
+        return (plugin.Visibility, plugin.OwnerOrgId, plugin.OwnerUserId);
     }
 
     public async Task UpdateVisibilityAsync(

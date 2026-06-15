@@ -3,8 +3,11 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using ClaudeForge.Core.Shared.Authorization;
 using ClaudeForge.Infrastructure.Persistence;
+using ClaudeForge.Infrastructure.Persistence.Entities;
 using ClaudeForge.Tests.Integration.Fixtures;
+using ClaudeForge.Tests.Integration.Organizations;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,12 +37,22 @@ namespace ClaudeForge.Tests.Integration.AddOnPublishing;
 ///   "Version not found"                                                (plugin-versioning/spec.md)
 ///   "Version must be in format MAJOR.MINOR.PATCH (e.g., 1.2.3)"       (plugin-versioning/spec.md)
 /// </summary>
+/// <summary>
+/// Holds the seeded test user identity shared across all tests in this class.
+/// Used to authenticate upload and version-publish requests so that
+/// PublishVersionUseCase authorization can resolve OwnerUserId correctly.
+/// </summary>
 [Collection(PostgresFixture.CollectionName)]
 public sealed class PluginPublishingHttpTests : IAsyncLifetime
 {
     private readonly PostgresFixture _fixture;
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
+
+    // Seeded once per test method (in InitializeAsync) so each test gets a fresh identity
+    // in a truncated database. The user ID is stable within one test run.
+    private Guid _testUserId;
+    private const string TestUserEmail = "publishing-mechanic-tester@example.com";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -53,6 +66,18 @@ public sealed class PluginPublishingHttpTests : IAsyncLifetime
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
+                // Flag OFF so the upload endpoint does not require auth.
+                // These tests cover publishing API mechanics (validation, versioning),
+                // not the auth gate. UploadAuthGateTests owns the flag-ON/OFF scenarios.
+                // Version-publish auth is now exercised by PublishVersionAuthGateTests.
+                builder.ConfigureAppConfiguration((_, config) =>
+                {
+                    config.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["Features:RequireAuthForUpload"] = "false",
+                    });
+                });
+
                 builder.ConfigureServices(services =>
                 {
                     // Replace the DbContext registration with the test container connection
@@ -68,6 +93,14 @@ public sealed class PluginPublishingHttpTests : IAsyncLifetime
 
                     services.AddDbContext<MarketplaceDbContext>(options =>
                         options.UseNpgsql(fixture.ConnectionString));
+
+                    // Replace ICurrentUser with header-based test stub so that
+                    // PublishVersionUseCase can resolve the caller's identity without JWT.
+                    ServiceDescriptor? cuDesc = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(ICurrentUser));
+                    if (cuDesc is not null) services.Remove(cuDesc);
+
+                    services.AddScoped<ICurrentUser, HeaderBasedTestCurrentUser>();
                 });
             });
 
@@ -76,6 +109,7 @@ public sealed class PluginPublishingHttpTests : IAsyncLifetime
 
     // -------------------------------------------------------------------------
     // Per-test isolation: truncate all marketplace tables before each test.
+    // Seed a test user so that upload + version-publish carry a valid OwnerUserId.
     // -------------------------------------------------------------------------
 
     public async Task InitializeAsync()
@@ -84,6 +118,13 @@ public sealed class PluginPublishingHttpTests : IAsyncLifetime
         await ctx.Database.ExecuteSqlRawAsync(
             """
             TRUNCATE TABLE
+                org_audit_log,
+                organization_invitations,
+                organization_members,
+                refresh_tokens,
+                user_identities,
+                organizations,
+                users,
                 telemetry_aggregates,
                 telemetry_events,
                 plugin_categories,
@@ -92,12 +133,41 @@ public sealed class PluginPublishingHttpTests : IAsyncLifetime
                 categories
             RESTART IDENTITY CASCADE
             """);
+
+        // Seed a stable test user used to authenticate all upload + version-publish calls.
+        _testUserId = Guid.NewGuid();
+        UserEntity user = new()
+        {
+            Id = _testUserId,
+            Email = TestUserEmail,
+            EmailNormalized = TestUserEmail,
+            DisplayName = "PublishingMechanicTester",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
+        ctx.Users.Add(user);
+        await ctx.SaveChangesAsync();
+
+        // Present the test user identity on all requests by default.
+        SetAuthUser(_testUserId, TestUserEmail);
     }
 
     public async Task DisposeAsync()
     {
         _client.Dispose();
         await _factory.DisposeAsync();
+    }
+
+    // -------------------------------------------------------------------------
+    // Auth helpers — mirrors UploadAuthGateTests pattern
+    // -------------------------------------------------------------------------
+
+    private void SetAuthUser(Guid userId, string email)
+    {
+        _client.DefaultRequestHeaders.Remove("X-Test-User-Id");
+        _client.DefaultRequestHeaders.Remove("X-Test-User-Email");
+        _client.DefaultRequestHeaders.Add("X-Test-User-Id", userId.ToString());
+        _client.DefaultRequestHeaders.Add("X-Test-User-Email", email);
     }
 
     // =========================================================================
